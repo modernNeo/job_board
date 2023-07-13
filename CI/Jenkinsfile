@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    options {
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10', artifactNumToKeepStr: '10'))
+    }
+    stages {
+        stage('Deploy') {
+            when {
+                branch 'master'
+            }
+            steps {
+                withCredentials(
+                [string(credentialsId: 'JOBS_SITE_POSTGRES_PASSWORD', variable: 'JOBS_SITE_POSTGRES_PASSWORD'),
+                string(credentialsId: 'JOBS_SITE_POSTGRES_USER', variable: 'JOBS_SITE_POSTGRES_USER'),
+                string(credentialsId: 'JOBS_SITE_POSTGRES_DB', variable: 'JOBS_SITE_POSTGRES_DB'),
+                string(credentialsId: 'JOB_SITE_SECRET_KEY', variable: 'JOB_SITE_SECRET_KEY')]
+                ){
+                    sh label: '', script: """bash -c \'
+                        export POSTGRES_DB="'"${JOBS_SITE_POSTGRES_DB}"'";
+                        export POSTGRES_USER="'"${JOBS_SITE_POSTGRES_USER}"'";
+                        export POSTGRES_PASSWORD="'"${JOBS_SITE_POSTGRES_PASSWORD}"'";
+                        export SECRET_KEY="'"${JOB_SITE_SECRET_KEY}"'";
+                        export JENKINS="true";
+                        export ENV="PROD";
+                        ./CI/deploy.sh;
+                    \'"""
+                }
+            }
+        }
+    }
+    post {
+      always {
+          script {
+              if (fileExists('test_results/all-unit-tests.xml')){
+                  junit skipPublishingChecks: true, testResults: 'test_results/all-unit-tests.xml'
+              }
+          }
+      }
+  }
+}

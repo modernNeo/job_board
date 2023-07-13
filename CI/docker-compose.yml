@@ -1,0 +1,41 @@
+version: '3.8' #docker-compose version
+services:  #Services that are needed for the linkedin_jobs app
+    jobs_site_app: #the jobs_site app, the name will of the image will be ${COMPOSE_PROJECT_NAME}_jobs_site
+        build:
+            context: ../ #Saying that all of my source files are at the root path
+            dockerfile: CI/Dockerfile
+        environment:
+            - POSTGRES_DB
+            - POSTGRES_USER
+            - POSTGRES_PASSWORD
+            - COMPOSE_PROJECT_NAME
+            - ENV
+            - SECRET_KEY
+        volumes: #volume are for hot reload
+            - logs:/src/app/logs
+        depends_on:   # used to ensure that docker wont start jobs_site until after it has started the database container
+            - "db"
+        container_name: "${COMPOSE_PROJECT_NAME}_app"
+        restart: unless-stopped
+        image: "${COMPOSE_PROJECT_NAME}_app"
+        networks:
+            - jobs_site_network
+        stdin_open: true # docker run -i
+        tty: true        # docker run -t
+    db: #declaration of the postgres container
+        environment:
+            - POSTGRES_DB
+            - POSTGRES_USER
+            - POSTGRES_PASSWORD
+        image: postgres:alpine #using postgres image
+        container_name: "${COMPOSE_PROJECT_NAME}_db"
+        networks:
+            - jobs_site_network
+volumes:
+    logs:
+        name: "${COMPOSE_PROJECT_NAME}_logs"
+
+networks:
+    jobs_site_network:
+        name: jobs_site_network
+        external: true
