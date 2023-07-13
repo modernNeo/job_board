@@ -1,0 +1,44 @@
+{% load static %}
+<style>
+    .overflow_box {
+        overflow: scroll;
+        display: -webkit-box;
+        -webkit-line-clamp: 50;
+        -webkit-box-orient: vertical;
+    }
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="{%  static 'js/browse.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        setCookie("list_of_jobs","{% url "api:job-list" %}");
+        setCookie("update_user_job_settings","{% url "api:userjobposting-detail" "user_job_info_id" %}");
+        setCookie("get_user_job_settings","{% url "api:userjobposting-detail" "user_job_info_id" %}");
+        browser_ready();
+    });
+</script>
+{%  if user == "" %}
+    <a href="/admin/login/?next=/">Login</a>
+{%  else %}
+    <a href="/admin/logout/?next=/">Logout</a>
+{%  endif %}
+<br><br>
+{%  if user == "jace" %}
+    <form method="post" class="form" enctype="multipart/form-data">
+        {% csrf_token %}
+        <br><br><input id="media_uploads" type="file" name="linkedin_exports">
+        <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br>
+    </form>
+{%  endif %}
+<div style="width: 100%; overflow: hidden">
+    <div style="width: 70%; float: left">
+        <button onclick="showVisibleJobs('{% url "api:userjobposting-list" %}')">Visible Jobs</button>
+        <button onclick="showHiddenJobs('{% url "api:userjobposting-list" %}')">Hidden Jobs</button>
+        <button onclick="showAppliedJobs('{% url "api:userjobposting-list" %}')">Applied Jobs</button><br>
+        <div id="job_list_header"></div>
+        <div id="job_list" class="overflow_box"></div>
+        <div id="number_of_jobs"></div>
+    </div>
+    <div style="width: 30%; float: right" id="company_info"></div>
+</div>
