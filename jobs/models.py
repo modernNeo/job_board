@@ -105,16 +105,16 @@ class PSTDateTimeField(models.DateTimeField):
         """
         date = getattr(model_instance, self.attname)
         # date can be None cause of end date
-        if date is not None:
+        if type(date) == str and date.strip() == "":
+            setattr(model_instance, self.attname, None)
+        elif date == 'Actively recruiting':
+            setattr(model_instance, self.attname, None)
+        elif date is not None:
             if type(date) is str and re.match(r"\d{4}-\d{2}-\d{2}", date):
                 year = int(date[:4])
                 month = int(date[5:7])
                 day = int(date[8:10])
-                hour = int(date[11:13])
-                minute = int(date[14:16])
-                second = int(date[-2:])
-                setattr(model_instance, self.attname,
-                        create_utc_time(year, month, day, hour_24=hour, minute=minute, second=second))
+                setattr(model_instance, self.attname, create_utc_time(year, month, day))
             elif date.tzinfo == tzfile('/usr/share/zoneinfo/Canada/Pacific'):
                 setattr(model_instance, self.attname, convert_pacific_time_to_utc(date))
         return super(PSTDateTimeField, self).pre_save(model_instance, add)
@@ -124,6 +124,8 @@ class PSTDateTimeField(models.DateTimeField):
         Converts the value from the DB from UTC time to PST time before returning to calling code
         """
         # date can be None cause of end date
+        if value is None:
+            return None
         return convert_utc_time_to_pacific(value)
 
 
@@ -151,7 +153,10 @@ class Job(models.Model):
         max_length=500
     )
 
-    date_posted = PSTDateTimeField()
+    date_posted = PSTDateTimeField(
+        null=True,
+        blank=True
+    )
 
     source_domain = models.CharField(
         max_length=500
