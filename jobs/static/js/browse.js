@@ -76,7 +76,7 @@ function updateJobList(jobs) {
     }
     document.getElementById("job_list_header").replaceChildren(header);
 
-    let index_of_previously_select_job = getCookie("index_of_previously_select_job") === "null" ? null : getCookie("index_of_previously_select_job");
+    let index_of_previously_select_job = getCookie("index_of_previously_select_job") === "null" ? null : Number(getCookie("index_of_previously_select_job"));
     let id_for_new_job_to_select = null;
     let last_selected_job;
     if (index_of_previously_select_job !== null) {
@@ -100,16 +100,18 @@ function updateJobList(jobs) {
         let adjacent_job = (index_of_previously_select_job !== null && i <= index_of_previously_select_job)
         // if the previously selected job is still in the current list
         let previously_select_job = last_selected_job === jobs[i].job_id;
-        if (adjacent_job || previously_select_job) {
+        // make sure the first element is selected at least if none of the above cases end up being true
+        let select_first_item = id_for_new_job_to_select === null;
+        if (adjacent_job || previously_select_job || select_first_item ) {
             id_for_new_job_to_select = jobs[i].job_id;
             index_for_new_job_to_select = i;
-        } else if (id_for_new_job_to_select === null) {
-            id_for_new_job_to_select = jobs[i].job_id;
         }
     }
-    if (id_for_new_job_to_select !== null) {
-        job_list.scrollTop = document.getElementById(id_for_new_job_to_select + "_list_item").offsetTop - job_list.offsetTop - 20;
-    }
+    // will comment it out since its a bit too jarring atm and I dont want to spend time working out the kinks since its not
+    // a necessity
+    // if (id_for_new_job_to_select !== null) {
+    //     job_list.scrollTop = document.getElementById(id_for_new_job_to_select + "_list_item").offsetTop - job_list.offsetTop - 20;
+    // }
     if (jobs.length > 0) {
         updateSelectedJobInList(id_for_new_job_to_select, index_for_new_job_to_select, jobs);
     } else {
