@@ -26,7 +26,7 @@ class Command(BaseCommand):
                 csvFile = [line for line in csv.reader(linkedin_export)][1:]
                 index = 1
                 for line in csvFile:
-                    print(f" parsing line {index}/{len(csvFile)}")
+                    print(f"parsing line {index}/{len(csvFile)}")
                     if line[JOB_ID_INDEX] != 'LOCKED 🔒. Please Upgrade your account to continue. ':
                         job = Job.objects.all().filter(
                             job_id=int(line[JOB_ID_INDEX]),
