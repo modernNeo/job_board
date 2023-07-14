@@ -36,8 +36,8 @@ function showVisibleJobs() {
         'url': getCookie('list_of_jobs'),
         'type': 'GET',
         'cache': false,
-        success: function (response) {
-            updateJobList(response);
+        success: function (jobs) {
+            updateJobList(jobs);
         }
     });
 
@@ -48,8 +48,8 @@ function showHiddenJobs() {
         'url': getCookie('list_of_jobs')+"?hidden=true",
         'type': 'GET',
         'cache': false,
-        success: function (response) {
-            updateJobList(response);
+        success: function (jobs) {
+            updateJobList(jobs);
         }
     });
 }
@@ -75,46 +75,54 @@ function updateJobList(jobs) {
         header.textContent = "Jobs";
     }
     document.getElementById("job_list_header").replaceChildren(header);
-    let lastSelectJob = Number(getCookie("selected_job_id"));
-    let last_select_job_in_list = false;
-    let index = 0;
-    let selected_job_id = null;
+
+    let index_of_previously_select_job = getCookie("index_of_previously_select_job") === "null" ? null : getCookie("index_of_previously_select_job");
+    let id_for_new_job_to_select = null;
+    let last_selected_job;
+    if (index_of_previously_select_job !== null) {
+        setCookie("index_of_previously_select_job", null);
+    } else {
+        last_selected_job = Number(getCookie("selected_job_id"));
+    }
+    let index_for_new_job_to_select = 0;
     let job_list = document.getElementById("job_list");
     job_list.replaceChildren();
     for (let i = 0; i < jobs.length; i++) {
         var job_item = document.createElement("b");
         job_item.setAttribute("id", jobs[i].job_id + "_list_item");
         job_item.setAttribute("onclick", "updateSelectedJobInList(" + jobs[i].job_id + ", " + i + ")");
-        console.log(jobs[i].organisation_name);
         job_item.innerHTML = jobs[i].job_title + " || " + jobs[i].organisation_name;
         job_list.append(job_item);
         job_item.append(document.createElement("br"))
-        if (selected_job_id === null) {
-            selected_job_id = jobs[i].job_id;
-        }
-        if (lastSelectJob === jobs[i].job_id) {
-            selected_job_id = jobs[i].job_id;
-            index = i;
-            last_select_job_in_list = true;
+
+        // if the previously selected job was marked as applied or hidden so the code will try and jump to the nearest job so the user is not
+        // moved back to the top and loses their place
+        let adjacent_job = (index_of_previously_select_job !== null && i <= index_of_previously_select_job)
+        // if the previously selected job is still in the current list
+        let previously_select_job = last_selected_job === jobs[i].job_id;
+        if (adjacent_job || previously_select_job) {
+            id_for_new_job_to_select = jobs[i].job_id;
+            index_for_new_job_to_select = i;
+        } else if (id_for_new_job_to_select === null) {
+            id_for_new_job_to_select = jobs[i].job_id;
         }
     }
-    if (selected_job_id !== null) {
-        job_list.scrollTop = document.getElementById(selected_job_id + "_list_item").offsetTop - job_list.offsetTop;
+    if (id_for_new_job_to_select !== null) {
+        job_list.scrollTop = document.getElementById(id_for_new_job_to_select + "_list_item").offsetTop - job_list.offsetTop - 20;
     }
     if (jobs.length > 0) {
-        if (last_select_job_in_list) {
-            updateSelectedJobInList(lastSelectJob, index, jobs);
-        } else {
-            setCookie("selected_job_id", jobs[0].job_id)
-            updateSelectedJobInList(jobs[0].job_id, index, jobs);
-        }
+        updateSelectedJobInList(id_for_new_job_to_select, index_for_new_job_to_select, jobs);
     } else {
+        setCookie("selected_job_id", null);
+        setCookie("selected_job_index", null);
+        setCookie("index_of_previously_select_job", null);
         document.getElementById('company_info').replaceChildren();
         document.getElementById("number_of_jobs").innerText = "0/0 jobs";
     }
 }
 function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
     setCookie("selected_job_id", job_id);
+    setCookie("selected_job_index", index_of_job_in_list);
     try {
         previous_item = document.getElementById(previously_selected_job_id + "_list_item");
         previous_item.style = '';
@@ -210,8 +218,9 @@ function updateCompanyPane(jobs, job_id) {
                 let company_info = document.getElementById('company_info');
                 company_info.replaceChildren();
                 company_info.appendChild(addButton(visible_job ? "hideJob(" + job.job_id + ")" : "showJob(" + job.job_id + ")", visible_job ? 'Hide Job' : 'Show Job'))
-                company_info.appendChild(addButton("toggle_applied("+job.job_id+", "+resp['applied']+")", resp['applied'] ? 'Applied' : "Apply"))
+                company_info.appendChild(addButton("toggle_applied("+job.job_id+", "+resp['applied']+")", resp['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
                 company_info.append(document.createElement("br"), document.createElement("br"));
+                company_info.appendChild(createCompanyInfoLine("Applied : ", "none", resp['applied']))
                 company_info.appendChild(createCompanyNoteInfo(job.job_id, resp['note']));
                 company_info.appendChild(createCompanyTitle(job.job_title))
                 company_info.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
@@ -247,6 +256,7 @@ function hideJob(job_id) {
     });
 }
 function showJob(job_id) {
+    setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
         "id": job_id,
         "hide": false
@@ -264,6 +274,7 @@ function showJob(job_id) {
     });
 }
 function toggle_applied(job_id, job_applied) {
+    setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
         "id": job_id,
         "applied": !job_applied
