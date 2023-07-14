@@ -163,6 +163,24 @@ class Job(models.Model):
         max_length=5000
     )
 
+#
+# class List(models.Model):
+#     name = models.CharField(
+#         max_length=500
+#     )
+#     user = models.ForeignKey(
+#         User, on_delete=models.CASCADE
+#     )
+#
+#
+# class Item(models.Model):
+#     list = models.ForeignKey(
+#         List, on_delete=models.CASCADE
+#     ),
+#     job_posting = models.ForeignKey(
+#         Job, on_delete=models.CASCADE
+#     )
+
 
 class UserJobPosting(models.Model):
     hide = models.BooleanField(
