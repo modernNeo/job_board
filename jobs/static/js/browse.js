@@ -241,6 +241,7 @@ function updateCompanyPane(jobs, job_id) {
     });
 }
 function hideJob(job_id) {
+    setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
         "id" : job_id,
         "hide" : true
