@@ -133,12 +133,12 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
         let previously_selected_job_id = previously_selected_job_ids.split(",");
         for (let job_id_index = 0; job_id_index < previously_selected_job_id.length; job_id_index++) {
             try {
-                console.log(`removing highlighting for ${previously_selected_job_id}_list_item"`);
-                let previous_item = document.getElementById(previously_selected_job_id + "_list_item");
+                console.log(`removing highlighting for ${previously_selected_job_id[job_id]}_list_item"`);
+                let previous_item = document.getElementById(previously_selected_job_id[job_id] + "_list_item");
                 previous_item.style = '';
-                console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
+                console.log(`removed highlighting for ${previously_selected_job_id[job_id]}_list_item`);
             } catch (e) {
-                console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
+                console.log(`could not remove highlighting for ${previously_selected_job_id[job_id]}_list_item a list item due to error\n${e}`);
             }
         }
     }
