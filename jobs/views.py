@@ -55,7 +55,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 Q(userjobposting__isnull=True)
 
             )
-        return job_postings.order_by('organisation_name', 'job_title')
+        return job_postings.order_by('-date_posted','organisation_name', 'job_title')
 
 
 class UserJobPostingSerializer(serializers.ModelSerializer):
