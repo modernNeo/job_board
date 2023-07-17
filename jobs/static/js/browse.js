@@ -1,7 +1,7 @@
 function setCookie(name, value) {
     document.cookie = `${name}=${value}`;
 }
-function getCookie(name) {
+function getCookie(name, wipe) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -10,6 +10,9 @@ function getCookie(name) {
             // Does this cookie string begin with the name we want?
             if (cookie.substring(0, name.length + 1) === (name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                if (wipe !== undefined && wipe !== null && wipe === true) {
+                    setCookie(name, null)
+                }
                 break;
             }
         }
@@ -125,19 +128,19 @@ function updateJobList(jobs) {
 function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
     setCookie("selected_job_id", job_id);
     setCookie("selected_job_index", index_of_job_in_list);
-    let previously_selected_job_id = null;
-    try {
-        let previously_selected_job_ids = getCookie("previously_selected_job_ids");
-            if (!(previously_selected_job_ids === null || previously_selected_job_ids === "")) {
-                previously_selected_job_id = previously_selected_job_ids.pop();
-                setCookie("previously_selected_job_ids", previously_selected_job_ids.join(","));
+    let previously_selected_job_ids = getCookie("previously_selected_job_ids", true);
+    if (!(previously_selected_job_ids === null || previously_selected_job_ids === "")) {
+        let previously_selected_job_id = previously_selected_job_ids.split(",");
+        for (let job_id_index = 0; job_id_index < previously_selected_job_ids.length; job_id_index++) {
+            try {
                 console.log(`removing highlighting for ${previously_selected_job_id}_list_item"`);
                 let previous_item = document.getElementById(previously_selected_job_id + "_list_item");
                 previous_item.style = '';
                 console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
+            } catch (e) {
+                console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
             }
-    } catch (e) {
-        console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
+        }
     }
     item = document.getElementById(job_id + "_list_item");
     item.style = 'color: blue';
@@ -244,11 +247,9 @@ function updateCompanyPane(jobs, job_id) {
                 console.log(e);
             }
             let previously_selected_job_ids = getCookie("previously_selected_job_ids");
-            if (previously_selected_job_ids === null || previously_selected_job_ids === ""){
-                previously_selected_job_ids = [];
-            }
-            previously_selected_job_ids.push(job_id);
-            setCookie("previously_selected_job_ids", previously_selected_job_ids.join(","));
+            previously_selected_job_ids = (previously_selected_job_ids === null) ? `${job_id}`
+                : previously_selected_job_ids + `,${job_id}`;
+            setCookie("previously_selected_job_ids", previously_selected_job_ids);
         }
     });
 }
