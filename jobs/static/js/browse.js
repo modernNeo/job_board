@@ -131,7 +131,7 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
     let previously_selected_job_ids = getCookie("previously_selected_job_ids", true);
     if (!(previously_selected_job_ids === null || previously_selected_job_ids === "")) {
         let previously_selected_job_id = previously_selected_job_ids.split(",");
-        for (let job_id_index = 0; job_id_index < previously_selected_job_ids.length; job_id_index++) {
+        for (let job_id_index = 0; job_id_index < previously_selected_job_id.length; job_id_index++) {
             try {
                 console.log(`removing highlighting for ${previously_selected_job_id}_list_item"`);
                 let previous_item = document.getElementById(previously_selected_job_id + "_list_item");
