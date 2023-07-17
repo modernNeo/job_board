@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from django.db.models import Q
+from django.db.models import Q, F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views import View
@@ -55,8 +55,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 Q(userjobposting__isnull=True)
 
             )
-        return job_postings.order_by('-date_posted','organisation_name', 'job_title')
-
+        return job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
 
 class UserJobPostingSerializer(serializers.ModelSerializer):
     class Meta:
