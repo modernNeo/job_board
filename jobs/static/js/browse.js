@@ -126,9 +126,12 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
     setCookie("selected_job_id", job_id);
     setCookie("selected_job_index", index_of_job_in_list);
     try {
-        previous_item = document.getElementById(previously_selected_job_id + "_list_item");
+        console.log(`removing highlighting for ${previously_selected_job_id}_list_item"`);
+        let previous_item = document.getElementById(previously_selected_job_id + "_list_item");
         previous_item.style = '';
+        console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
     } catch (e) {
+        console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item due to error\n${e}`);
     }
     item = document.getElementById(job_id + "_list_item");
     item.style = 'color: blue';
@@ -145,14 +148,12 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
             'type': 'GET',
             'cache': false,
             success: function (jobs) {
-                console.log(jobs.length);
                 updateCompanyPane(jobs, job_id);
                 document.getElementById("number_of_jobs").innerText = index_of_job_in_list+1 + "/" +jobs.length+ " jobs";
             }
         });
     } else {
         updateCompanyPane(jobs, job_id);
-        console.log(jobs.length);
         document.getElementById("number_of_jobs").innerText = index_of_job_in_list+1 + "/" +jobs.length+ " jobs";
     }
 }
