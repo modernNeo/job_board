@@ -131,7 +131,14 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
         previous_item.style = '';
         console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
     } catch (e) {
-        console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item due to error\n${e}`);
+        let message = `could not remove highlighting for`;
+        try{
+            message += ` ${previously_selected_job_id}_list_item`;
+        }catch (e) {
+            message += ` a list item`;
+        }
+        message += `due to error\n${e}`
+        console.log(message);
     }
     item = document.getElementById(job_id + "_list_item");
     item.style = 'color: blue';
