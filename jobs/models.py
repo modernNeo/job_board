@@ -215,5 +215,8 @@ class ETLFile(models.Model):
 
     def delete(self, *args, **kwargs):
         fs = FileSystemStorage()
-        fs.delete(self.file_path)
+        try:
+            fs.delete(self.file_path)
+        except Exception:
+            pass
         super(ETLFile, self).delete(*args, **kwargs)
