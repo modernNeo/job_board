@@ -214,10 +214,12 @@ class ETLFile(models.Model):
         max_length=10000
     )
 
-    def __init__(self, file, *args, **kwargs):
-        fs = FileSystemStorage()
-        fs.save(f"{settings.CSV_ROOT}/{file.name}", file)
-        self.file_path = f"{settings.CSV_ROOT}/{file.name}"
+    def __init__(self, *args, **kwargs):
+        if 'file' in kwargs:
+            fs = FileSystemStorage()
+            fs.save(f"{settings.CSV_ROOT}/{kwargs['file'].name}", kwargs['file'])
+            self.file_path = f"{settings.CSV_ROOT}/{kwargs['file'].name}"
+            del kwargs['kwargs']
         super().__init__(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
