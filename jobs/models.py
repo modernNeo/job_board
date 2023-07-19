@@ -216,10 +216,11 @@ class ETLFile(models.Model):
 
     def __init__(self, *args, **kwargs):
         if 'file' in kwargs:
+            file = kwargs['file']
+            del kwargs['file']
             fs = FileSystemStorage()
-            fs.save(f"{settings.CSV_ROOT}/{kwargs['file'].name}", kwargs['file'])
-            self.file_path = f"{settings.CSV_ROOT}/{kwargs['file'].name}"
-            del kwargs['kwargs']
+            fs.save(f"{settings.CSV_ROOT}/{file.name}", file)
+            self.file_path = f"{settings.CSV_ROOT}/{file.name}"
         super().__init__(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
