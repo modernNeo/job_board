@@ -3,6 +3,7 @@ import re
 
 import pytz
 from dateutil.tz import tzfile
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.db import models
@@ -212,6 +213,12 @@ class ETLFile(models.Model):
     file_path = models.CharField(
         max_length=10000
     )
+
+    def __init__(self, file, *args, **kwargs):
+        fs = FileSystemStorage()
+        fs.save(f"{settings.CSV_ROOT}/{file.name}", file)
+        self.file_path = f"{settings.CSV_ROOT}/{file.name}"
+        super().__init__(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         fs = FileSystemStorage()

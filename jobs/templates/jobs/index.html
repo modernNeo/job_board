@@ -27,7 +27,7 @@
 {%  if user == "jace" %}
     <form method="post" class="form" enctype="multipart/form-data">
         {% csrf_token %}
-        <br><br><input id="media_uploads" type="file" name="linkedin_exports">
+        <br><br><input id="media_uploads" type="file" name="linkedin_exports" multiple="multiple">
         <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br>
     </form>
 {%  endif %}

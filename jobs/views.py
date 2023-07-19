@@ -1,5 +1,3 @@
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.db.models import Q, F
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -16,11 +14,11 @@ class IndexPage(View):
         return render(request, 'jobs/index.html', {"user": request.user.username})
 
     def post(self, request):
-        linkedin_export = request.FILES.get("linkedin_exports", None)
-        if linkedin_export is not None:
-            fs = FileSystemStorage()
-            fs.save(f"{settings.CSV_ROOT}/{linkedin_export.name}", linkedin_export)
-            ETLFile(file_path=f"{settings.CSV_ROOT}/{linkedin_export.name}").save()
+        linkedin_exports = request.FILES.get("linkedin_exports", None)
+        if linkedin_exports is not None:
+            linkedin_exports = (dict(request.FILES))['linkedin_exports']
+            for linkedin_export in linkedin_exports:
+                ETLFile(file=linkedin_export).save()
         return HttpResponseRedirect("/")
 
 
