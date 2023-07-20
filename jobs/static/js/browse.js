@@ -172,7 +172,7 @@ function addButton(function_call, string){
     button.innerHTML = string;
     return button;
 }
-function createCompanyNoteInfo(job_id, note){
+function createCompanyNoteInfo(job_id, job_obj_id, note){
     let company_info = document.createElement("company_info_note")
     let company_label = document.createElement("label");
     company_label.style.fontWeight = 'bold';
@@ -181,7 +181,7 @@ function createCompanyNoteInfo(job_id, note){
 
     let company_input = document.createElement("input");
     company_input.type = "text";
-    company_input.setAttribute("onfocusout", "save_note("+job_id+")");
+    company_input.setAttribute("onfocusout", "save_note("+job_id+", "+job_obj_id+")");
     company_input.setAttribute("id", "note");
     company_input.value = note;
     company_info.appendChild(company_input);
@@ -233,7 +233,7 @@ function updateCompanyPane(jobs, job_id) {
                 company_info.appendChild(addButton("toggle_applied(" + job.job_id + ", " + resp['applied'] + ", "+job.id+")", resp['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
                 company_info.append(document.createElement("br"), document.createElement("br"));
                 company_info.appendChild(createCompanyInfoLine("Applied : ", "none", resp['applied']))
-                company_info.appendChild(createCompanyNoteInfo(job.job_id, resp['note']));
+                company_info.appendChild(createCompanyNoteInfo(job.job_id, job.id, resp['note']));
                 company_info.appendChild(createCompanyTitle(job.job_title))
                 company_info.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
                 company_info.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
@@ -307,13 +307,13 @@ function toggle_applied(job_id, job_applied, job_obj_id) {
         }
     });
 }
-function save_note(job_id){
+function save_note(job_id, job_obj_id){
     let data = {
-        "id": job_id,
+        "id": job_obj_id,
         "note": document.getElementById("note").value
     }
     $.ajax({
-        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_id + "/"),
+        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_obj_id + "/"),
         'type': 'POST',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
