@@ -219,11 +219,11 @@ function updateCompanyPane(jobs, job_id) {
     jobs = new Map(jobs.map(job => [job.job_id, job]))
     const job = jobs.get(job_id);
     $.ajax({
-        'url': getCookie('get_user_job_settings').replace("user_job_info_id/", job_id + "/"),
+        'url': getCookie('get_user_job_settings').replace("user_job_info_id/", job.id + "/"),
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
-        contentType : 'application/json; charset=utf-8',
+        contentType: 'application/json; charset=utf-8',
         success: function (resp) {
             try {
                 const visible_job = !resp['hide'];
