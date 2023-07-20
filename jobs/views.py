@@ -75,9 +75,12 @@ class UserJobPostingViewSet(viewsets.ModelViewSet):
         return Job.objects.all().filter(id=self.kwargs['pk']).first().userjobposting_set.all().first()
 
     def post(self, request, pk):
-        posting = UserJobPosting.objects.all().filter(user=request.user, job_posting__job_id=pk).first()
-        if posting is None:
-            posting = UserJobPosting(user=request.user, job_posting=Job.objects.get(job_id=pk))
+        postings = Job.objects.all().filter(id=pk).first().userjobposting_set.all()
+        posting = [posting for posting in postings if posting.user == request.user]
+        if len(posting) == 0:
+            posting = UserJobPosting(user=request.user, job_posting=Job.objects.get(id=pk))
+        else:
+            posting = posting[0]
         if request.data.get("hide", None) is not None:
             posting.hide = request.data['hide']
         if request.data.get("applied", None) is not None:
