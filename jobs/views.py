@@ -65,14 +65,14 @@ class UserJobPostingViewSet(viewsets.ModelViewSet):
     serializer_class = UserJobPostingSerializer
     queryset = UserJobPosting.objects.all()
 
-    def get_queryset(self):
-        if self.kwargs.get("pk", None) is not None:
-            return UserJobPosting.objects.all().filter(job_posting__job_id=self.kwargs['pk'])
-        else:
-            return UserJobPosting.objects.all()
+    # def get_queryset(self):
+    #     if self.kwargs.get("pk", None) is not None:
+    #         return Job.objects.all().filter(id=self.kwargs['pk']).first().userjobposting_set.all()
+    #     else:
+    #         return UserJobPosting.objects.all()
 
     def get_object(self):
-        return UserJobPosting.objects.all().filter(job_posting__job_id=self.kwargs['pk']).first()
+        return Job.objects.all().filter(id=self.kwargs['pk']).first().userjobposting_set.all().first()
 
     def post(self, request, pk):
         posting = UserJobPosting.objects.all().filter(user=request.user, job_posting__job_id=pk).first()

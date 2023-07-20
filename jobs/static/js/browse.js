@@ -229,8 +229,8 @@ function updateCompanyPane(jobs, job_id) {
                 const visible_job = !resp['hide'];
                 let company_info = document.getElementById('company_info');
                 company_info.replaceChildren();
-                company_info.appendChild(addButton(visible_job ? "hideJob(" + job.job_id + ")" : "showJob(" + job.job_id + ")", visible_job ? 'Hide Job' : 'Show Job'))
-                company_info.appendChild(addButton("toggle_applied("+job.job_id+", "+resp['applied']+")", resp['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
+                company_info.appendChild(addButton(visible_job ? "hideJob(" + job.job_id + ", "+job.id+")" : "showJob(" + job.job_id + ", "+job.id+")", visible_job ? 'Hide Job' : 'Show Job'))
+                company_info.appendChild(addButton("toggle_applied(" + job.job_id + ", " + resp['applied'] + ", "+job.id+")", resp['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
                 company_info.append(document.createElement("br"), document.createElement("br"));
                 company_info.appendChild(createCompanyInfoLine("Applied : ", "none", resp['applied']))
                 company_info.appendChild(createCompanyNoteInfo(job.job_id, resp['note']));
@@ -253,14 +253,14 @@ function updateCompanyPane(jobs, job_id) {
         }
     });
 }
-function hideJob(job_id) {
+function hideJob(job_id, job_obj_id) {
     setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
-        "id" : job_id,
+        "id" : job_obj_id,
         "hide" : true
     }
     $.ajax({
-        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_id + "/"),
+        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_obj_id + "/"),
         'type': 'POST',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -271,14 +271,14 @@ function hideJob(job_id) {
         }
     });
 }
-function showJob(job_id) {
+function showJob(job_id, job_obj_id) {
     setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
-        "id": job_id,
+        "id": job_obj_id,
         "hide": false
     }
     $.ajax({
-        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_id + "/"),
+        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_obj_id + "/"),
         'type': 'POST',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -289,14 +289,14 @@ function showJob(job_id) {
         }
     });
 }
-function toggle_applied(job_id, job_applied) {
+function toggle_applied(job_id, job_applied, job_obj_id) {
     setCookie("index_of_previously_select_job",getCookie("selected_job_index"))
     let data = {
-        "id": job_id,
+        "id": job_obj_id,
         "applied": !job_applied
     }
     $.ajax({
-        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_id + "/"),
+        'url': getCookie('update_user_job_settings').replace("user_job_info_id/", job_obj_id + "/"),
         'type': 'POST',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
