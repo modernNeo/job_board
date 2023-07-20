@@ -35,7 +35,8 @@
     <div style="width: 70%; float: left">
         <button onclick="showVisibleJobs('{% url "api:userjobposting-list" %}')">Visible Jobs</button>
         <button onclick="showHiddenJobs('{% url "api:userjobposting-list" %}')">Hidden Jobs</button>
-        <button onclick="showAppliedJobs('{% url "api:userjobposting-list" %}')">Applied Jobs</button><br>
+        <button onclick="showAppliedJobs('{% url "api:userjobposting-list" %}')">Applied Jobs</button>
+        <button onclick="clearCookies()">Clear Cookies</button><br>
         <div id="job_list_header"></div>
         <div id="job_list" class="overflow_box"></div>
         <div id="number_of_jobs"></div>
