@@ -81,6 +81,7 @@ function updateJobList(jobs) {
 
     let index_of_previously_select_job = getCookie("index_of_previously_select_job") === null ? null : Number(getCookie("index_of_previously_select_job"));
     let id_for_new_job_to_select = null;
+    let db_id_for_new_job_to_select=null;
     let last_selected_job;
     if (index_of_previously_select_job !== null) {
         setCookie("index_of_previously_select_job", null);
@@ -92,8 +93,8 @@ function updateJobList(jobs) {
     job_list.replaceChildren();
     for (let i = 0; i < jobs.length; i++) {
         var job_item = document.createElement("b");
-        job_item.setAttribute("id", jobs[i].job_id + "_list_item");
-        job_item.setAttribute("onclick", "updateSelectedJobInList(" + jobs[i].job_id + ", " + i + ")");
+        job_item.setAttribute("id", jobs[i].id + "_list_item");
+        job_item.setAttribute("onclick", "updateSelectedJobInList(" + jobs[i].job_id + ", " + i + ", "+jobs[i].id+")");
         job_item.innerHTML = jobs[i].job_title + " || " + jobs[i].organisation_name;
         job_list.append(job_item);
         job_item.append(document.createElement("br"))
@@ -107,6 +108,7 @@ function updateJobList(jobs) {
         let select_first_item = id_for_new_job_to_select === null;
         if (adjacent_job || previously_select_job || select_first_item ) {
             id_for_new_job_to_select = jobs[i].job_id;
+            db_id_for_new_job_to_select = jobs[i].id;
             index_for_new_job_to_select = i;
         }
     }
@@ -116,7 +118,7 @@ function updateJobList(jobs) {
     //     job_list.scrollTop = document.getElementById(id_for_new_job_to_select + "_list_item").offsetTop - job_list.offsetTop - 20;
     // }
     if (jobs.length > 0) {
-        updateSelectedJobInList(id_for_new_job_to_select, index_for_new_job_to_select, jobs);
+        updateSelectedJobInList(id_for_new_job_to_select, index_for_new_job_to_select, db_id_for_new_job_to_select, jobs);
     } else {
         setCookie("selected_job_id", null);
         setCookie("selected_job_index", null);
@@ -125,8 +127,8 @@ function updateJobList(jobs) {
         document.getElementById("number_of_jobs").innerText = "0/0 jobs";
     }
 }
-function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
-    setCookie("selected_job_id", job_id);
+function updateSelectedJobInList(job_id, index_of_job_in_list, job_obj_id, jobs) {
+    setCookie("selected_job_id", job_obj_id);
     setCookie("selected_job_index", index_of_job_in_list);
     let previously_selected_job_ids = getCookie("previously_selected_job_ids", true);
     if (!(previously_selected_job_ids === null || previously_selected_job_ids === "")) {
@@ -157,13 +159,13 @@ function updateSelectedJobInList(job_id, index_of_job_in_list, jobs) {
             'type': 'GET',
             'cache': false,
             success: function (jobs) {
-                updateCompanyPane(jobs, job_id);
-                document.getElementById("number_of_jobs").innerText = index_of_job_in_list+1 + "/" +jobs.length+ " jobs";
+                updateCompanyPane(jobs, job_obj_id);
+                document.getElementById("number_of_jobs").innerText = index_of_job_in_list + 1 + "/" + jobs.length + " jobs";
             }
         });
     } else {
-        updateCompanyPane(jobs, job_id);
-        document.getElementById("number_of_jobs").innerText = index_of_job_in_list+1 + "/" +jobs.length+ " jobs";
+        updateCompanyPane(jobs, job_obj_id);
+        document.getElementById("number_of_jobs").innerText = index_of_job_in_list + 1 + "/" + jobs.length + " jobs";
     }
 }
 function addButton(function_call, string){
@@ -215,9 +217,9 @@ function createLink(link) {
     linkElement.innerHTML = link;
     return linkElement;
 }
-function updateCompanyPane(jobs, job_id) {
-    jobs = new Map(jobs.map(job => [job.job_id, job]))
-    const job = jobs.get(job_id);
+function updateCompanyPane(jobs, job_obj_id) {
+    jobs = new Map(jobs.map(job => [job.id, job]))
+    const job = jobs.get(job_obj_id);
     $.ajax({
         'url': getCookie('get_user_job_settings').replace("user_job_info_id/", job.id + "/"),
         'type': 'GET',
