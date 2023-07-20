@@ -22,6 +22,10 @@ function getCookie(name, value) {
     return cookieValue === "null" ? null : cookieValue;
 }
 function browser_ready() {
+    setCookie("index_of_previously_select_job", null);
+    setCookie("previously_selected_job_ids", null);
+    setCookie("selected_job_id", null);
+    setCookie("selected_job_index", null);
     showVisibleJobs()
 }
 function refreshJobView() {
@@ -105,7 +109,7 @@ function updateJobList(jobs) {
         // moved back to the top and loses their place
         let adjacent_job = (index_of_previously_select_job !== null && i <= index_of_previously_select_job)
         // if the previously selected job is still in the current list
-        let previously_select_job = last_selected_job === jobs[i].job_id;
+        let previously_select_job = last_selected_job === jobs[i].id;
         // make sure the first element is selected at least if none of the above cases end up being true
         let select_first_item = id_for_new_job_to_select === null;
         if (adjacent_job || previously_select_job || select_first_item ) {
@@ -238,7 +242,7 @@ function updateCompanyPane(jobs, job_obj_id) {
                 console.log(e);
             }
             let previously_selected_job_id = getCookie("previously_selected_job_ids", job_obj_id);
-            if (!(previously_selected_job_id === null || previously_selected_job_id === "")) {
+            if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(job_obj_id))) {
                 try {
                     console.log(`removing highlighting for ${previously_selected_job_id}_list_item`);
                     let previous_item = document.getElementById(`${previously_selected_job_id}_list_item`);
@@ -307,6 +311,7 @@ function toggle_applied(job_id, job_applied, job_obj_id) {
     });
 }
 function save_note(job_id, job_obj_id){
+    setCookie("selected_job_id", job_obj_id);
     let data = {
         "id": job_obj_id,
         "note": document.getElementById("note").value
