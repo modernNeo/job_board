@@ -55,15 +55,15 @@ function getParameterForView(){
 }
 function showVisibleJobs() {
     setCookie("view","visible_jobs")
-    goToPage(getParameterForView(), 1);
+    goToPage(getParameterForView(), getCookie("page_number"));
 }
 function showHiddenJobs() {
     setCookie("view","hidden_jobs")
-    goToPage(getParameterForView(), 1);
+    goToPage(getParameterForView(), getCookie("page_number"));
 }
 function showAppliedJobs() {
     setCookie("view", "applied_jobs")
-    goToPage(getParameterForView(), 1);
+    goToPage(getParameterForView(), getCookie("page_number"));
 }
 function goToPage(param, page_number) {
     $.ajax({
