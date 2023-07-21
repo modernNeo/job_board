@@ -15,6 +15,7 @@
         setCookie("list_of_jobs","{% url "api:job-list" %}");
         setCookie("update_user_job_settings","{% url "api:userjobposting-detail" "user_job_info_id" %}");
         setCookie("get_user_job_settings","{% url "api:userjobposting-detail" "user_job_info_id" %}");
+        setCookie("num_pages_endpoint","{% url "page_numbers" %}");
         browser_ready();
     });
 </script>
@@ -42,4 +43,6 @@
         <div id="number_of_jobs"></div>
     </div>
     <div style="width: 30%; float: right" id="company_info"></div>
+    <button onclick="goToPreviousPage()">Previous Page</button>
+    <button onclick="goToNextPage()">Next Page</button><br>
 </div>

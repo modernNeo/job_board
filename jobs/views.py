@@ -1,5 +1,6 @@
+from django.core.paginator import Paginator
 from django.db.models import Q, F
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views import View
 from rest_framework import serializers, viewsets
@@ -8,10 +9,35 @@ from rest_framework.response import Response
 from jobs.models import Job, UserJobPosting, ETLFile
 
 
+def get_job_postings(params, job_postings, user_id):
+    user_job_posting_customizations = UserJobPosting.objects.all().filter(user_id=user_id)
+    if params.get("hidden", False) == 'true':
+        user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
+        job_postings = job_postings.filter(
+            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
+        )
+    elif params.get("applied", False) == 'true':
+        user_job_posting_customizations = user_job_posting_customizations.filter(applied=True)
+        job_postings = job_postings.filter(
+            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
+        )
+    else:
+        user_job_posting_customizations = user_job_posting_customizations.filter(hide=False).filter(applied=False)
+        job_postings = job_postings.filter(
+            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
+            Q(userjobposting__isnull=True)
+
+        )
+    job_postings = job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
+    return Paginator(job_postings, 25)
+
+
 class IndexPage(View):
 
     def get(self, request):
-        return render(request, 'jobs/index.html', {"user": request.user.username})
+        from django.urls import get_resolver
+        get_resolver().reverse_dict.keys()
+        return render(request, 'jobs/index.html', {"user": request.user.username, })
 
     def post(self, request):
         linkedin_exports = request.FILES.get("linkedin_exports", None)
@@ -20,6 +46,15 @@ class IndexPage(View):
             for linkedin_export in linkedin_exports:
                 ETLFile(file=linkedin_export).save()
         return HttpResponseRedirect("/")
+
+
+class PageNumbers(View):
+
+    def get(self, request):
+        return 0 if self.request.user.id is None \
+            else HttpResponse(
+                get_job_postings(request.GET, Job.objects.all(), request.user.id).num_pages
+            )
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -37,25 +72,10 @@ class JobViewSet(viewsets.ModelViewSet):
         job_postings = Job.objects.all()
         if self.request.user.id is None:
             return job_postings.filter(job_id=None)
-        user_job_posting_customizations = UserJobPosting.objects.all().filter(user_id=self.request.user.id)
-        if self.request.query_params.get("hidden", False) == 'true':
-            user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
-            job_postings = job_postings.filter(
-                Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-            )
-        elif self.request.query_params.get("applied", False) == 'true':
-            user_job_posting_customizations = user_job_posting_customizations.filter(applied=True)
-            job_postings = job_postings.filter(
-                Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-            )
-        else:
-            user_job_posting_customizations = user_job_posting_customizations.filter(hide=False).filter(applied=False)
-            job_postings = job_postings.filter(
-                Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
-                Q(userjobposting__isnull=True)
+        return get_job_postings(
+            self.request.query_params, job_postings, self.request.user.id
+        ).page(self.request.query_params['page']).object_list
 
-            )
-        return job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
 
 class UserJobPostingSerializer(serializers.ModelSerializer):
     class Meta:
