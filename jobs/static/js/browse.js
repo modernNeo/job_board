@@ -72,11 +72,14 @@ function goToPage(param, page_number) {
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
-        success: function (max_pages) {
-            setCookie("max_pages", max_pages);
+        success: function (response) {
+            response = JSON.parse(response);
+            const total_number_of_pages = response['total_number_of_pages']
+            setCookie("total_number_of_pages", total_number_of_pages);
+            setCookie("total_number_of_jobs", response['total_number_of_jobs']);
             if (page_number < 1) {
-                setCookie("page_number", max_pages);
-            } else if (page_number > max_pages) {
+                setCookie("page_number", total_number_of_pages);
+            } else if (page_number > total_number_of_pages) {
                 setCookie("page_number", 1)
             } else {
                 setCookie("page_number", page_number)
@@ -152,7 +155,7 @@ function updateJobList(jobs) {
         setCookie("currently_selected_job_index", null);
         setCookie("previously_selected_job_index", null);
         document.getElementById('company_info').replaceChildren();
-        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("max_pages")}`;
+        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("total_number_of_pages")} | Job 0/0`;
     }
 }
 function updateSelectedJobInList(currently_selected_job_index, currently_selected_job_id, jobs) {
@@ -169,12 +172,12 @@ function updateSelectedJobInList(currently_selected_job_index, currently_selecte
             'cache': false,
             success: function (jobs) {
                 updateCompanyPane(jobs, currently_selected_job_id);
-                document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("max_pages")}`;
+                document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("page_number")-1) * 25) + currently_selected_job_index+1}/${getCookie("total_number_of_jobs")}`;
             }
         });
     } else {
         updateCompanyPane(jobs, currently_selected_job_id);
-        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("max_pages")}`;
+        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("page_number")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("page_number")-1) * 25) + currently_selected_job_index+1}/${getCookie("total_number_of_jobs")}`;
     }
 }
 function addButton(function_call, string){

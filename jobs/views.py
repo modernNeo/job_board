@@ -1,3 +1,6 @@
+import json
+import pickle
+
 from django.core.paginator import Paginator
 from django.db.models import Q, F
 from django.http import HttpResponseRedirect, HttpResponse
@@ -28,8 +31,8 @@ def get_job_postings(params, job_postings, user_id):
             Q(userjobposting__isnull=True)
 
         )
-    job_postings = job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
-    return Paginator(job_postings, 25)
+    ordered_postings = job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
+    return Paginator(ordered_postings, 25), len(job_postings)
 
 
 class IndexPage(View):
@@ -51,10 +54,13 @@ class IndexPage(View):
 class PageNumbers(View):
 
     def get(self, request):
-        return 0 if self.request.user.id is None \
-            else HttpResponse(
-                get_job_postings(request.GET, Job.objects.all(), request.user.id).num_pages
-            )
+        jobs = Job.objects.all().filter(job_id=None) if self.request.user.id is None else Job.objects.all()
+        paginated_jobs, total_number_of_jobs = get_job_postings(request.GET, jobs, request.user.id)
+        response = {
+            'total_number_of_pages': paginated_jobs.num_pages,
+            'total_number_of_jobs': total_number_of_jobs
+        }
+        return HttpResponse(json.dumps(response))
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -74,7 +80,7 @@ class JobViewSet(viewsets.ModelViewSet):
             return job_postings.filter(job_id=None)
         return get_job_postings(
             self.request.query_params, job_postings, self.request.user.id
-        ).page(self.request.query_params['page']).object_list
+        )[0].page(self.request.query_params['page']).object_list
 
 
 class UserJobPostingSerializer(serializers.ModelSerializer):
