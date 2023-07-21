@@ -23,6 +23,8 @@ class IndexPage(View):
 
 
 class JobSerializer(serializers.ModelSerializer):
+    note = serializers.CharField(read_only=True)
+
     class Meta:
         model = Job
         fields = '__all__'

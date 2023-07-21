@@ -169,6 +169,11 @@ class Job(models.Model):
         max_length=5000
     )
 
+    @property
+    def note(self):
+        postings = self.userjobposting_set.all().first()
+        return postings.note if postings is not None else None
+
 
 class List(models.Model):
     name = models.CharField(

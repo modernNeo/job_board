@@ -106,6 +106,9 @@ function updateJobList(jobs) {
         job_item.setAttribute("id", jobs[i].id + "_list_item");
         job_item.setAttribute("onclick", "updateSelectedJobInList(" + i + ", " + jobs[i].id + ")");
         job_item.innerHTML = jobs[i].job_title + " || " + jobs[i].organisation_name;
+        if (jobs[i].note !== null){
+            job_item.innerHTML += ` *`;
+        }
         job_list.append(job_item);
         job_item.append(document.createElement("br"))
 
