@@ -174,6 +174,14 @@ class Job(models.Model):
         postings = self.userjobposting_set.all().first()
         return postings.note if postings is not None else None
 
+    @property
+    def lists(self):
+        lists = List.objects.all().filter(item__job_id=self.id)
+        if len(lists) == 0:
+            return ""
+        else:
+            return "<->" +  " || ".join(list(lists.values_list('name', flat=True)))
+
 
 class List(models.Model):
     name = models.CharField(

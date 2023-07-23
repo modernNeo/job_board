@@ -69,6 +69,7 @@ function showAppliedJobs() {
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
 function goToPage(list_of_jobs_url, param, page_number, list_id) {
+    document.getElementById('lists').replaceChildren();
     $.ajax({
         'url' : `${getCookie('lists_endpoint')}`,
         'type' : 'GET',
@@ -82,7 +83,6 @@ function goToPage(list_of_jobs_url, param, page_number, list_id) {
                 job_button.textContent = response[i].name;
                 document.getElementById('lists').appendChild(job_button);
             }
-            console.log(response);
         }
     })
     param = `${param}&page=${getCookie("page_number")}`
@@ -151,6 +151,7 @@ function updateJobList(jobs) {
         if (jobs[i].note !== null){
             job_item.innerHTML += ` *`;
         }
+        job_item.innerHTML += jobs[i].lists;
         job_list.append(job_item);
         job_item.append(document.createElement("br"))
 
@@ -231,6 +232,24 @@ function createCompanyTitle(company_title){
     header.innerHTML = company_title;
     return header;
 }
+function createListSelectSection(lists, job_lists_for_user, job_id) {
+    let job_list = document.createElement("div");
+    job_lists_for_user = new Map(job_lists_for_user.map(job_list_for_user => [job_list_for_user.id, job_list_for_user]))
+    for (let i = 0; i < lists.length; i++) {
+        let option = document.createElement("input");
+        option.setAttribute("type", "checkbox");
+        option.checked = job_lists_for_user.get(lists[i].id) !== undefined;
+        option.id = `job_list_${lists[i].id}`;
+        option.setAttribute("onclick", "addJobToList(" + job_id + ", " + lists[i].id + ")");
+        job_list.append(option);
+        let option_label = document.createElement("label");
+        option_label.setAttribute("for", `job_list_${lists[i].id}`);
+        option_label.textContent = lists[i].name;
+        job_list.append(option_label);
+    }
+    return job_list;
+}
+
 function createCompanyInfoLine(label, p_tag_id, value){
     let company_info = document.createElement(`company_info_${p_tag_id}`)
     let company_label = document.createElement("label");
@@ -255,48 +274,70 @@ function createLink(link) {
 function updateCompanyPane(jobs, job_obj_id) {
     jobs = new Map(jobs.map(job => [job.id, job]))
     const job = jobs.get(job_obj_id);
+    console.log("updateCompanyPane")
     $.ajax({
-        'url': getCookie('get_user_job_settings').replace("user_job_info_id/", job.id + "/"),
+        'url': `${getCookie('lists_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
-        success: function (resp) {
-            try {
-                const visible_job = !resp['hide'];
-                let company_info = document.getElementById('company_info');
-                company_info.replaceChildren();
-                company_info.appendChild(addButton(visible_job ? "hideJob(" + job.id+")" : "showJob(" + job.id+")", visible_job ? 'Hide Job' : 'Show Job'))
-                company_info.appendChild(addButton("toggle_applied(" + resp['applied'] + ", "+job.id+")", resp['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
-                company_info.append(document.createElement("br"), document.createElement("br"));
-                company_info.appendChild(createCompanyInfoLine("Applied : ", "none", resp['applied']))
-                company_info.appendChild(createCompanyNoteInfo(job.id, resp['note']));
-                company_info.appendChild(createCompanyTitle(job.job_title))
-                company_info.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
-                company_info.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
-                company_info.appendChild(createCompanyInfoLine("Remote Work Allowed : ", "remote_work_allowed_label", job.remote_work_allowed))
-                company_info.appendChild(createCompanyInfoLine("Workplace Type : ", "workplace_type_label", job.workplace_type))
-                company_info.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", job.date_posted))
-                company_info.appendChild(createCompanyInfoLine("Source : ", "source_label", job.source_domain))
-                company_info.appendChild(createCompanyInfoLine("Link : ", "link_label", job.organisation_name))
-                company_info.appendChild(createLink(job.linkedin_link));
-            } catch (e) {
-                console.log(e);
-            }
-            let previously_selected_job_id = getCookie("previously_selected_job_ids", job_obj_id);
-            if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(job_obj_id))) {
-                try {
-                    console.log(`removing highlighting for ${previously_selected_job_id}_list_item`);
-                    let previous_item = document.getElementById(`${previously_selected_job_id}_list_item`);
-                    previous_item.style = '';
-                    console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
-                } catch (e) {
-                    console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
-                }
+        success: function (all_lists) {
+            $.ajax({
+                'url': getCookie('get_user_job_settings').replace("user_job_info_id/", job.id + "/"),
+                'type': 'GET',
+                'cache': false,
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+                contentType: 'application/json; charset=utf-8',
+                success: function (user_job_settings) {
+                    $.ajax({
+                            'url': `${getCookie('lists_endpoint')}?job_id=${job.id}`,
+                            'type': 'GET',
+                            'cache': false,
+                            headers: {'X-CSRFToken': getCookie('csrftoken')},
+                            contentType: 'application/json; charset=utf-8',
+                            success: function (job_lists_for_user) {
+                                console.log(job_lists_for_user);
+                                try {
+                                    const visible_job = !user_job_settings['hide'];
+                                    let company_info = document.getElementById('company_info');
+                                    company_info.replaceChildren();
+                                    company_info.appendChild(addButton(visible_job ? "hideJob(" + job.id + ")" : "showJob(" + job.id + ")", visible_job ? 'Hide Job' : 'Show Job'))
+                                    company_info.appendChild(addButton("toggle_applied(" + user_job_settings['applied'] + ", " + job.id + ")", user_job_settings['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
+                                    company_info.append(document.createElement("br"), document.createElement("br"));
+                                    company_info.append(createListSelectSection(all_lists, job_lists_for_user, job.id), document.createElement("br"));
+                                    company_info.appendChild(createCompanyInfoLine("Applied : ", "none", user_job_settings['applied']))
+                                    company_info.appendChild(createCompanyNoteInfo(job.id, user_job_settings['note']));
+                                    company_info.appendChild(createCompanyTitle(job.job_title))
+                                    company_info.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
+                                    company_info.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
+                                    company_info.appendChild(createCompanyInfoLine("Remote Work Allowed : ", "remote_work_allowed_label", job.remote_work_allowed))
+                                    company_info.appendChild(createCompanyInfoLine("Workplace Type : ", "workplace_type_label", job.workplace_type))
+                                    company_info.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", job.date_posted))
+                                    company_info.appendChild(createCompanyInfoLine("Source : ", "source_label", job.source_domain))
+                                    company_info.appendChild(createCompanyInfoLine("Link : ", "link_label", job.organisation_name))
+                                    company_info.appendChild(createLink(job.linkedin_link));
+                                } catch (e) {
+                                    console.log(e);
+                                }
+                                let previously_selected_job_id = getCookie("previously_selected_job_ids", job_obj_id);
+                                if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(job_obj_id))) {
+                                    try {
+                                        console.log(`removing highlighting for ${previously_selected_job_id}_list_item`);
+                                        let previous_item = document.getElementById(`${previously_selected_job_id}_list_item`);
+                                        previous_item.style = '';
+                                        console.log(`removed highlighting for ${previously_selected_job_id}_list_item`);
+                                    } catch (e) {
+                                        console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
+                                    }
 
-            }
+                                }
+                            }
+                        }
+                    )
+                }
+            });
         }
-    });
+    })
 }
 function hideJob(job_obj_id) {
     setCookie("previously_selected_job_index",getCookie("currently_selected_job_index"))
@@ -399,15 +440,26 @@ function createNewList(url){
         data: JSON.stringify(data),
         contentType: 'application/json; charset=utf-8',
         success: function (list_info){
-            console.log(list_info);
             refreshJobView();
         }
     })
 
 }
 function showList(list_index) {
-    console.log(`showList-${list_index}`);
     setCookie("view",list_index);
     const list_of_jobs = getCookie('list_of_jobs');
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"), list_index);
+}
+function addJobToList(job_id, list_id) {
+    $.ajax({
+            'url': `${getCookie('item_endpoint')}?job_id=${job_id}&list_id=${list_id}`,
+            'type': 'POST',
+            'cache': false,
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json; charset=utf-8',
+            success: function () {
+                refreshJobView();
+            }
+        }
+    )
 }

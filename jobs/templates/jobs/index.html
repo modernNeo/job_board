@@ -17,6 +17,7 @@
         setCookie("get_user_job_settings","{% url "api:userjobposting-detail" "user_job_info_id" %}");
         setCookie("num_pages_endpoint","{% url "page_numbers" %}");
         setCookie('lists_endpoint', "{% url "api:list-list" %}");
+        setCookie('item_endpoint', "{% url "api:item-list" %}");
         browser_ready();
     });
 </script>
@@ -36,8 +37,8 @@
 <div style="width: 100%; overflow: hidden">
     <div style="width: 70%; float: left">
         {%  if user != "" %}
-        <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button>
-        <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name"><br><br>
+        <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name">
+            <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button><br><br>
         {%  endif %}
         <button onclick="showVisibleJobs('{% url "api:userjobposting-list" %}')">Visible Jobs</button>
         <button onclick="showHiddenJobs('{% url "api:userjobposting-list" %}')">Hidden Jobs</button>

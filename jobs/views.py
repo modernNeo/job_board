@@ -1,5 +1,4 @@
 import json
-import pickle
 
 from django.core.paginator import Paginator
 from django.db.models import Q, F
@@ -9,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets, status
 from rest_framework.response import Response
 
-from jobs.models import Job, UserJobPosting, ETLFile, List
+from jobs.models import Job, UserJobPosting, ETLFile, List, Item
 
 
 def get_job_postings(params, job_postings, user_id):
@@ -65,6 +64,7 @@ class PageNumbers(View):
 
 class JobSerializer(serializers.ModelSerializer):
     note = serializers.CharField(read_only=True)
+    lists = serializers.CharField(read_only=True)
 
     class Meta:
         model = Job
@@ -81,8 +81,8 @@ class JobViewSet(viewsets.ModelViewSet):
         if 'list' in self.request.query_params:
             list_id = self.request.query_params['list']
             list_id = None if list_id == 'undefined' else list_id
-            list_obj = List.objects.all().filter(id=list_id).first()
-            return Response(list_obj.joblistitem_set.all() if list_obj is not None else list_obj)
+            list_obj = Job.objects.all().filter(item__list_id=list_id)
+            return list_obj
         else:
             return get_job_postings(self.request.query_params, job_postings, self.request.user.id)[0].page(
                 self.request.query_params['page']).object_list
@@ -147,6 +147,25 @@ class UserJobPostingViewSet(viewsets.ModelViewSet):
         return Response("ok")
 
 
+class ItemCRUDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = '__all__'
+
+
+class ItemCRUDSet(viewsets.ModelViewSet):
+    serializer_class = ItemCRUDSerializer
+    queryset = Item.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        list_id = request.query_params['list_id']
+        job_id = request.query_params['job_id']
+        item = Item.objects.all().get_or_create(list_id=list_id, job_id=job_id)
+        item.save()
+        serializer = self.get_serializer(item)
+        return Response(serializer.data)
+
+
 class ListCRUDSerializer(serializers.ModelSerializer):
     class Meta:
         model = List
@@ -173,6 +192,22 @@ class ListCRUDSet(viewsets.ModelViewSet):
         # serializer.is_valid(raise_exception=True)
         # headers = self.get_success_headers(serializer.data)
         # return Response(json.dumps(list_obj, default=ListCRUDSerializer))
+
+    def get_queryset(self):
+        request = self.request
+        if 'job_id' in request.query_params:
+            return List.objects.all().filter(item__job_id=request.query_params['job_id'], user_id=request.user.id)
+        else:
+            return List.objects.all().filter(user_id=request.user.id)
+
+    # def list(self, request, *args, **kwargs):
+    #     if 'job_id' in request.query_params:
+    #         job = Job.objects.all().filter(id=request.query_params['job_id']).first()
+    #         lists = [item.list for item in job.item_set.all().filter(list__user_id=request.user.id)]
+    #         serializer = self.get_serializer(lists)
+    #         return Response(serializer.data)
+    #     else:
+    #         return super(ListCRUDSet, self).list(request, args, kwargs)
 
     # def list(self, request, *args, **kwargs):
     #     serializer = self.get_serializer(data=self.queryset.filter(user_id=request.user.id))
