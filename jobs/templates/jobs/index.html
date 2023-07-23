@@ -9,7 +9,12 @@
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="{%  static 'js/browse.js' %}"></script>
+<script src="{%  static 'js/load.js' %}"></script>
+<script src="{%  static 'js/element_creators.js' %}"></script>
+<script src="{%  static 'js/on_click_functions.js' %}"></script>
+<script src="{%  static 'js/refreshJobView.js' %}"></script>
+<script src="{%  static 'js/updating_job_posting.js' %}"></script>
+<script src="{%  static 'js/updating_lists.js' %}"></script>
 <script>
     $(document).ready(function () {
         setCookie("list_of_jobs","{% url "api:job-list" %}");

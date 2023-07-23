@@ -11,17 +11,17 @@ from rest_framework.response import Response
 from jobs.models import Job, UserJobPosting, ETLFile, List, Item
 
 
-def get_job_postings(params, job_postings, user_id):
+def get_job_postings(job_postings, user_id, list_parameter=None):
     user_job_posting_customizations = UserJobPosting.objects.all().filter(user_id=user_id)
-    if params['list'] == "all":
+    if list_parameter is None or list_parameter == "all":
         pass
-    elif params['list'] == "inbox":
+    elif list_parameter == "inbox":
         user_job_posting_customizations = user_job_posting_customizations.filter(archived=False)
         job_postings = job_postings.filter(
             Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
         )
     else:
-        job_postings = Job.objects.all().filter(item__list_id=int(params['list']), item__list__user_id=user_id)
+        job_postings = Job.objects.all().filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
     # elif params.get("hidden", False) == 'true':
     #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
     #     job_postings = job_postings.filter(
@@ -63,7 +63,7 @@ class PageNumbers(View):
 
     def get(self, request):
         jobs = Job.objects.all().filter(job_id=None) if self.request.user.id is None else Job.objects.all()
-        paginated_jobs, total_number_of_jobs = get_job_postings(request.GET, jobs, request.user.id)
+        paginated_jobs, total_number_of_jobs = get_job_postings(jobs, request.user.id, list_parameter=request.GET['list'])
         response = {
             'total_number_of_pages': paginated_jobs.num_pages,
             'total_number_of_jobs': total_number_of_jobs
@@ -83,19 +83,21 @@ class JobSerializer(serializers.ModelSerializer):
 class JobViewSet(viewsets.ModelViewSet):
     serializer_class = JobSerializer
 
+    def get_object(self):
+        return Job.objects.get(id=int(self.kwargs['pk']))
+
     def get_queryset(self):
         job_postings = Job.objects.all()
         if self.request.user.id is None:
             return job_postings.filter(job_id=None)
         if 'list' in self.request.query_params:
-            list_id = self.request.query_params['list']
-            if list_id == "all" or list_id == "inbox":
-                postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
-            else:
-                postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
+            postings = get_job_postings(job_postings, self.request.user.id, list_parameter=self.request.query_params['list'])
         else:
-            postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
-        return postings[0].page(self.request.query_params['page']).object_list
+            postings = get_job_postings(job_postings, self.request.user.id)
+        if 'page' in self.request.query_params:
+            return postings[0].page(self.request.query_params['page']).object_list
+        else:
+            return postings[0].page(1).object_list
 
 
 class UserJobPostingSerializer(serializers.ModelSerializer):
