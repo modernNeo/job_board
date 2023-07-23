@@ -174,6 +174,25 @@ class Job(models.Model):
         postings = self.userjobposting_set.all().first()
         return postings.note if postings is not None else None
 
+
+class List(models.Model):
+    name = models.CharField(
+        max_length=500
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+
+
+class Item(models.Model):
+    list = models.ForeignKey(
+        List, on_delete=models.CASCADE,
+    )
+    job = models.ForeignKey(
+        Job, on_delete=models.CASCADE,
+    )
+
+
 class UserJobPosting(models.Model):
     hide = models.BooleanField(
         default=False
