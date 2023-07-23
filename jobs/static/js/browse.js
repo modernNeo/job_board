@@ -30,36 +30,60 @@ function getCookie(name, value) {
 function browser_ready() {
     clearCookies();
     setCookie("page_number", 1);
-    showVisibleJobs()
+    showInbox()
+    refreshDeleteList()
 }
-function refreshJobView() {
-    const view = getCookie("view")
-    if (view === "applied_jobs") {
-        showAppliedJobs();
-    } else if (view === "hidden_jobs") {
-        showHiddenJobs();
-    } else {
-        showVisibleJobs();
-    }
 
-}
-function getParameterForView(){
-    const view = getCookie("view")
-    if (view === "applied_jobs") {
-        return `applied=true`;
-    } else if (view === "hidden_jobs") {
-        return `hidden=true`;
+function viewParameterOrFunction(view, return_type) {
+    if (view === "all_jobs") {
+        return (return_type === "func") ? showAllJobs : (return_type === "parameter") ? `list=all` : `All Jobs`;
+    } else if (view === "inbox") {
+        return (return_type === "func") ? showInbox : (return_type === "parameter") ? `list=inbox` : `Inbox`;
+    } else if (view.match(/^list_index_\d*$/)) {
+        $.ajax({
+            'url': `${getCookie('lists_endpoint')}`,
+            'type': 'GET',
+            'cache': false,
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json; charset=utf-8',
+            success: function (all_lists) {
+                const list_index = Number(view.slice(11));
+                for (let i = 0; i < all_lists.length; i++) {
+                    if (list_index === all_lists[i].id) {
+                        if (return_type === "header") {
+                            let header = document.createElement("h3");
+                            header.textContent = all_lists[i].name;
+                            document.getElementById("job_list_header").replaceChildren(header);
+                        }
+                        return (return_type === "func") ? `showList_${all_lists[i].id}` : (return_type === "parameter") ? `list_id=${all_lists[i].id}` : all_lists[i].name;
+                    }
+                }
+            }
+        })
     } else {
-        return `visible=true`;
+        return (return_type === "func") ? showInbox : (return_type === "parameter") ? `list=inbox` : `Inbox`;
     }
 }
-function showVisibleJobs() {
-    setCookie("view","visible_jobs")
+async function refreshJobView() {
+    const view = getCookie("view")
+    let func = await viewParameterOrFunction(view, "func");
+    if (typeof func === "function") {
+        func()
+    } else {
+        showList(Number(func.slice(9)));
+    }
+}
+function getParameterForView() {
+    const view = getCookie("view")
+    return viewParameterOrFunction(view, "parameter");
+}
+function showAllJobs() {
+    setCookie("view", "all_jobs")
     const list_of_jobs = getCookie('list_of_jobs');
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
-function showHiddenJobs() {
-    setCookie("view","hidden_jobs")
+function showInbox() {
+    setCookie("view", "inbox")
     const list_of_jobs = getCookie('list_of_jobs');
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
@@ -68,25 +92,53 @@ function showAppliedJobs() {
     const list_of_jobs = getCookie('list_of_jobs');
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
+function showList(list_index) {
+    setCookie("view",`list_index_${list_index}`);
+    const list_of_jobs = getCookie('list_of_jobs');
+    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"), list_index);
+}
+
+
+
+function showVisibleJobs() {
+    setCookie("view","inbox")
+    const list_of_jobs = getCookie('list_of_jobs');
+    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
+}
+
+function showHiddenJobs() {
+    setCookie("view","hidden_jobs")
+    const list_of_jobs = getCookie('list_of_jobs');
+    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
+}
+
 function goToPage(list_of_jobs_url, param, page_number, list_id) {
-    document.getElementById('lists').replaceChildren();
+    document.getElementById('lists_buttons').replaceChildren();
     $.ajax({
-        'url' : `${getCookie('lists_endpoint')}`,
-        'type' : 'GET',
-        'cache' : false,
+        'url': `${getCookie('lists_endpoint')}`,
+        'type': 'GET',
+        'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
         success: function (response) {
-            for (let i = 0; i < response.length; i++){
+            let job_button = document.createElement("button");
+            job_button.setAttribute("onclick", "showAllJobs()");
+            job_button.textContent = "All Jobs";
+            document.getElementById('lists_buttons').appendChild(job_button);
+            job_button = document.createElement("button");
+            job_button.setAttribute("onclick", "showInbox()");
+            job_button.textContent = "Inbox";
+            document.getElementById('lists_buttons').appendChild(job_button);
+            for (let i = 0; i < response.length; i++) {
                 let job_button = document.createElement("button");
-                job_button.setAttribute("onclick", "showList("+response[i].id+")");
+                job_button.setAttribute("onclick", "showList(" + response[i].id + ")");
                 job_button.textContent = response[i].name;
-                document.getElementById('lists').appendChild(job_button);
+                document.getElementById('lists_buttons').appendChild(job_button);
             }
         }
     })
     param = `${param}&page=${getCookie("page_number")}`
-    if (list_id !== undefined){
+    if (list_id !== undefined) {
         param += `&list=${list_id}`;
     }
     $.ajax({
@@ -121,13 +173,9 @@ function goToPage(list_of_jobs_url, param, page_number, list_id) {
 function updateJobList(jobs) {
     let header = document.createElement("h3");
     const view = getCookie("view")
-    if (view === "applied_jobs") {
-        header.textContent = "Applied Jobs";
-    } else if (view === "hidden_jobs") {
-        header.textContent = "Hidden Jobs";
-    } else {
-        header.textContent = "Jobs";
-    }
+    let ret = viewParameterOrFunction(view, "header");
+    console.log(`ret=${ret}`);
+    header.textContent = ret;
     document.getElementById("job_list_header").replaceChildren(header);
 
     let last_selected_job_id = null;
@@ -234,11 +282,8 @@ function createCompanyTitle(company_title){
 }
 function createListSelectSection(lists, job_lists_for_user, job_id) {
     let job_list = document.createElement("div");
-    console.log(job_lists_for_user);
     job_lists_for_user = new Map(job_lists_for_user.map(job_list_for_user => [job_list_for_user.list, job_list_for_user]))
-    console.log(job_lists_for_user);
     for (let i = 0; i < lists.length; i++) {
-        console.log(job_lists_for_user.get(lists[i].id));
         let option = document.createElement("input");
         option.setAttribute("type", "checkbox");
         option.checked = job_lists_for_user.get(lists[i].id) !== undefined;
@@ -281,7 +326,6 @@ function createLink(link) {
 function updateCompanyPane(jobs, job_obj_id) {
     jobs = new Map(jobs.map(job => [job.id, job]))
     const job = jobs.get(job_obj_id);
-    console.log("updateCompanyPane")
     $.ajax({
         'url': `${getCookie('lists_endpoint')}`,
         'type': 'GET',
@@ -404,7 +448,7 @@ function clearCookies() {
     setCookie("previously_selected_job_ids", null);
     setCookie("currently_selected_job_id", null);
     setCookie("currently_selected_job_index", null);
-    setCookie("view","visible_jobs")
+    setCookie("view","inbox")
 }
 function save_note(job_obj_id){
     setCookie("currently_selected_job_id", job_obj_id);
@@ -438,6 +482,7 @@ function createNewList(url){
     let data = {
         "name": document.getElementById("new_list_name").value
     }
+    document.getElementById("new_list_name").value = '';
     $.ajax({
         "url" : url,
         "type" : 'POST',
@@ -445,16 +490,59 @@ function createNewList(url){
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         data: JSON.stringify(data),
         contentType: 'application/json; charset=utf-8',
-        success: function (list_info){
+        success: function (){
             refreshJobView();
+            refreshDeleteList();
         }
     })
 
 }
-function showList(list_index) {
-    setCookie("view",list_index);
-    const list_of_jobs = getCookie('list_of_jobs');
-    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"), list_index);
+function refreshDeleteList() {
+    $.ajax({
+        'url': `${getCookie('lists_endpoint')}`,
+        'type': 'GET',
+        'cache': false,
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+        contentType: 'application/json; charset=utf-8',
+        success: function (all_lists) {
+            let delete_list = document.getElementById("delete_list");
+            let list_delete_drop_down = document.createElement("select");
+            for (let i = 0; i < all_lists.length; i++) {
+                let option = document.createElement("option")
+                option.value = all_lists[i].id;
+                option.innerText = all_lists[i].name;
+                list_delete_drop_down.appendChild(option);
+            }
+            list_delete_drop_down.id = 'delete_list_select_tag';
+            delete_list.replaceChildren();
+            if (all_lists.length > 0) {
+                let delete_label = document.createElement("label");
+                delete_label.textContent = "List to delete: ";
+                delete_list.appendChild(delete_label);
+                delete_list.appendChild(list_delete_drop_down);
+
+                let delete_list_button = document.createElement("button");
+                delete_list_button.textContent = "Delete";
+                delete_list_button.setAttribute("onclick", "deleteList()");
+                delete_list.appendChild(delete_list_button);
+            }
+            delete_list.append(document.createElement("br"), document.createElement("br"))
+        }
+    })
+}
+function deleteList() {
+    const item_to_delete_index = document.getElementById("delete_list_select_tag").value
+        $.ajax({
+        "url" : `${getCookie("lists_endpoint")}${item_to_delete_index}`,
+        "type" : 'DELETE',
+        'cache' : false,
+        headers: {'X-CSRFToken': getCookie('csrftoken')},
+        contentType: 'application/json; charset=utf-8',
+        success: function (){
+            refreshJobView();
+            refreshDeleteList();
+        }
+    })
 }
 function addJobToList(job_id, list_id) {
     $.ajax({

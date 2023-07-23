@@ -25,32 +25,30 @@
     <a href="/admin/login/?next=/">Login</a>
 {%  else %}
     <a href="/admin/logout/?next=/">Logout</a>
+    <button onclick="clearCookies()">Clear Cookies</button>
 {%  endif %}
 <br><br>
 {%  if user == "jace" %}
     <form method="post" class="form" enctype="multipart/form-data">
         {% csrf_token %}
-        <br><br><input id="media_uploads" type="file" name="linkedin_exports" multiple="multiple">
-        <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br>
+        <br><input id="media_uploads" type="file" name="linkedin_exports" multiple="multiple">
+        <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br><br>
     </form>
-{%  endif %}
-<div style="width: 100%; overflow: hidden">
-    <div style="width: 70%; float: left">
-        {%  if user != "" %}
-        <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name">
-            <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button><br><br>
-        {%  endif %}
-        <button onclick="showVisibleJobs('{% url "api:userjobposting-list" %}')">Visible Jobs</button>
-        <button onclick="showHiddenJobs('{% url "api:userjobposting-list" %}')">Hidden Jobs</button>
-        <button onclick="showAppliedJobs('{% url "api:userjobposting-list" %}')">Applied Jobs</button>
-        <button onclick="clearCookies()">Clear Cookies</button><br>
-        <div id="lists"></div>
-        <div id="job_list_header"></div>
-        <div id="job_list" class="overflow_box"></div>
-        <div id="number_of_jobs"></div>
-        <button onclick="goToPreviousPage()">Previous Page</button>
-        <button onclick="goToNextPage()">Next Page</button><br>
-    </div>
-    <div style="width: 30%; float: right" id="company_info"></div>
+    <div style="width: 100%; overflow: hidden">
+        <div style="width: 70%; float: left">
+            {%  if user != "" %}
+                <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name">
+                <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button><br>
+            {%  endif %}
+            <div id="delete_list"></div>
+            <div id="lists_buttons"></div>
+            <div id="job_list_header"></div>
+            <div id="job_list" class="overflow_box"></div>
+            <div id="number_of_jobs"></div>
+            <button onclick="goToPreviousPage()">Previous Page</button>
+            <button onclick="goToNextPage()">Next Page</button><br>
+        </div>
+        <div style="width: 30%; float: right" id="company_info"></div>
 
-</div>
+    </div>
+{%  endif %}

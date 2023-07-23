@@ -180,7 +180,7 @@ class Job(models.Model):
         if len(lists) == 0:
             return ""
         else:
-            return "<->" +  " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
+            return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
 
 
 class List(models.Model):
@@ -213,6 +213,9 @@ class UserJobPosting(models.Model):
         default=None,
         blank=True,
         null=True
+    )
+    archived = models.BooleanField(
+        default=False
     )
     user = models.ForeignKey(
         User, on_delete=models.CASCADE
