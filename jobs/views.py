@@ -118,52 +118,48 @@ class UserJobPostingViewSet(viewsets.ModelViewSet):
         return Response("ok")
 
 
-class ItemCRUDSerializer(serializers.ModelSerializer):
+class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = '__all__'
 
 
-class ItemCRUDSet(viewsets.ModelViewSet):
-    serializer_class = ItemCRUDSerializer
+class ItemSet(viewsets.ModelViewSet):
+    serializer_class = ItemSerializer
     queryset = Item.objects.all()
 
     def create(self, request, *args, **kwargs):
         list_id = request.query_params['list_id']
         job_id = request.query_params['job_id']
-        item_obj, new = Item.objects.all().get_or_create(list_id=list_id, job_id=job_id)
+        item_obj, new = self.queryset.get_or_create(list_id=list_id, job_id=job_id)
         item_obj.save()
         serializer = self.get_serializer(item_obj)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        item = self.queryset.first()
+        item = self.queryset.filter(id=int(kwargs['pk'])).first()
         if item is not None:
             item.delete()
         return Response("ok")
 
     def get_queryset(self):
+        items = self.queryset
         if 'job_id' in self.request.query_params:
-            return Item.objects.all().filter(job_id=self.request.query_params['job_id'])
-        elif 'pk' in self.request.parser_context['kwargs']:
-            item_id = self.request.parser_context['kwargs']['pk']
-            return Item.objects.filter(id=item_id)
+            items = items.filter(job_id=self.request.query_params['job_id'])
+        return items
 
 
-class ListCRUDSerializer(serializers.ModelSerializer):
+class ListSerializer(serializers.ModelSerializer):
     class Meta:
         model = List
         fields = '__all__'
 
 
-class ListCRUDSet(viewsets.ModelViewSet):
-    serializer_class = ListCRUDSerializer
+class ListSet(viewsets.ModelViewSet):
+    serializer_class = ListSerializer
     queryset = List.objects.all()
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-        data['user'] = request.user.id
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -172,7 +168,7 @@ class ListCRUDSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         request = self.request
+        lists = self.queryset
         if 'job_id' in request.query_params:
-            return List.objects.all().filter(item__job_id=request.query_params['job_id'], user_id=request.user.id)
-        else:
-            return List.objects.all().filter(user_id=request.user.id)
+            lists = lists.filter(item__job_id=request.query_params['job_id'])
+        return lists.filter(user_id=request.user.id)
