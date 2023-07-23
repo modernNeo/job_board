@@ -234,13 +234,20 @@ function createCompanyTitle(company_title){
 }
 function createListSelectSection(lists, job_lists_for_user, job_id) {
     let job_list = document.createElement("div");
-    job_lists_for_user = new Map(job_lists_for_user.map(job_list_for_user => [job_list_for_user.id, job_list_for_user]))
+    console.log(job_lists_for_user);
+    job_lists_for_user = new Map(job_lists_for_user.map(job_list_for_user => [job_list_for_user.list, job_list_for_user]))
+    console.log(job_lists_for_user);
     for (let i = 0; i < lists.length; i++) {
+        console.log(job_lists_for_user.get(lists[i].id));
         let option = document.createElement("input");
         option.setAttribute("type", "checkbox");
         option.checked = job_lists_for_user.get(lists[i].id) !== undefined;
         option.id = `job_list_${lists[i].id}`;
-        option.setAttribute("onclick", "addJobToList(" + job_id + ", " + lists[i].id + ")");
+        if (option.checked){
+            option.setAttribute("onclick", "removeJobToList(" + job_lists_for_user.get(lists[i].id).id + ")");
+        }else {
+            option.setAttribute("onclick", "addJobToList(" + job_id + ", " + lists[i].id + ")");
+        }
         job_list.append(option);
         let option_label = document.createElement("label");
         option_label.setAttribute("for", `job_list_${lists[i].id}`);
@@ -290,13 +297,12 @@ function updateCompanyPane(jobs, job_obj_id) {
                 contentType: 'application/json; charset=utf-8',
                 success: function (user_job_settings) {
                     $.ajax({
-                            'url': `${getCookie('lists_endpoint')}?job_id=${job.id}`,
+                            'url': `${getCookie('item_endpoint')}?job_id=${job.id}`,
                             'type': 'GET',
                             'cache': false,
                             headers: {'X-CSRFToken': getCookie('csrftoken')},
                             contentType: 'application/json; charset=utf-8',
                             success: function (job_lists_for_user) {
-                                console.log(job_lists_for_user);
                                 try {
                                     const visible_job = !user_job_settings['hide'];
                                     let company_info = document.getElementById('company_info');
@@ -454,6 +460,19 @@ function addJobToList(job_id, list_id) {
     $.ajax({
             'url': `${getCookie('item_endpoint')}?job_id=${job_id}&list_id=${list_id}`,
             'type': 'POST',
+            'cache': false,
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json; charset=utf-8',
+            success: function () {
+                refreshJobView();
+            }
+        }
+    )
+}
+function removeJobToList(item_id){
+        $.ajax({
+            'url': `${getCookie('item_endpoint')}${item_id}`,
+            'type': 'DELETE',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
             contentType: 'application/json; charset=utf-8',
