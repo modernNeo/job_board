@@ -93,8 +93,10 @@ function showAppliedJobs() {
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
 function showList(list_index) {
+    setCookie("page_number", 1)
     setCookie("view",`list_index_${list_index}`);
     const list_of_jobs = getCookie('list_of_jobs');
+    console.log(`list_index=${list_index}`);
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"), list_index);
 }
 
@@ -112,7 +114,7 @@ function showHiddenJobs() {
     goToPage(list_of_jobs, getParameterForView(), getCookie("page_number"));
 }
 
-function goToPage(list_of_jobs_url, param, page_number, list_id) {
+function goToPage(list_of_jobs_url, params, page_number, list_id) {
     document.getElementById('lists_buttons').replaceChildren();
     $.ajax({
         'url': `${getCookie('lists_endpoint')}`,
@@ -137,12 +139,22 @@ function goToPage(list_of_jobs_url, param, page_number, list_id) {
             }
         }
     })
-    param = `${param}&page=${getCookie("page_number")}`
+
+    let list_of_jobs_param = '';
+    let num_pages_param = '';
     if (list_id !== undefined) {
-        param += `&list=${list_id}`;
+        list_of_jobs_param += `list=${list_id}`;
+        num_pages_param += `list=${list_id}`;
+    }else{
+        list_of_jobs_param += `${params}`;
+        num_pages_param += `${params}`;
     }
+    console.log(`list_id[${list_id}]`);
+    console.log(`params[${params}]`);
+    console.log(`list_of_jobs_param[${list_of_jobs_param}]`);
+    console.log(`num_pages_param[${num_pages_param}]`);
     $.ajax({
-        'url': `${getCookie('num_pages_endpoint')}?${param}`,
+        'url': `${getCookie('num_pages_endpoint')}?${num_pages_param}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -159,8 +171,9 @@ function goToPage(list_of_jobs_url, param, page_number, list_id) {
             } else {
                 setCookie("page_number", page_number)
             }
+            list_of_jobs_param += `&page=${getCookie("page_number")}`;
             $.ajax({
-                'url': `${list_of_jobs_url}?${param}`,
+                'url': `${list_of_jobs_url}?${list_of_jobs_param}`,
                 'type': 'GET',
                 'cache': false,
                 success: function (jobs) {
@@ -476,7 +489,10 @@ function goToPreviousPage() {
 }
 function goToNextPage() {
     const list_of_jobs = getCookie('list_of_jobs');
-    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number")+1);
+    const view = getCookie("view");
+    console.log(`list_index=${view}`);
+    const list_id = view.match(/^list_index_\d*$/) ? Number(view.slice(11)) : view;
+    goToPage(list_of_jobs, getParameterForView(), getCookie("page_number")+1, list_id);
 }
 function createNewList(url){
     let data = {

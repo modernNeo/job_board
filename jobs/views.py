@@ -20,23 +20,25 @@ def get_job_postings(params, job_postings, user_id):
         job_postings = job_postings.filter(
             Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
         )
-    elif params.get("hidden", False) == 'true':
-        user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
-        job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-        )
-    elif params.get("applied", False) == 'true':
-        user_job_posting_customizations = user_job_posting_customizations.filter(applied=True)
-        job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-        )
     else:
-        user_job_posting_customizations = user_job_posting_customizations.filter(hide=False).filter(applied=False)
-        job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
-            Q(userjobposting__isnull=True)
-
-        )
+        job_postings = Job.objects.all().filter(item__list_id=int(params['list']), item__list__user_id=user_id)
+    # elif params.get("hidden", False) == 'true':
+    #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
+    #     job_postings = job_postings.filter(
+    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
+    #     )
+    # elif params.get("applied", False) == 'true':
+    #     user_job_posting_customizations = user_job_posting_customizations.filter(applied=True)
+    #     job_postings = job_postings.filter(
+    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
+    #     )
+    # else:
+    #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=False).filter(applied=False)
+    #     job_postings = job_postings.filter(
+    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
+    #         Q(userjobposting__isnull=True)
+    #
+    #     )
     ordered_postings = job_postings.order_by(F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title')
     return Paginator(ordered_postings, 25), len(job_postings)
 
@@ -90,9 +92,7 @@ class JobViewSet(viewsets.ModelViewSet):
             if list_id == "all" or list_id == "inbox":
                 postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
             else:
-                list_id = None if list_id == 'undefined' else list_id
-                list_obj = Job.objects.all().filter(item__list_id=list_id)
-                return list_obj
+                postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
         else:
             postings = get_job_postings(self.request.query_params, job_postings, self.request.user.id)
         return postings[0].page(self.request.query_params['page']).object_list
