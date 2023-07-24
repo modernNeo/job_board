@@ -113,7 +113,7 @@ async function addJobToList(jobId, listId) {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    await refreshDeleteListDropDown(allLists);
+    setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
     await refreshAfterJobOrListUpdate(allLists);
 }
 async function removeJobFromList(itemObjId) {
@@ -134,7 +134,7 @@ async function removeJobFromList(itemObjId) {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    await refreshDeleteListDropDown(allLists);
+    setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
     await refreshAfterJobOrListUpdate(allLists);
 }
 
