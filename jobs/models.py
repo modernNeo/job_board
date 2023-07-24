@@ -171,10 +171,10 @@ class Job(models.Model):
 
     @property
     def note(self):
-        postings = self.userjobposting_set.all().first()
-        if postings is not None:
-            return postings.note
-        note = self.jobnote_set.all().first()
+        posting = self.userjobposting
+        if posting is not None:
+            return posting.note
+        note = self.jobnote
         return note.note if note is not None else None
 
     @property
