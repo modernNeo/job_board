@@ -211,13 +211,13 @@ class JobNoteSet(viewsets.ModelViewSet):
         return super(JobNoteSet, self).create(request, args, kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        job_note = self.queryset.filter(id=int(kwargs['pk'])).first()
+        job_note = self.queryset.filter(job_id=int(kwargs['pk'])).first()
         if job_note is not None:
             job_note.delete()
         return Response("ok")
 
     def get_queryset(self):
         job_note = self.queryset
-        if 'job_id' in self.request.query_params:
-            job_note = job_note.filter(job_id=self.request.query_params['job_id'])
+        if 'pk' in self.kwargs:
+            job_note = job_note.filter(job_id=self.kwargs['pk'])
         return job_note
