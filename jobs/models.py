@@ -190,7 +190,7 @@ class List(models.Model):
     name = models.CharField(
         max_length=500
     )
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User, on_delete=models.CASCADE
     )
 
@@ -211,7 +211,7 @@ class JobNote(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
-    job = models.ForeignKey(
+    job = models.OneToOneField(
         Job, on_delete=models.CASCADE,
     )
 
@@ -232,7 +232,7 @@ class UserJobPosting(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
-    job_posting = models.ForeignKey(
+    job_posting = models.OneToOneField(
         Job, on_delete=models.CASCADE
     )
 
