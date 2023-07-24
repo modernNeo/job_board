@@ -230,16 +230,18 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     }
     appliedFunctionCall += `)`;
 
-    let archivedFunctionCall = `toggle_archived(${userSpecificArchivedItem !== undefined}, ${job.id}, ${archivedListId}`;
-    if (userSpecificArchivedItem !== undefined) {
-        archivedFunctionCall += `, ${userSpecificArchivedItem.id}`;
-    }
-    archivedFunctionCall += `)`;
 
     let jobPostingInfo = document.getElementById('company_info');
     jobPostingInfo.replaceChildren();
     jobPostingInfo.appendChild(addButton(appliedFunctionCall, userSpecificAppliedItem === undefined ? "Mark as Applied" : 'Mark as Un-Applied'))
-    jobPostingInfo.appendChild(addButton(archivedFunctionCall, userSpecificArchivedItem === undefined ? "Archive" : 'Un-Archive'))
+    if (userSpecificItems.size > 0) {
+        let archivedFunctionCall = `toggle_archived(${userSpecificArchivedItem !== undefined}, ${job.id}, ${archivedListId}`;
+        if (userSpecificArchivedItem !== undefined) {
+            archivedFunctionCall += `, ${userSpecificArchivedItem.id}`;
+        }
+        archivedFunctionCall += `)`;
+        jobPostingInfo.appendChild(addButton(archivedFunctionCall, userSpecificArchivedItem === undefined ? "Archive" : 'Un-Archive'))
+    }
     jobPostingInfo.append(document.createElement("br"), document.createElement("br"));
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     jobPostingInfo.appendChild(createCompanyInfoLine("Applied : ", "none", userSpecificItems.get(appliedListId) !== undefined))
