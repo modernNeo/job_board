@@ -15,13 +15,21 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     user_job_posting_customizations = UserJobPosting.objects.all().filter(user_id=user_id)
     if list_parameter is None or list_parameter == "all":
         pass
-    elif list_parameter == "inbox":
-        user_job_posting_customizations = user_job_posting_customizations.filter(archived=False)
+    if list_parameter == "inbox":
         job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
+            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
+            Q(userjobposting__isnull=True)
         )
-    else:
-        job_postings = Job.objects.all().filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
+        job_postings = job_postings.exclude(item__list__name='Applied')
+    if f"{list_parameter}".isdigit():
+        job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
+    if list_parameter == 'archived':
+        job_postings = job_postings.filter(
+            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
+            # capturing any jobs that still use the Posting table
+            (Q(userjobposting__isnull=True) & Q(item__isnull=True))
+            # if a job has neither object
+        )
     # elif params.get("hidden", False) == 'true':
     #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
     #     job_postings = job_postings.filter(
@@ -63,7 +71,8 @@ class PageNumbers(View):
 
     def get(self, request):
         jobs = Job.objects.all().filter(job_id=None) if self.request.user.id is None else Job.objects.all()
-        paginated_jobs, total_number_of_jobs = get_job_postings(jobs, request.user.id, list_parameter=request.GET['list'])
+        paginated_jobs, total_number_of_jobs = get_job_postings(jobs, request.user.id,
+                                                                list_parameter=request.GET['list'])
         response = {
             'total_number_of_pages': paginated_jobs.num_pages,
             'total_number_of_jobs': total_number_of_jobs
@@ -91,7 +100,8 @@ class JobViewSet(viewsets.ModelViewSet):
         if self.request.user.id is None:
             return job_postings.filter(job_id=None)
         if 'list' in self.request.query_params:
-            postings = get_job_postings(job_postings, self.request.user.id, list_parameter=self.request.query_params['list'])
+            postings = get_job_postings(job_postings, self.request.user.id,
+                                        list_parameter=self.request.query_params['list'])
         else:
             postings = get_job_postings(job_postings, self.request.user.id)
         if 'page' in self.request.query_params:
@@ -126,6 +136,8 @@ class UserJobPostingViewSet(viewsets.ModelViewSet):
             posting.applied = request.data["applied"]
         if request.data.get("note", None) is not None:
             posting.note = request.data['note']
+        if request.data.get("archived", None) is not None:
+            posting.archived = request.data['archived']
         posting.save()
         return Response("ok")
 

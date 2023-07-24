@@ -172,7 +172,10 @@ class Job(models.Model):
     @property
     def note(self):
         postings = self.userjobposting_set.all().first()
-        return postings.note if postings is not None else None
+        if postings is not None:
+            return postings.note
+        note = self.jobnote_set.all().first()
+        return note.note if note is not None else None
 
     @property
     def lists(self):
@@ -195,6 +198,18 @@ class List(models.Model):
 class Item(models.Model):
     list = models.ForeignKey(
         List, on_delete=models.CASCADE,
+    )
+    job = models.ForeignKey(
+        Job, on_delete=models.CASCADE,
+    )
+
+
+class JobNote(models.Model):
+    note = models.CharField(
+        max_length=500
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
     )
     job = models.ForeignKey(
         Job, on_delete=models.CASCADE,

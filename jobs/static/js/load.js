@@ -39,7 +39,8 @@ async function browser_ready() {
         contentType: 'application/json; charset=utf-8',
         async: false
     }).responseText)
-    await refreshDeleteList(all_lists)
+    await refreshDeleteListDropDown(all_lists)
+    await showListButton(all_lists)
     await showInbox(all_lists)
 }
 
@@ -51,65 +52,12 @@ function clearCookies() {
     setCookie("view","inbox")
 }
 
-async function showAllJobs() {
-    const all_lists = JSON.parse($.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
-        'type': 'GET',
-        'cache': false,
-        headers: {'X-CSRFToken': getCookie('csrftoken')},
-        contentType: 'application/json; charset=utf-8',
-        async: false
-    }).responseText)
-    setCookie("view", "all_jobs")
-    await goToPage(all_lists, 0);
-}
-async function showInbox(all_lists) {
-    if (all_lists === undefined) {
-        all_lists = JSON.parse($.ajax({
-            'url': `${getCookie('lists_endpoint')}`,
-            'type': 'GET',
-            'cache': false,
-            headers: {'X-CSRFToken': getCookie('csrftoken')},
-            contentType: 'application/json; charset=utf-8',
-            async: false
-        }).responseText)
-        setCookie("view", "all_jobs")
-    }
-    setCookie("view", "inbox")
-    await goToPage(all_lists, 0);
-}
 async function showAppliedJobs(all_lists) {
     setCookie("view", "applied_jobs")
     await goToPage(all_lists, 0);
 }
-async function showList(list_obj_id, all_lists) {
-    setCookie("page_number", 1)
-    setCookie("view", `list_index_${list_obj_id}`);
-    await goToPage(all_lists, 0, list_obj_id);
-}
-
-
-
-
 
 async function goToPage(all_lists, new_page_difference, list_obj_id) {
-    document.getElementById('lists_buttons').replaceChildren();
-    let job_button = document.createElement("button");
-    job_button.setAttribute("onclick", "showAllJobs()");
-    job_button.textContent = "All Jobs";
-    document.getElementById('lists_buttons').appendChild(job_button);
-    job_button = document.createElement("button");
-    job_button.setAttribute("onclick", "showInbox()");
-    job_button.textContent = "Inbox";
-    document.getElementById('lists_buttons').appendChild(job_button);
-    console.log(all_lists);
-    for (let i = 0; i < all_lists.length; i++) {
-        let job_button = document.createElement("button");
-        job_button.setAttribute("onclick", "showList(" + all_lists[i].id + ")");
-        job_button.textContent = all_lists[i].name;
-        document.getElementById('lists_buttons').appendChild(job_button);
-    }
-
     let param = '';
     if (list_obj_id !== undefined) {
         param += `list=${list_obj_id}`;
@@ -148,13 +96,17 @@ async function goToPage(all_lists, new_page_difference, list_obj_id) {
 
 async function getListFuncOrParameterOrHeader(all_lists, return_type) {
     const view = getCookie("view")
+    console.log(view);
     if (view === "all_jobs") {
         return (return_type === "func") ? showAllJobs : (return_type === "parameter") ? `list=all` : `All Jobs`;
     } else if (view === "inbox") {
         return (return_type === "func") ? showInbox : (return_type === "parameter") ? `list=inbox` : `Inbox`;
+    }else if (view === "archived"){
+        return (return_type === "func") ? showArchived : (return_type === "parameter") ? `list=archived` : `Archived`;
     } else if (view.match(/^list_index_\d*$/)) {
         const list_index = Number(view.slice(11));
         for (let i = 0; i < all_lists.length; i++) {
+            console.log(`${list_index}-${all_lists[i].id}`);
             if (list_index === all_lists[i].id) {
                 return (return_type === "func") ? `showList_${all_lists[i].id}` : (return_type === "parameter") ? `list_id=${all_lists[i].id}` : all_lists[i].name;
             }
@@ -276,6 +228,7 @@ function updateCompanyPane(all_lists, list_of_jobs, job_obj_id) {
                             company_info.replaceChildren();
                             company_info.appendChild(addButton(visible_job ? "hideJob(" + job.id + ")" : "showJob(" + job.id + ")", visible_job ? 'Hide Job' : 'Show Job'))
                             company_info.appendChild(addButton("toggle_applied(" + user_job_settings['applied'] + ", " + job.id + ")", user_job_settings['applied'] ? 'Mark as Unapplied' : "Mark as Applied"))
+                            company_info.appendChild(addButton("toggle_archived(" + user_job_settings['archived'] + ", " + job.id + ")", user_job_settings['archived'] ? 'Unarchive' : "Archive"))
                             company_info.append(document.createElement("br"), document.createElement("br"));
                             company_info.append(createListSelectSection(all_lists, job_lists_for_user, job.id), document.createElement("br"));
                             company_info.appendChild(createCompanyInfoLine("Applied : ", "none", user_job_settings['applied']))

@@ -1,5 +1,5 @@
 
-async function refreshJobView(all_lists) {
+async function refresh_after_job_or_list_update(all_lists) {
     let func = await getListFuncOrParameterOrHeader(all_lists, "func");
     if (typeof func === "function") {
         await func()

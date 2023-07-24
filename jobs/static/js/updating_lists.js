@@ -1,5 +1,5 @@
 
-function refreshDeleteList(all_lists) {
+function refreshDeleteListDropDown(all_lists) {
     let delete_list = document.getElementById("delete_list");
     let list_delete_drop_down = document.createElement("select");
     for (let i = 0; i < all_lists.length; i++) {
@@ -25,6 +25,27 @@ function refreshDeleteList(all_lists) {
 }
 
 
+async function showListButton(all_lists) {
+    document.getElementById('lists_buttons').replaceChildren();
+    let job_button = document.createElement("button");
+    job_button.setAttribute("onclick", "showAllJobs()");
+    job_button.textContent = "All Jobs";
+    document.getElementById('lists_buttons').appendChild(job_button);
+    job_button = document.createElement("button");
+    job_button.setAttribute("onclick", "showInbox()");
+    job_button.textContent = "Inbox";
+    document.getElementById('lists_buttons').appendChild(job_button);
+    job_button = document.createElement("button");
+    job_button.setAttribute("onclick", "showArchived()");
+    job_button.textContent = "Archived";
+    document.getElementById('lists_buttons').appendChild(job_button);
+    for (let i = 0; i < all_lists.length; i++) {
+        let job_button = document.createElement("button");
+        job_button.setAttribute("onclick", "showList(" + all_lists[i].id + ")");
+        job_button.textContent = all_lists[i].name;
+        document.getElementById('lists_buttons').appendChild(job_button);
+    }
+}
 
 
 async function createNewList(url) {
@@ -49,8 +70,8 @@ async function createNewList(url) {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    await refreshDeleteList(all_lists);
-    await refreshJobView(all_lists);
+    await refreshDeleteListDropDown(all_lists);
+    await refresh_after_job_or_list_update(all_lists);
 }
 
 async function deleteList() {
@@ -71,8 +92,8 @@ async function deleteList() {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    await refreshDeleteList(all_lists);
-    await refreshJobView(all_lists);
+    await refreshDeleteListDropDown(all_lists);
+    await refresh_after_job_or_list_update(all_lists);
 }
 // async function addJobToList(job_id, list_id) {
 //     $.ajax({

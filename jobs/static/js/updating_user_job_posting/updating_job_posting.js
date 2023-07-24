@@ -23,6 +23,15 @@ async function toggle_applied(job_applied, job_obj_id) {
     await updating_job_and_view(job_obj_id, data);
 }
 
+async function toggle_archived(job_applied, job_obj_id) {
+    setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"))
+    let data = {
+        "id": job_obj_id,
+        "archived": !job_applied
+    }
+    await updating_job_and_view(job_obj_id, data);
+}
+
 async function save_note(job_obj_id) {
     setCookie("currently_selected_job_id", job_obj_id);
     let data = {
@@ -49,6 +58,6 @@ async function updating_job_and_view(job_obj_id, data){
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    await refreshJobView(all_lists);
+    await refresh_after_job_or_list_update(all_lists);
 }
 

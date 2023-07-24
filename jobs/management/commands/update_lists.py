@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 
-from jobs.models import UserJobPosting, List, Item
+from jobs.models import UserJobPosting, List, Item, JobNote
 
 
 class Command(BaseCommand):
@@ -14,12 +14,9 @@ class Command(BaseCommand):
         not_developer_job_list, new = List.objects.all().get_or_create(name='Not Developer Job', user_id=1)
         wants_blurb_list, new = List.objects.all().get_or_create(name='Want a Blurb', user_id=1)
         for user_job_posting in user_job_postings:
-            log = []
             if user_job_posting.applied:
-                log.append("job saved to apply")
                 Item.objects.all().get_or_create(list=applied_list, job=user_job_posting.job_posting)
             if user_job_posting.hide:
-                log.append("job saved to hidden")
                 Item.objects.all().get_or_create(list=hidden_list, job=user_job_posting.job_posting)
             if user_job_posting.note is None or len(user_job_posting.note.strip()) == 0:
                 user_job_posting.delete()
@@ -37,4 +34,7 @@ class Command(BaseCommand):
                 user_job_posting.delete()
             elif "blurb" in user_job_posting.note.strip().lower():
                 Item.objects.all().get_or_create(list=wants_blurb_list, job=user_job_posting.job_posting)
+                user_job_posting.delete()
+            else:
+                JobNote.objects.all().get_or_create(note=user_job_posting.note.strip(),job=user_job_posting.job_posting)
                 user_job_posting.delete()
