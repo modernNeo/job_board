@@ -32,7 +32,7 @@ async function browserReady() {
     clearCookies();
     setCookie("pageNumber", 1);
     const allLists = JSON.parse($.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -64,7 +64,6 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     } else {
         param += `${await getListFuncOrParameterOrHeader(allLists, "parameter")}`;
     }
-    console.log(`list_of_jobs_param[${param}]`);
     let numPagesInfo = JSON.parse($.ajax({
         'url': `${getCookie('num_pages_endpoint')}?${param}`,
         'type': 'GET',
@@ -73,8 +72,8 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
         contentType: 'application/json; charset=utf-8',
         async: false
     }).responseText)
-    const totalNumberOfPages = numPagesInfo['totalNumberOfPages']
-    setCookie("totalNumberOfPages", totalNumberOfPages);
+    const totalNumberOfPages = numPagesInfo['total_number_of_pages']
+    setCookie("total_number_of_pages", totalNumberOfPages);
     setCookie("total_number_of_jobs", numPagesInfo['total_number_of_jobs']);
     const pageNumber = getCookie("pageNumber") + newPageDifference;
     if (pageNumber < 1) {
@@ -86,7 +85,7 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     }
     param += `&page=${getCookie("pageNumber")}`;
     let listOfJobs = JSON.parse($.ajax({
-        'url': `${getCookie('list_of_jobs')}?${param}`,
+        'url': `${getCookie('list_of_jobs_endpoint')}?${param}`,
         'type': 'GET',
         'cache': false,
         async: false
@@ -169,7 +168,7 @@ async function updateJobList(listOfJobs, allLists) {
         setCookie("currently_selected_job_index", null);
         setCookie("previously_selected_job_index", null);
         document.getElementById('company_info').replaceChildren();
-        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("totalNumberOfPages")} | Job 0/0`;
+        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job 0/0`;
     }
 }
 
@@ -182,14 +181,14 @@ async function updateSelectedJobInList(currentlySelectedJobIndex, currentlySelec
     console.log(`adding highlighting to ${currentlySelectedJobId}_list_item`);
     item.style = 'color: blue';
     updateCompanyPane(allLists, listOfJobs, currentlySelectedJobId);
-    document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("totalNumberOfPages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/${getCookie("total_number_of_jobs")}`;
+    document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/${getCookie("total_number_of_jobs")}`;
 }
 
 function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     let job;
     if (listOfJobs === undefined) {
         job = JSON.parse($.ajax({
-            'url': `${getCookie('list_of_jobs')}${jobObjId}`,
+            'url': `${getCookie('list_of_jobs_endpoint')}${jobObjId}`,
             'type': 'GET',
             'cache': false,
             async: false
@@ -200,7 +199,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     }
     if (allLists === undefined) {
         allLists = JSON.parse($.ajax({
-            'url': `${getCookie('lists_endpoint')}`,
+            'url': `${getCookie('list_endpoint')}`,
             'type': 'GET',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},

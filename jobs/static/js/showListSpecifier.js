@@ -1,6 +1,6 @@
 async function showAllJobs() {
     const allLists = JSON.parse($.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -13,7 +13,7 @@ async function showAllJobs() {
 async function showInbox(allLists) {
     if (allLists === undefined) {
         allLists = JSON.parse($.ajax({
-            'url': `${getCookie('lists_endpoint')}`,
+            'url': `${getCookie('list_endpoint')}`,
             'type': 'GET',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -28,7 +28,7 @@ async function showInbox(allLists) {
 async function showArchived(allLists) {
     if (allLists === undefined) {
         allLists = JSON.parse($.ajax({
-            'url': `${getCookie('lists_endpoint')}`,
+            'url': `${getCookie('list_endpoint')}`,
             'type': 'GET',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -45,7 +45,7 @@ async function showList(listObjectId, allLists) {
     setCookie("view", `list_index_${listObjectId}`);
     if (allLists === undefined) {
         allLists = JSON.parse($.ajax({
-            'url': `${getCookie('lists_endpoint')}`,
+            'url': `${getCookie('list_endpoint')}`,
             'type': 'GET',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},

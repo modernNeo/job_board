@@ -1,6 +1,6 @@
 async function goToPreviousPage() {
     const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -13,7 +13,7 @@ async function goToPreviousPage() {
 }
 async function goToNextPage() {
     const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},

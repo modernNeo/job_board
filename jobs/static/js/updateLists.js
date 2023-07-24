@@ -63,7 +63,7 @@ async function createNewList(url) {
         async: false
     })
     const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -77,7 +77,7 @@ async function createNewList(url) {
 async function deleteList() {
     const itemToDeleteIndex = document.getElementById("delete_list_select_tag").value
     $.ajax({
-        "url": `${getCookie('lists_endpoint')}${itemToDeleteIndex}`,
+        "url": `${getCookie('list_endpoint')}${itemToDeleteIndex}`,
         "type": 'DELETE',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -85,7 +85,7 @@ async function deleteList() {
         async: false
     })
         const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -106,7 +106,7 @@ async function addJobToList(jobId, listId) {
         }
     )
         const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -127,7 +127,7 @@ async function removeJobFromList(itemObjId) {
         }
     )
     const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},

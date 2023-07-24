@@ -26,7 +26,7 @@ async function saveNote(jobObjectId) {
     }
 
     const allLists = $.ajax({
-        'url': `${getCookie('lists_endpoint')}`,
+        'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
