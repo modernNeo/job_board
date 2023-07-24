@@ -171,8 +171,53 @@ class Job(models.Model):
 
     @property
     def note(self):
-        postings = self.userjobposting_set.all().first()
-        return postings.note if postings is not None else None
+        posting = self.userjobposting_set.all().filter().first()
+        if posting is not None:
+            return posting.note
+        note = self.jobnote
+        return note.note if note is not None else None
+
+    @property
+    def lists(self):
+        lists = List.objects.all().filter(item__job_id=self.id)
+        if len(lists) == 0:
+            return ""
+        else:
+            return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
+
+
+class List(models.Model):
+    name = models.CharField(
+        max_length=500
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+
+
+class Item(models.Model):
+    list = models.ForeignKey(
+        List, on_delete=models.CASCADE,
+    )
+    job = models.ForeignKey(
+        Job, on_delete=models.CASCADE,
+    )
+
+    def list_name(self):
+        return self.list.name
+
+
+class JobNote(models.Model):
+    note = models.CharField(
+        max_length=500
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+    job = models.OneToOneField(
+        Job, on_delete=models.CASCADE,
+    )
+
 
 class UserJobPosting(models.Model):
     hide = models.BooleanField(
