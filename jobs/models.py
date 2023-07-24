@@ -232,7 +232,7 @@ class UserJobPosting(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
-    job_posting = models.OneToOneField(
+    job_posting = models.ForeignKey(
         Job, on_delete=models.CASCADE
     )
 
