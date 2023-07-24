@@ -5,7 +5,7 @@ import os.path
 
 from django.core.management import BaseCommand
 
-from jobs.models import Job, ETLFile, create_pst_time
+from jobs.models import Job, ETLFile, create_pst_time, List, Item
 
 JOB_URL_KEY = 'jobUrl'
 JOB_ID_KEY = 'jobId'
@@ -53,6 +53,7 @@ class Command(BaseCommand):
         new_post_with_oldest_posted_date = {}
         current_date = datetime.datetime.now()
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
+        etl_updated_list, new = List.objects.all().get_or_create(name='ETL_updated', user_id=1)
         number_of_new_jobs = {}
         for linkedin_export_obj in ETLFile.objects.all():
             if os.path.exists(linkedin_export_obj.file_path):
@@ -90,6 +91,7 @@ class Command(BaseCommand):
                         job.easy_apply = True if line[csv_mapping[IS_EASY_APPLY_KEY]] == 'true' else False
                         job.linkedin_link = line[csv_mapping[URL_KEY]][:-1]
                         job.save()
+                        Item.objects.all().get_or_create(job=job, list=etl_updated_list)
                         if new_job and job.date_posted is not None:
                             if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
                                 new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
