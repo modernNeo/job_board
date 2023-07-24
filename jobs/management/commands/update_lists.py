@@ -36,5 +36,5 @@ class Command(BaseCommand):
                 Item.objects.all().get_or_create(list=wants_blurb_list, job=user_job_posting.job_posting)
                 user_job_posting.delete()
             else:
-                JobNote.objects.all().get_or_create(note=user_job_posting.note.strip(),job=user_job_posting.job_posting)
+                JobNote.objects.all().get_or_create(note=user_job_posting.note.strip(),job=user_job_posting.job_posting, user_id=1)
                 user_job_posting.delete()

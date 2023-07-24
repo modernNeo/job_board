@@ -229,9 +229,6 @@ class UserJobPosting(models.Model):
         blank=True,
         null=True
     )
-    archived = models.BooleanField(
-        default=False
-    )
     user = models.ForeignKey(
         User, on_delete=models.CASCADE
     )
