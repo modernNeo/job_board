@@ -37,13 +37,15 @@ async function showListButton(allLists) {
     document.getElementById('lists_buttons').appendChild(jobButton);
     jobButton = document.createElement("button");
     jobButton.setAttribute("onclick", "showArchived()");
-    jobButton.textContent = "Archived-Legacy";
+    jobButton.textContent = "Archived";
     document.getElementById('lists_buttons').appendChild(jobButton);
     for (let i = 0; i < allLists.length; i++) {
-        jobButton = document.createElement("button");
-        jobButton.setAttribute("onclick", "showList(" + allLists[i].id + ")");
-        jobButton.textContent = allLists[i].name;
-        document.getElementById('lists_buttons').appendChild(jobButton);
+        if (allLists[i].name !== "Archived") {
+            jobButton = document.createElement("button");
+            jobButton.setAttribute("onclick", "showList(" + allLists[i].id + ")");
+            jobButton.textContent = allLists[i].name;
+            document.getElementById('lists_buttons').appendChild(jobButton);
+        }
     }
 }
 
