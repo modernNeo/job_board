@@ -171,11 +171,7 @@ class Job(models.Model):
 
     @property
     def note(self):
-        posting = self.userjobposting_set.all().filter().first()
-        if posting is not None:
-            return posting.note
-        note = self.jobnote
-        return note.note if note is not None else None
+        return self.jobnote.note if self.jobnote is not None else None
 
     @property
     def lists(self):
@@ -216,27 +212,6 @@ class JobNote(models.Model):
     )
     job = models.OneToOneField(
         Job, on_delete=models.CASCADE,
-    )
-
-
-class UserJobPosting(models.Model):
-    hide = models.BooleanField(
-        default=False
-    )
-    applied = models.BooleanField(
-        default=False
-    )
-    note = models.CharField(
-        max_length=5000,
-        default=None,
-        blank=True,
-        null=True
-    )
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE
-    )
-    job_posting = models.ForeignKey(
-        Job, on_delete=models.CASCADE
     )
 
 

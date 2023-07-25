@@ -8,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, UserJobPosting, ETLFile, List, Item, JobNote
+from jobs.models import Job, ETLFile, List, Item, JobNote
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -87,38 +87,6 @@ class JobViewSet(viewsets.ModelViewSet):
             return postings[0].page(self.request.query_params['page']).object_list
         else:
             return postings[0].page(1).object_list
-
-
-class UserJobPostingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserJobPosting
-        fields = '__all__'
-
-
-class UserJobPostingViewSet(viewsets.ModelViewSet):
-    serializer_class = UserJobPostingSerializer
-    queryset = UserJobPosting.objects.all()
-
-    def get_object(self):
-        return Job.objects.all().filter(id=self.kwargs['pk']).first().userjobposting_set.all().first()
-
-    def post(self, request, pk):
-        postings = Job.objects.all().filter(id=pk).first().userjobposting_set.all()
-        posting = [posting for posting in postings if posting.user == request.user]
-        if len(posting) == 0:
-            posting = UserJobPosting(user=request.user, job_posting=Job.objects.get(id=pk))
-        else:
-            posting = posting[0]
-        if request.data.get("hide", None) is not None:
-            posting.hide = request.data['hide']
-        if request.data.get("applied", None) is not None:
-            posting.applied = request.data["applied"]
-        if request.data.get("note", None) is not None:
-            posting.note = request.data['note']
-        if request.data.get("archived", None) is not None:
-            posting.archived = request.data['archived']
-        posting.save()
-        return Response("ok")
 
 
 class ListSerializer(serializers.ModelSerializer):
