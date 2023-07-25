@@ -73,6 +73,7 @@ async function createNewList(url) {
         async: false
     })
     await refreshDeleteListDropDown(allLists);
+    await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
 }
 
@@ -95,6 +96,7 @@ async function deleteList() {
         async: false
     })
     await refreshDeleteListDropDown(allLists);
+    await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
 }
 async function addJobToList(jobId, listId) {
