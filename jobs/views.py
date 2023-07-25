@@ -16,9 +16,9 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         pass
     elif list_parameter == "inbox":
         archived_jobs_ids = list(Job.objects.all().filter(item__list__name='Archived').values_list('id', flat=True))
-        non_archived_jobs = list(Job.objects.all().exclude(job_id__in=archived_jobs_ids).values_list('id', flat=True))
+        non_archived_jobs = list(Job.objects.all().exclude(id__in=archived_jobs_ids).values_list('id', flat=True))
         job_postings = job_postings.filter(
-            Q(job_id__in=non_archived_jobs)
+            Q(id__in=non_archived_jobs)
             | Q(item__list__name="ETL_updated")
         )
     elif list_parameter == 'archived':
