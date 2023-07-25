@@ -1,7 +1,7 @@
 import json
 
 from django.core.paginator import Paginator
-from django.db.models import Q, F
+from django.db.models import F, Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views import View
@@ -12,41 +12,18 @@ from jobs.models import Job, UserJobPosting, ETLFile, List, Item, JobNote
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
-    user_job_posting_customizations = UserJobPosting.objects.all().filter(user_id=user_id)
     if list_parameter is None or list_parameter == "all":
         pass
-    if list_parameter == "inbox":
+    elif list_parameter == "inbox":
         job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
-            Q(userjobposting__isnull=True)
+            Q(item__isnull=True)
+            | Q(item__list__name="ETL_updated")
         )
-        job_postings = job_postings.exclude(item__list__name='Archived')
-    if f"{list_parameter}".isdigit():
+    elif list_parameter == 'archived':
+        non_archived_items = Item.objects.all().exclude(list__name="Archived")
+        job_postings = job_postings.filter(item__list__name='Archived').exclude(item__in=non_archived_items)
+    elif f"{list_parameter}".isdigit():
         job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
-    if list_parameter == 'archived':
-        job_postings = job_postings.filter(
-            Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
-            # capturing any jobs that still use the Posting table
-            (Q(userjobposting__isnull=True) & Q(item__isnull=True))
-            # if a job has neither object
-        )
-    # elif params.get("hidden", False) == 'true':
-    #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=True)
-    #     job_postings = job_postings.filter(
-    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-    #     )
-    # elif params.get("applied", False) == 'true':
-    #     user_job_posting_customizations = user_job_posting_customizations.filter(applied=True)
-    #     job_postings = job_postings.filter(
-    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True)))
-    #     )
-    # else:
-    #     user_job_posting_customizations = user_job_posting_customizations.filter(hide=False).filter(applied=False)
-    #     job_postings = job_postings.filter(
-    #         Q(job_id__in=list(user_job_posting_customizations.values_list('job_posting__job_id', flat=True))) |
-    #         Q(userjobposting__isnull=True)
-    #
-    #     )
     ordered_postings = job_postings.order_by(
         F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title', 'id'
     )
