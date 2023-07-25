@@ -16,7 +16,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         pass
     elif list_parameter == "inbox":
         archived_jobs_ids = list(Job.objects.all().filter(item__list__name='Archived').values_list('id', flat=True))
-        non_archived_jobs = Job.objects.all().exclude(job_id__in=archived_jobs_ids)
+        non_archived_jobs = list(Job.objects.all().exclude(job_id__in=archived_jobs_ids).values_list('id', flat=True))
         job_postings = job_postings.filter(
             Q(job_id__in=non_archived_jobs)
             | Q(item__list__name="ETL_updated")
@@ -115,6 +115,7 @@ class ListSet(viewsets.ModelViewSet):
 
 class ItemSerializer(serializers.ModelSerializer):
     list_name = serializers.CharField(read_only=True)
+
     class Meta:
         model = Item
         fields = '__all__'
