@@ -68,32 +68,33 @@ class Command(BaseCommand):
                         csv_mapping[column] = idx
                     csvFile = csvFile[1:]
                     for line in csvFile:
-                        job = Job.objects.all().filter(
-                            linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
-                            job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                            linkedin_link=line[csv_mapping[URL_KEY]][:-1]
-                        ).first()
-                        new_job = job is None
-                        if new_job:
-                            print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
-                            number_of_new_jobs[linkedin_export_obj.file_path]+=1
-                            job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
-                                      job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                      linkedin_link=line[csv_mapping[URL_KEY]][:-1])
-                        else:
-                            Item.objects.all().get_or_create(job=job, list=etl_updated_list)
-                            print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
-                        job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
-                        job.location = line[csv_mapping[SCRAPED_LOCATION_KEY]]
-                        job.remote_work_allowed = False if line[csv_mapping[IS_REMOTE_KEY]] == "" else True
-                        job.workplace_type = line[csv_mapping[WORKPLACE_TYPE_KEY]]
-                        job.date_posted = line[csv_mapping[POST_DATE_KEY]]
-                        job.easy_apply = True if line[csv_mapping[IS_EASY_APPLY_KEY]] == 'true' else False
-                        job.linkedin_link = line[csv_mapping[URL_KEY]][:-1]
-                        job.save()
-                        if new_job and job.date_posted is not None:
-                            if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
-                                new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
+                        if line[csv_mapping[COMPANY_NAME_KEY]] not in ["Canonical", 'Aha!']:
+                            job = Job.objects.all().filter(
+                                linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
+                                job_title=line[csv_mapping[JOB_TITLE_KEY]],
+                                linkedin_link=line[csv_mapping[URL_KEY]][:-1]
+                            ).first()
+                            new_job = job is None
+                            if new_job:
+                                print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
+                                number_of_new_jobs[linkedin_export_obj.file_path]+=1
+                                job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
+                                          job_title=line[csv_mapping[JOB_TITLE_KEY]],
+                                          linkedin_link=line[csv_mapping[URL_KEY]][:-1])
+                            else:
+                                Item.objects.all().get_or_create(job=job, list=etl_updated_list)
+                                print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
+                            job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
+                            job.location = line[csv_mapping[SCRAPED_LOCATION_KEY]]
+                            job.remote_work_allowed = False if line[csv_mapping[IS_REMOTE_KEY]] == "" else True
+                            job.workplace_type = line[csv_mapping[WORKPLACE_TYPE_KEY]]
+                            job.date_posted = line[csv_mapping[POST_DATE_KEY]]
+                            job.easy_apply = True if line[csv_mapping[IS_EASY_APPLY_KEY]] == 'true' else False
+                            job.linkedin_link = line[csv_mapping[URL_KEY]][:-1]
+                            job.save()
+                            if new_job and job.date_posted is not None:
+                                if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
+                                    new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
                         index += 1
                 print(f"\nparsed {linkedin_export_obj.file_path}")
             linkedin_export_obj.delete()
