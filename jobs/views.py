@@ -19,7 +19,6 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         non_archived_jobs = list(Job.objects.all().exclude(id__in=archived_jobs_ids).values_list('id', flat=True))
         job_postings = job_postings.filter(
             Q(id__in=non_archived_jobs)
-            | Q(item__list__name="ETL_updated")
         )
     elif list_parameter == 'archived':
         non_archived_items = Item.objects.all().exclude(list__name="Archived")
