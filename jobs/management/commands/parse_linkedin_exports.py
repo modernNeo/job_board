@@ -83,7 +83,8 @@ class Command(BaseCommand):
                                           job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                           linkedin_link=line[csv_mapping[URL_KEY]][:-1])
                             else:
-                                if job.id not in new_ids: # needed to distinguish new jobs that were created in previous iteration of this loop
+                                if job.id not in new_ids: # needed to distinguish new jobs that were created in
+                                    # previous iteration of this loop
                                     Item.objects.all().get_or_create(job=job, list=etl_updated_list)
                                     print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
                             job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
