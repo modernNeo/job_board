@@ -15,14 +15,12 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     if list_parameter is None or list_parameter == "all":
         pass
     elif list_parameter == "inbox":
-        archived_jobs_ids = list(Job.objects.all().filter(item__list__name='Archived').values_list('id', flat=True))
-        non_archived_jobs = list(Job.objects.all().exclude(id__in=archived_jobs_ids).values_list('id', flat=True))
-        job_postings = job_postings.filter(
-            Q(id__in=non_archived_jobs)
-        )
+        job_postings = job_postings.exclude(item__list__name='Archived')
     elif list_parameter == 'archived':
-        non_archived_items = Item.objects.all().exclude(list__name="Archived")
-        job_postings = job_postings.filter(item__list__name='Archived').exclude(item__in=non_archived_items)
+        job_postings = job_postings.filter(item__list__name='Archived')
+
+        # necessary to remove any jobs that have entries in any other non-Archived lists
+        job_postings = job_postings.exclude(item__in=Item.objects.all().exclude(list__name="Archived"))
     elif f"{list_parameter}".isdigit():
         job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
     ordered_postings = job_postings.order_by(
