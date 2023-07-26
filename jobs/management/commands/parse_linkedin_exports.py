@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     csvFile = csvFile[1:]
                     for line in csvFile:
                         job = Job.objects.all().filter(
-                            job_id=int(line[csv_mapping[JOB_ID_KEY]]),
+                            linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                             job_title=line[csv_mapping[JOB_TITLE_KEY]],
                             linkedin_link=line[csv_mapping[URL_KEY]][:-1]
                         ).first()
@@ -77,7 +77,7 @@ class Command(BaseCommand):
                         if new_job:
                             print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
                             number_of_new_jobs[linkedin_export_obj.file_path]+=1
-                            job = Job(job_id=int(line[csv_mapping[JOB_ID_KEY]]),
+                            job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                                       job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                       linkedin_link=line[csv_mapping[URL_KEY]][:-1])
                         else:
