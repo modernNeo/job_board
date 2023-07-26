@@ -51,7 +51,7 @@ class IndexPage(View):
 class PageNumbers(View):
 
     def get(self, request):
-        jobs = Job.objects.all().filter(job_id=None) if self.request.user.id is None else Job.objects.all()
+        jobs = Job.objects.all().filter(id=None) if self.request.user.id is None else Job.objects.all()
         paginated_jobs, total_number_of_jobs = get_job_postings(jobs, request.user.id,
                                                                 list_parameter=request.GET['list'])
         response = {
@@ -79,7 +79,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         job_postings = Job.objects.all()
         if self.request.user.id is None:
-            return job_postings.filter(job_id=None)
+            return job_postings.filter(id=None)
         if 'list' in self.request.query_params:
             postings = get_job_postings(job_postings, self.request.user.id,
                                         list_parameter=self.request.query_params['list'])
