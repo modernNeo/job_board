@@ -19,7 +19,6 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         non_archived_jobs = list(Job.objects.all().exclude(id__in=archived_jobs_ids).values_list('id', flat=True))
         job_postings = job_postings.filter(
             Q(id__in=non_archived_jobs)
-            | Q(item__list__name="ETL_updated")
         )
     elif list_parameter == 'archived':
         non_archived_items = Item.objects.all().exclude(list__name="Archived")
@@ -51,7 +50,7 @@ class IndexPage(View):
 class PageNumbers(View):
 
     def get(self, request):
-        jobs = Job.objects.all().filter(job_id=None) if self.request.user.id is None else Job.objects.all()
+        jobs = Job.objects.all().filter(id=None) if self.request.user.id is None else Job.objects.all()
         paginated_jobs, total_number_of_jobs = get_job_postings(jobs, request.user.id,
                                                                 list_parameter=request.GET['list'])
         response = {
@@ -79,7 +78,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         job_postings = Job.objects.all()
         if self.request.user.id is None:
-            return job_postings.filter(job_id=None)
+            return job_postings.filter(id=None)
         if 'list' in self.request.query_params:
             postings = get_job_postings(job_postings, self.request.user.id,
                                         list_parameter=self.request.query_params['list'])

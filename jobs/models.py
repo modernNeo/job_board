@@ -133,7 +133,7 @@ class PSTDateTimeField(models.DateTimeField):
 # Create your models here.
 
 class Job(models.Model):
-    job_id = models.PositiveBigIntegerField(
+    linkedin_id = models.PositiveBigIntegerField(
 
     )
     job_title = models.CharField(
