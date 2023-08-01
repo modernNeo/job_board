@@ -95,7 +95,6 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
 
 async function getListFuncOrParameterOrHeader(allLists, returnType) {
     const view = getCookie("view")
-    console.log(view);
     if (view === "all_jobs") {
         return (returnType === "func") ? showAllJobs : (returnType === "parameter") ? `list=all` : `All Jobs`;
     } else if (view === "inbox") {
@@ -105,7 +104,6 @@ async function getListFuncOrParameterOrHeader(allLists, returnType) {
     } else if (view.match(/^list_index_\d*$/)) {
         const listIndex = Number(view.slice(11));
         for (let i = 0; i < allLists.length; i++) {
-            console.log(`${listIndex}-${allLists[i].id}`);
             if (listIndex === allLists[i].id) {
                 return (returnType === "func") ? `showList_${allLists[i].id}` : (returnType === "parameter") ? `list_id=${allLists[i].id}` : allLists[i].name;
             }
@@ -178,7 +176,6 @@ async function updateSelectedJobInList(currentlySelectedJobIndex, currentlySelec
     setCookie("currently_selected_job_id", currentlySelectedJobId);
     setCookie("currently_selected_job_index", currentlySelectedJobIndex);
     item = document.getElementById(currentlySelectedJobId + "_list_item");
-    console.log(`adding highlighting to ${currentlySelectedJobId}_list_item`);
     item.style = 'color: blue';
     updateCompanyPane(allLists, listOfJobs, currentlySelectedJobId);
     document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/${getCookie("total_number_of_jobs")}`;
@@ -258,10 +255,8 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     let previouslySelectedJobId = getCookie("previously_selected_job_ids", jobObjId);
     if (!(previouslySelectedJobId === null || previouslySelectedJobId === "" || Number(previouslySelectedJobId) === Number(jobObjId))) {
         try {
-            console.log(`removing highlighting for ${previouslySelectedJobId}_list_item`);
             let previousItem = document.getElementById(`${previouslySelectedJobId}_list_item`);
             previousItem.style = '';
-            console.log(`removed highlighting for ${previouslySelectedJobId}_list_item`);
         } catch (e) {
             console.log(`could not remove highlighting for ${previouslySelectedJobId}_list_item a list item due to error\n${e}`);
         }

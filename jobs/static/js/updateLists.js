@@ -64,14 +64,14 @@ async function createNewList(url) {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-    const allLists = $.ajax({
+    const allLists = JSON.parse($.ajax({
         'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
         async: false
-    })
+    }).responseText)
     await refreshDeleteListDropDown(allLists);
     await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
@@ -87,14 +87,14 @@ async function deleteList() {
         contentType: 'application/json; charset=utf-8',
         async: false
     })
-        const allLists = $.ajax({
+    const allLists = JSON.parse($.ajax({
         'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
         async: false
-    })
+    }).responseText)
     await refreshDeleteListDropDown(allLists);
     await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
@@ -109,14 +109,14 @@ async function addJobToList(jobId, listId) {
             async: false
         }
     )
-        const allLists = $.ajax({
+    const allLists = JSON.parse($.ajax({
         'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
         async: false
-    })
+    }).responseText)
     setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
     await refreshAfterJobOrListUpdate(allLists);
 }
@@ -130,14 +130,14 @@ async function removeJobFromList(itemObjId) {
             async: false
         }
     )
-    const allLists = $.ajax({
+    const allLists = JSON.parse($.ajax({
         'url': `${getCookie('list_endpoint')}`,
         'type': 'GET',
         'cache': false,
         headers: {'X-CSRFToken': getCookie('csrftoken')},
         contentType: 'application/json; charset=utf-8',
         async: false
-    })
+    }).responseText)
     setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
     await refreshAfterJobOrListUpdate(allLists);
 }
