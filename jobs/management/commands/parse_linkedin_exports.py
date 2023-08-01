@@ -51,6 +51,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         new_post_with_oldest_posted_date = {}
+        update_to_existing_pending_postings = {}
+        update_to_existing_applied_posting = {}
+        aha_or_canonical_job_posting_encountered = {}
         current_date = datetime.datetime.now()
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
         etl_updated_list, new = List.objects.all().get_or_create(name='ETL_updated', user_id=1)
@@ -61,6 +64,9 @@ class Command(BaseCommand):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
                     number_of_new_jobs[linkedin_export_obj.file_path] = 0
                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = today_date
+                    update_to_existing_pending_postings[linkedin_export_obj.file_path] = 0
+                    update_to_existing_applied_posting[linkedin_export_obj.file_path] = 0
+                    aha_or_canonical_job_posting_encountered[linkedin_export_obj.file_path] = 0
                     print(f"parsing {linkedin_export_obj.file_path}")
                     csvFile = [line for line in csv.reader(linkedin_export)]
                     index = 1
@@ -87,6 +93,9 @@ class Command(BaseCommand):
                                     # previous iteration of this loop
                                     if job.item_set.all().filter(list__name='Applied').first() is not None:
                                         Item.objects.all().get_or_create(job=job, list=etl_updated_list)
+                                        update_to_existing_applied_posting[linkedin_export_obj.file_path] += 1
+                                    else:
+                                        update_to_existing_pending_postings[linkedin_export_obj.file_path] += 1
                                     print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
                             job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
                             job.location = line[csv_mapping[SCRAPED_LOCATION_KEY]]
@@ -100,10 +109,19 @@ class Command(BaseCommand):
                                 if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
                                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
                             new_ids.append(job.id)
+                        else:
+                            aha_or_canonical_job_posting_encountered[linkedin_export_obj.file_path] += 1
                         index += 1
+
                 print(f"\nparsed {linkedin_export_obj.file_path}")
             linkedin_export_obj.delete()
         print(f"new_post_with_oldest_posted_date=")
         print(json.dumps(new_post_with_oldest_posted_date, indent=4, default=str))
         print(f"number_of_new_jobs=")
         print(json.dumps(number_of_new_jobs, indent=4))
+        print(f"aha_or_canonical_job_posting_encountered=")
+        print(json.dumps(aha_or_canonical_job_posting_encountered, indent=4))
+        print(f"update_to_existing_applied_posting=")
+        print(json.dumps(update_to_existing_applied_posting, indent=4))
+        print(f"update_to_existing_pending_postings=")
+        print(json.dumps(update_to_existing_pending_postings, indent=4))
