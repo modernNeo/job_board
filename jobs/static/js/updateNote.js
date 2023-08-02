@@ -14,15 +14,19 @@ async function saveNote(jobObjectId) {
             "job": jobObjectId,
             "note": document.getElementById("note").value
         }
-        await $.ajax({
-            'url': getCookie('note_endpoint'),
-            'type': 'POST',
-            'cache': false,
-            headers: {'X-CSRFToken': getCookie('csrftoken')},
-            data: JSON.stringify(data),
-            contentType: 'application/json; charset=utf-8',
-            async: false
-        })
+        try {
+            await $.ajax({
+                'url': getCookie('note_endpoint'),
+                'type': 'POST',
+                'cache': false,
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+                data: JSON.stringify(data),
+                contentType: 'application/json; charset=utf-8',
+                async: false
+            })
+        } catch (e) {
+            console.log(JSON.parse(e.responseText)['job'][0]);
+        }
     }
 
     const allLists = $.ajax({
