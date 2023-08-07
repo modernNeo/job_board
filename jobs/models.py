@@ -190,6 +190,10 @@ class List(models.Model):
         User, on_delete=models.CASCADE
     )
 
+    @property
+    def number_of_jobs(self):
+        return len(Item.objects.all().filter(list_id=self.id))
+
 
 class Item(models.Model):
     list = models.ForeignKey(

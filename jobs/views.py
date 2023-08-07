@@ -89,6 +89,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
 
 class ListSerializer(serializers.ModelSerializer):
+    number_of_jobs = serializers.CharField(read_only=True)
+
     class Meta:
         model = List
         fields = '__all__'
@@ -161,6 +163,14 @@ class JobNoteSet(viewsets.ModelViewSet):
         job_note = self.queryset.filter(job_id=int(kwargs['pk'])).first()
         if job_note is not None:
             job_note.delete()
+        return Response("ok")
+
+    def update(self, request, *args, **kwargs):
+        job = Job.objects.all().filter(id=kwargs['pk']).first()
+        if job is not None:
+            note_obj = job.jobnote
+            note_obj.note = request.data['note']
+            note_obj.save()
         return Response("ok")
 
     def get_queryset(self):

@@ -4,7 +4,7 @@ function addButton(functionCall, string){
     button.innerHTML = string;
     return button;
 }
-function createCompanyNoteInfo(jobObjectId, note){
+function createCompanyNoteInfo(jobObjectId, note, note_exists){
     let companyInfo = document.createElement("company_info_note")
     let companyLabel = document.createElement("label");
     companyLabel.style.fontWeight = 'bold';
@@ -13,7 +13,7 @@ function createCompanyNoteInfo(jobObjectId, note){
 
     let companyInput = document.createElement("input");
     companyInput.type = "text";
-    companyInput.setAttribute("onfocusout", "saveNote("+jobObjectId+")");
+    companyInput.setAttribute("onfocusout", "saveNote("+jobObjectId+", "+note_exists+")");
     companyInput.setAttribute("id", "note");
     companyInput.value = note;
     companyInfo.appendChild(companyInput);

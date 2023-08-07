@@ -43,7 +43,7 @@ async function showListButton(allLists) {
         if (allLists[i].name !== "Archived") {
             jobButton = document.createElement("button");
             jobButton.setAttribute("onclick", "showList(" + allLists[i].id + ")");
-            jobButton.textContent = allLists[i].name;
+            jobButton.textContent = `${allLists[i].name}-${allLists[i].number_of_jobs}`;
             document.getElementById('lists_buttons').appendChild(jobButton);
         }
     }
