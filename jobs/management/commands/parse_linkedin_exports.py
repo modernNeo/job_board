@@ -56,14 +56,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         new_post_with_oldest_posted_date = {}
-        update_to_existing_pending_postings = {}
-        update_to_existing_applied_posting = {}
         aha_or_canonical_job_posting_encountered = {}
         current_date = datetime.datetime.now()
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
-        etl_updated_list, new = List.objects.all().get_or_create(name='ETL_updated', user_id=1)
         applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
         archived_list, new = List.objects.all().get_or_create(name='Archived', user_id=1)
+        jobs = Job.objects.all()
+        for job in jobs:
+            if job.linkedin_link[-1:] != "/":
+                job.linkedin_link += "/"
+                job.save()
         number_of_new_jobs = {}
         new_ids = []
         for linkedin_export_obj in ETLFile.objects.all():
@@ -71,8 +73,6 @@ class Command(BaseCommand):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
                     number_of_new_jobs[linkedin_export_obj.file_path] = 0
                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = today_date
-                    update_to_existing_pending_postings[linkedin_export_obj.file_path] = 0
-                    update_to_existing_applied_posting[linkedin_export_obj.file_path] = 0
                     aha_or_canonical_job_posting_encountered[linkedin_export_obj.file_path] = 0
                     print(f"parsing {linkedin_export_obj.file_path}")
                     csvFile = [line for line in csv.reader(linkedin_export)]
@@ -95,27 +95,17 @@ class Command(BaseCommand):
                                 job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                                           job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                           linkedin_link=line[csv_mapping[JOB_URL_KEY]])
-                            else:
-                                if job.id not in new_ids:  # needed to distinguish new jobs that were created in
-                                    # previous iteration of this loop
-                                    if job.item_set.all().filter(list__name='Applied').first() is not None:
-                                        Item.objects.all().get_or_create(job=job, list=etl_updated_list)
-                                        update_to_existing_applied_posting[linkedin_export_obj.file_path] += 1
-                                    else:
-                                        update_to_existing_pending_postings[linkedin_export_obj.file_path] += 1
-                                    print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
+                            elif job.id not in new_ids:  # needed to distinguish new jobs that were created in
+                                # previous iteration of this loop
+                                print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
                             job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
                             job.location = line[csv_mapping[LOCATION_KEY]]
-                            job.remote_work_allowed = False if 'remote' not in job.job_title.lower() else True
+                            job.remote_work_allowed = 'remote' in job.job_title.lower()
                             job.date_posted = datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
-                            job.easy_apply = True if line[csv_mapping[IS_EASY_APPLY_KEY]] == 'true' else False
                             job.linkedin_link = line[csv_mapping[JOB_URL_KEY]]
-                            applied = line[csv_mapping[APPLIED_TO_JOB_KEY]]== 'True'
-                            easy_apply = line[csv_mapping[IS_EASY_APPLY_KEY]]
-                            easy_apply = easy_apply if easy_apply != "" else False
-                            job.easy_apply = easy_apply
+                            job.easy_apply = line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
                             job.save()
-                            if applied:
+                            if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':
                                 if job.item_set.all().filter(list__name="Applied").first() is None:
                                     Item.objects.all().get_or_create(job=job, list=applied_list)
                                 if job.item_set.all().filter(list__name="Archived").first() is None:
@@ -138,7 +128,3 @@ class Command(BaseCommand):
         print(json.dumps(number_of_new_jobs, indent=4))
         print(f"aha_or_canonical_job_posting_encountered=")
         print(json.dumps(aha_or_canonical_job_posting_encountered, indent=4))
-        print(f"update_to_existing_applied_posting=")
-        print(json.dumps(update_to_existing_applied_posting, indent=4))
-        print(f"update_to_existing_pending_postings=")
-        print(json.dumps(update_to_existing_pending_postings, indent=4))
