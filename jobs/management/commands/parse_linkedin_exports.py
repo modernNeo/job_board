@@ -7,18 +7,20 @@ from django.core.management import BaseCommand
 
 from jobs.models import Job, ETLFile, create_pst_time, List, Item
 
-JOB_URL_KEY = 'jobUrl'
 JOB_ID_KEY = 'jobId'
-COMPANY_NAME_KEY = 'companyName'
 JOB_TITLE_KEY = 'jobTitle'
+COMPANY_NAME_KEY = 'companyName'
+POST_DATE_KEY = 'postDate'
+LOCATION_KEY = 'location'
+JOB_URL_KEY = 'jobUrl'
+APPLIED_TO_JOB_KEY = 'applied'
+IS_EASY_APPLY_KEY = 'isEasyApply'
+
 LOGO_URL_KEY = 'logoUrl'
 SCRAPED_LOCATION_KEY = 'scrapedLocation'
-LOCATION_KEY = 'location'
 IS_REMOTE_KEY = 'isRemote'
 WORKPLACE_TYPE_KEY = 'workplaceType'
 INSIGHTS_KEY = 'insights'
-POST_DATE_KEY = 'postDate'
-IS_EASY_APPLY_KEY = 'isEasyApply'
 IS_PROMOTED_KEY = 'isPromoted'
 APPLICANT_COUNT_KEY = 'applicantCount'
 URL_KEY = 'url'
@@ -26,18 +28,20 @@ QUERY_KEY = 'query'
 CATEGORY_KEY = 'category'
 TIMESTAMP_KEY = 'timestamp'
 MAPPING = {
-    JOB_URL_KEY: None,
     JOB_ID_KEY: None,
-    COMPANY_NAME_KEY: None,
     JOB_TITLE_KEY: None,
+    COMPANY_NAME_KEY: None,
+    POST_DATE_KEY: None,
+    LOCATION_KEY: None,
+    JOB_URL_KEY: None,
+    APPLIED_TO_JOB_KEY: None,
+    IS_EASY_APPLY_KEY: None,
+
     LOGO_URL_KEY: None,
     SCRAPED_LOCATION_KEY: None,
-    LOCATION_KEY: None,
     IS_REMOTE_KEY: None,
     WORKPLACE_TYPE_KEY: None,
     INSIGHTS_KEY: None,
-    POST_DATE_KEY: None,
-    IS_EASY_APPLY_KEY: None,
     IS_PROMOTED_KEY: None,
     APPLICANT_COUNT_KEY: None,
     URL_KEY: None,

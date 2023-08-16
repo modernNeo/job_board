@@ -22,6 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['SECRET_KEY']
 
+LINKEDIN_EMAIL = None
+if 'LINKEDIN_EMAIL' in os.environ:
+    LINKEDIN_EMAIL = os.environ['LINKEDIN_EMAIL']
+
+LINKEDIN_PASSWORD = None
+if 'LINKEDIN_PASSWORD' in os.environ:
+    LINKEDIN_PASSWORD = os.environ['LINKEDIN_PASSWORD']
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

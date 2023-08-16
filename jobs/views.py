@@ -59,8 +59,20 @@ class PageNumbers(View):
 
 
 class JobSerializer(serializers.ModelSerializer):
-    note = serializers.CharField(read_only=True)
     lists = serializers.CharField(read_only=True)
+    """
+    https://www.cdrf.co/3.9/rest_framework.viewsets/ModelViewSet.html
+    """
+    note = serializers.SerializerMethodField('user_has_note')
+
+    @property
+    def user_id_for_request(self):
+        request = self.context.get('request', None)
+        return request.user.id if request else None
+
+    def user_has_note(self, job):
+        note = JobNote.objects.all().filter(job_id=job.id, user_id=self.user_id_for_request).first()
+        return note.note if note is not None else note
 
     class Meta:
         model = Job
