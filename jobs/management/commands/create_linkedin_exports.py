@@ -29,6 +29,8 @@ def get_posted_date(driver):
         tz=tz.gettz('Canada/Pacific')
     ).replace(minute=0).replace(second=0).replace(microsecond=0)
     duration = int(date_posted[:date_posted.find(" ")])
+    if 'year' in date_posted:
+        post_date -= datetime.timedelta(days=(365*duration))
     if 'month' in date_posted:
         post_date -= datetime.timedelta(days=(30 * duration))
         post_date = post_date.replace(hour=0)

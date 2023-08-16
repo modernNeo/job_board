@@ -24,7 +24,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     elif f"{list_parameter}".isdigit():
         job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
     ordered_postings = job_postings.order_by(
-        F('date_posted').desc(nulls_last=True), 'organisation_name', 'job_title', 'id'
+        F('date_posted').desc(nulls_last=True), 'easy_apply', 'organisation_name', 'job_title', 'id'
     )
     return Paginator(ordered_postings, 25), len(job_postings)
 
@@ -84,6 +84,17 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def get_object(self):
         return Job.objects.get(id=int(self.kwargs['pk']))
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = Job.objects.all()
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True, user_id=self.request.user.id)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
 
     def get_queryset(self):
         job_postings = Job.objects.all()

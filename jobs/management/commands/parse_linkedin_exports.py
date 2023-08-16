@@ -3,6 +3,7 @@ import datetime
 import json
 import os.path
 
+from dateutil.tz import tz
 from django.core.management import BaseCommand
 
 from jobs.models import Job, ETLFile, create_pst_time, List, Item
@@ -61,6 +62,8 @@ class Command(BaseCommand):
         current_date = datetime.datetime.now()
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
         etl_updated_list, new = List.objects.all().get_or_create(name='ETL_updated', user_id=1)
+        applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
+        archived_list, new = List.objects.all().get_or_create(name='Archived', user_id=1)
         number_of_new_jobs = {}
         new_ids = []
         for linkedin_export_obj in ETLFile.objects.all():
@@ -83,15 +86,15 @@ class Command(BaseCommand):
                             job = Job.objects.all().filter(
                                 linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                linkedin_link=line[csv_mapping[URL_KEY]][:-1]
+                                linkedin_link=line[csv_mapping[JOB_URL_KEY]]
                             ).first()
                             new_job = job is None
                             if new_job:
-                                print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
+                                print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
                                 number_of_new_jobs[linkedin_export_obj.file_path]+=1
                                 job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                                           job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                          linkedin_link=line[csv_mapping[URL_KEY]][:-1])
+                                          linkedin_link=line[csv_mapping[JOB_URL_KEY]])
                             else:
                                 if job.id not in new_ids:  # needed to distinguish new jobs that were created in
                                     # previous iteration of this loop
@@ -100,15 +103,25 @@ class Command(BaseCommand):
                                         update_to_existing_applied_posting[linkedin_export_obj.file_path] += 1
                                     else:
                                         update_to_existing_pending_postings[linkedin_export_obj.file_path] += 1
-                                    print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far", end='')
+                                    print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
                             job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
-                            job.location = line[csv_mapping[SCRAPED_LOCATION_KEY]]
-                            job.remote_work_allowed = False if line[csv_mapping[IS_REMOTE_KEY]] == "" else True
-                            job.workplace_type = line[csv_mapping[WORKPLACE_TYPE_KEY]]
-                            job.date_posted = line[csv_mapping[POST_DATE_KEY]]
+                            job.location = line[csv_mapping[LOCATION_KEY]]
+                            job.remote_work_allowed = False if 'remote' not in job.job_title.lower() else True
+                            job.date_posted = datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
                             job.easy_apply = True if line[csv_mapping[IS_EASY_APPLY_KEY]] == 'true' else False
-                            job.linkedin_link = line[csv_mapping[URL_KEY]][:-1]
+                            job.linkedin_link = line[csv_mapping[JOB_URL_KEY]]
+                            applied = line[csv_mapping[APPLIED_TO_JOB_KEY]]== 'True'
+                            easy_apply = line[csv_mapping[IS_EASY_APPLY_KEY]]
+                            easy_apply = easy_apply if easy_apply != "" else False
+                            job.easy_apply = easy_apply
                             job.save()
+                            if applied:
+                                if job.item_set.all().filter(list__name="Applied").first() is None:
+                                    Item.objects.all().get_or_create(job=job, list=applied_list)
+                                if job.item_set.all().filter(list__name="Archived").first() is None:
+                                    Item.objects.all().get_or_create(job=job, list=archived_list)
+                                if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
+                                    job.item_set.all().filter(list__name="ETL_updated").delete()
                             if new_job and job.date_posted is not None:
                                 if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
                                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
