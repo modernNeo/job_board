@@ -61,11 +61,6 @@ class Command(BaseCommand):
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
         applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
         archived_list, new = List.objects.all().get_or_create(name='Archived', user_id=1)
-        jobs = Job.objects.all()
-        for job in jobs:
-            if job.linkedin_link[-1:] != "/":
-                job.linkedin_link += "/"
-                job.save()
         number_of_new_jobs = {}
         new_ids = []
         for linkedin_export_obj in ETLFile.objects.all():
