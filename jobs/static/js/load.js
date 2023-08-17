@@ -139,6 +139,9 @@ async function updateJobList(listOfJobs, allLists) {
             jobItem.innerHTML += ` *`;
         }
         jobItem.innerHTML += listOfJobs[i].lists;
+        if (listOfJobs[i].easy_apply) {
+            jobItem.style = 'background-color: green;';
+        }
         jobList.append(jobItem);
         jobItem.append(document.createElement("br"))
 
@@ -252,13 +255,14 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", job.date_posted))
     jobPostingInfo.appendChild(createCompanyInfoLine("Source : ", "source_label", job.source_domain))
     jobPostingInfo.appendChild(createCompanyInfoLine("Link : ", "link_label", job.organisation_name))
-    let previouslySelectedJobId = getCookie("previously_selected_job_ids", jobObjId);
-    if (!(previouslySelectedJobId === null || previouslySelectedJobId === "" || Number(previouslySelectedJobId) === Number(jobObjId))) {
+    let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
+    let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
+    if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
         try {
-            let previousItem = document.getElementById(`${previouslySelectedJobId}_list_item`);
-            previousItem.style = '';
+            let previousItem = document.getElementById(`${previously_selected_job_id}_list_item`);
+            previousItem.style = (previously_selected_job_id_green_highlighting === "true") ? 'background-color: green;'  : '';
         } catch (e) {
-            console.log(`could not remove highlighting for ${previouslySelectedJobId}_list_item a list item due to error\n${e}`);
+            console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
         }
 
     }
