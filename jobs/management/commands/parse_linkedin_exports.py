@@ -16,6 +16,7 @@ LOCATION_KEY = 'location'
 JOB_URL_KEY = 'jobUrl'
 APPLIED_TO_JOB_KEY = 'applied'
 IS_EASY_APPLY_KEY = 'isEasyApply'
+JOB_CLOSED_KEY = 'closed'
 
 LOGO_URL_KEY = 'logoUrl'
 SCRAPED_LOCATION_KEY = 'scrapedLocation'
@@ -37,6 +38,7 @@ MAPPING = {
     JOB_URL_KEY: None,
     APPLIED_TO_JOB_KEY: None,
     IS_EASY_APPLY_KEY: None,
+    JOB_CLOSED_KEY : None,
 
     LOGO_URL_KEY: None,
     SCRAPED_LOCATION_KEY: None,
@@ -61,6 +63,7 @@ class Command(BaseCommand):
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
         applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
         archived_list, new = List.objects.all().get_or_create(name='Archived', user_id=1)
+        job_closed_list, new = List.objects.all().get_or_create(name='Job Closed', user_id=1)
         number_of_new_jobs = {}
         new_ids = []
         for linkedin_export_obj in ETLFile.objects.all():
@@ -103,6 +106,13 @@ class Command(BaseCommand):
                             if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':
                                 if job.item_set.all().filter(list__name="Applied").first() is None:
                                     Item.objects.all().get_or_create(job=job, list=applied_list)
+                                if job.item_set.all().filter(list__name="Archived").first() is None:
+                                    Item.objects.all().get_or_create(job=job, list=archived_list)
+                                if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
+                                    job.item_set.all().filter(list__name="ETL_updated").delete()
+                            if line[csv_mapping[JOB_CLOSED_KEY]] == 'True':
+                                if job.item_set.all().filter(list__name="Job Closed").first() is None:
+                                    Item.objects.all().get_or_create(job=job, list=job_closed_list)
                                 if job.item_set.all().filter(list__name="Archived").first() is None:
                                     Item.objects.all().get_or_create(job=job, list=archived_list)
                                 if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
