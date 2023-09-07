@@ -1,5 +1,6 @@
 import csv
 import datetime
+import os
 import re
 import time
 
@@ -13,8 +14,11 @@ from selenium.webdriver import FirefoxOptions
 from selenium.webdriver.common.by import By
 
 from jobs.models import Job
+from jobs.setup_logger import Loggers
 
 COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover']
+
+logger = Loggers.get_logger()
 
 def get_posted_date(driver):
     primary_description = driver.find_element(
@@ -53,7 +57,7 @@ def get_posted_date(driver):
     elif 'minute' in date_posted:
         post_date -= datetime.timedelta(minutes=duration)
     else:
-        print(date_posted)
+        logger.info(date_posted)
         raise Exception(date_posted)
     return post_date
 
@@ -67,12 +71,22 @@ def get_job(driver):
 
 class Command(BaseCommand):
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--headless',
+            action='store_true',
+            default=False
+        )
+
     def handle(self, *args, **options):
+        status_file_name = 'linkedin_scrape_in_progress'
+        open(status_file_name, 'x')
         time1 = time.perf_counter()
         today = datetime.datetime.today().astimezone(tz.gettz('Canada/Pacific'))
 
         opts = FirefoxOptions()
-        # opts.add_argument("--headless")
+        if options['headless']:
+            opts.add_argument("--headless")
         driver = webdriver.Firefox(options=opts)
         driver.set_page_load_timeout(30)
         driver.get("https://www.linkedin.com/uas/login")
@@ -81,9 +95,12 @@ class Command(BaseCommand):
         word.send_keys(settings.LINKEDIN_PASSWORD)
         word.submit()
         time.sleep(6)
-        page_loaded = len([item for item in BeautifulSoup(driver.page_source, 'html.parser').findAll("span") if
-                 'class' in item.attrs and 'artdeco-button__text' in item.attrs['class']]) > 10
+        page_loaded = (
+            len(BeautifulSoup(driver.page_source, 'html.parser').findAll("span")) > 10
+        )
         if not page_loaded:
+            driver.quit()
+            os.remove(status_file_name)
             return
         exports = open(f'{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
         exports_writer = csv.writer(exports, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -113,11 +130,10 @@ class Command(BaseCommand):
                 else:
                     index+=1
                     skipped_jobs+=1
-                    print(
-                        f"\rparsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
+                    logger.info(
+                        f"parsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
                         f"Skipped Jobs = {skipped_jobs}, Open Jobs = {open_job} / {total_number_of_jobs}"
-                        f" for existing url {job.linkedin_link}              ",
-                        end=''
+                        f" for existing url {job.linkedin_link}              "
                     )
                     retry_attempt_to_get_job_details = 0
             if job_access:
@@ -156,11 +172,10 @@ class Command(BaseCommand):
                     else:
                         index+=1
                         skipped_jobs+=1
-                        print(
-                            f"\rparsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
+                        logger.info(
+                            f"parsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
                             f"Skipped Jobs = {skipped_jobs}, Open Jobs = {open_job} / {total_number_of_jobs}"
-                            f" for existing url {job.linkedin_link}              ",
-                            end=''
+                            f" for existing url {job.linkedin_link}"
                         )
                         retry_attempt_to_get_job_details = 0
                 else:
@@ -171,11 +186,10 @@ class Command(BaseCommand):
                         else:
                             index+=1
                             skipped_jobs+=1
-                            print(
-                                f"\rparsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
+                            logger.info(
+                                f"parsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
                                 f"Skipped Jobs = {skipped_jobs}, Open Jobs = {open_job} / {total_number_of_jobs}"
-                                f" for existing url {job.linkedin_link}              ",
-                                end=''
+                                f" for existing url {job.linkedin_link}",
                             )
                             retry_attempt_to_get_job_details = 0
                     elif job.organisation_name not in COMPANIES_TO_SKIP:
@@ -190,11 +204,10 @@ class Command(BaseCommand):
                             number_of_jobs_processed += 1
                         if job_open_for_application:
                             open_job += 1
-                        print(
-                            f"\rparsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
+                        logger.info(
+                            f"parsed job[{index+1}] => Jobs Processed = {number_of_jobs_processed}, "
                             f"Skipped Jobs = {skipped_jobs}, Open Jobs = {open_job} / {total_number_of_jobs}"
-                            f" for existing url {job.linkedin_link}              ",
-                            end=''
+                            f" for existing url {job.linkedin_link}",
                         )
                         index+=1
 
@@ -227,7 +240,7 @@ class Command(BaseCommand):
                 url = f"https://www.linkedin.com/jobs/search/?{search_filter}&refresh=true&sortBy=DD"
                 if page > 0:
                     url += f"&start={25 * page}"
-                print(f"\ngetting page {url} for page {(page + 1)}")
+                logger.info(f"\ngetting page {url} for page {(page + 1)}")
                 page += 1
                 driver.get(url)
 
@@ -270,7 +283,7 @@ class Command(BaseCommand):
                         while not (job_item_obtained or retry_attempt == retry_max):
                             try:
                                 if retry_attempt > 0:
-                                    print(f"\rattempt {retry_attempt}/{retry_max} to get job info     ", end='')
+                                    logger.info(f"attempt {retry_attempt}/{retry_max} to get job info")
                                 job_info_item = jobs_list[index].contents[1].contents[1].contents[1].contents[3]
                                 job_item_obtained = True
                             except AttributeError:
@@ -316,11 +329,9 @@ class Command(BaseCommand):
                                 else:
                                     index += 1
                                     skipped_jobs += 1
-                                    print(
-                                        f"\rparsed job {number_of_jobs_processed}/{total_number_of_jobs} "
-                                        f"with "
-                                        f"{skipped_jobs} skipped jobs",
-                                        end=''
+                                    logger.info(
+                                        f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} "
+                                        f"with {skipped_jobs} skipped jobs"
                                     )
                                     retry_attempt_to_get_job_details = 0
                             else:
@@ -332,11 +343,9 @@ class Command(BaseCommand):
                                     else:
                                         index+=1
                                         skipped_jobs+=1
-                                        print(
-                                            f"\rparsed job {number_of_jobs_processed}/{total_number_of_jobs} "
-                                            f"with "
-                                            f"{skipped_jobs} skipped jobs",
-                                            end=''
+                                        logger.info(
+                                            f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} "
+                                            f"with {skipped_jobs} skipped jobs"
                                         )
                                         retry_attempt_to_get_job_details = 0
                                 elif company_name not in COMPANIES_TO_SKIP:
@@ -348,18 +357,20 @@ class Command(BaseCommand):
                                     ])
                                     exports.flush()
                                     number_of_jobs_processed += 1
-                                    print(
-                                        f"\rparsed job {number_of_jobs_processed}/{total_number_of_jobs} for {search_filter}     ",
-                                        end='')
+                                    logger.info(
+                                        f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} for "
+                                        f"{search_filter}"
+                                    )
                                     index += 1
             search_filter_time2 = time.perf_counter()
             time_run[search_filter] = search_filter_time2 - search_filter_time1
 
         driver.quit()
         time2 = time.perf_counter()
-        print(f"run time = {get_time_string(time2 - time1)}")
+        logger.info(f"run time = {get_time_string(time2 - time1)}")
         for key, value in time_run.items():
-            print(f" {key} run time = {get_time_string(value)}")
+            logger.info(f" {key} run time = {get_time_string(value)}")
+        os.remove(status_file_name)
 
 
 def get_time_string(total_seconds):

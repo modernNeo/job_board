@@ -9,10 +9,14 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import logging
+import logging.config
 import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent
 
 
@@ -32,6 +36,16 @@ if 'LINKEDIN_PASSWORD' in os.environ:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+LOG_LOCATION = os.environ['LOG_LOCATION'] if 'LOG_LOCATION' in os.environ else None
+if LOG_LOCATION is None:
+    LOG_LOCATION = f"{Path(__file__).resolve().parent.parent}/logs"
+
+DJANGO_SETTINGS_LOG_HANDLER_NAME = "linkedin_jobs"
+
+from jobs.setup_logger import Loggers
+
+Loggers.get_logger()
 
 ALLOWED_HOSTS = ["127.0.0.1", "linkedinjobs.modernneo.com"]
 
@@ -158,3 +172,72 @@ CSV_ROOT = f"{MEDIA_ROOT}/linkedin_exports"
 print(f'[settings.py] MEDIA_URL set to {MEDIA_URL}')
 print(f'[settings.py] MEDIA_ROOT set to {MEDIA_ROOT}')
 print(f'[settings.py] CSV_ROOT set to {CSV_ROOT}')
+
+
+# Loggers.setup_sys_stream_logger()
+
+LOGGING_CONFIG = None
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    'formatters': {
+        'django.server': {
+            '()': 'django.utils.log.ServerFormatter',
+            'format': '[{server_time}] {message}',
+            'style': '{',
+        }
+    },
+    'handlers': {
+        'info_handler': {
+            'level': 'INFO',
+            'filters': ['require_debug_true'],
+            'class': 'jobs.setup_logger.CSSSDebugStreamHandler',
+            "stream": sys.__stdout__  # setting this up manually because this specific property had to be changed,
+            # and I was too lazy to figure out how to customize this via
+            # https://docs.djangoproject.com/en/4.1/topics/logging/#configuring-logging
+        },
+        'error_handler': {
+            'level': 'ERROR',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            "stream": sys.__stderr__  # setting this up manually because this specific property had to be changed,
+            # and I was too lazy to figure out how to customize this via
+            # https://docs.djangoproject.com/en/4.1/topics/logging/#configuring-logging
+        },
+        'django.server': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            "stream": sys.__stdout__,  # setting this up manually because this specific property had to be changed,
+            # and I was too lazy to figure out how to customize this via
+            # https://docs.djangoproject.com/en/4.1/topics/logging/#configuring-logging
+            'formatter': 'django.server',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['info_handler', 'error_handler', 'mail_admins'],
+            'level': 'INFO',
+        },
+        'django.server': {
+            'handlers': ['django.server'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+})
+
+print("settings.py finished")
