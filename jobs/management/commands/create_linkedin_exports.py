@@ -9,7 +9,7 @@ from dateutil.tz import tz
 from django.conf import settings
 from django.core.management import BaseCommand
 from selenium import webdriver
-from selenium.common import NoSuchElementException, TimeoutException
+from selenium.common import NoSuchElementException, TimeoutException, StaleElementReferenceException
 from selenium.webdriver import FirefoxOptions
 from selenium.webdriver.common.by import By
 
@@ -163,14 +163,14 @@ class Command(BaseCommand):
                     ).text
                     job_closed = job_closed_or_applied_text == 'No longer accepting applications'
                     job_already_applied = re.match(r"Applied \d* \w* ago", job_closed_or_applied_text) is not None
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException):
                     pass
                 try:
                     if not job_already_applied:
                         job_already_applied = driver.find_element(
                             by=By.CLASS_NAME, value='post-apply-timeline__entity'
                         ).text.split("\n")[0] == 'Applied on company site'
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException):
                     pass
                 try:
                     apply_text = driver.find_element(by=By.CLASS_NAME, value="jobs-apply-button").text
@@ -178,7 +178,7 @@ class Command(BaseCommand):
                     easy_apply = apply_text == "Easy Apply"
                     if easy_apply:
                         job_already_applied = False
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException):
                     pass
                 if not (job_closed or job_already_applied or job_open_for_application):
                     if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
@@ -272,7 +272,7 @@ class Command(BaseCommand):
                     ).find_elements(
                         by=By.XPATH, value=".//li[contains(@id, 'ember')]"
                     )
-                except NoSuchElementException:
+                except (NoSuchElementException, StaleElementReferenceException):
                     more_jobs_to_search = False
                 if more_jobs_to_search and jobs is not None:
                     jobs_list = get_job(driver)
@@ -318,14 +318,14 @@ class Command(BaseCommand):
                                 job_closed = job_closed_or_applied_text == 'No longer accepting applications'
                                 job_already_applied = re.match(r"Applied \d* \w* ago",
                                                                job_closed_or_applied_text) is not None
-                            except NoSuchElementException:
+                            except (NoSuchElementException, StaleElementReferenceException):
                                 pass
                             try:
                                 if not job_already_applied:
                                     job_already_applied = driver.find_element(
                                         by=By.CLASS_NAME, value='post-apply-timeline__entity'
                                     ).text.split("\n")[0] == 'Applied on company site'
-                            except NoSuchElementException:
+                            except (NoSuchElementException, StaleElementReferenceException):
                                 pass
                             try:
                                 apply_text = driver.find_element(by=By.CLASS_NAME,
@@ -334,7 +334,7 @@ class Command(BaseCommand):
                                 easy_apply = apply_text == "Easy Apply"
                                 if easy_apply:
                                     job_already_applied = False
-                            except NoSuchElementException:
+                            except (NoSuchElementException, StaleElementReferenceException):
                                 pass
                             if not (job_closed or job_already_applied or job_open_for_application):
                                 if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
