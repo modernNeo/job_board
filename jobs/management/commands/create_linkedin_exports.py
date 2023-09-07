@@ -20,6 +20,7 @@ COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover']
 
 logger = Loggers.get_logger()
 
+
 def get_posted_date(driver):
     primary_description = driver.find_element(
         by=By.CLASS_NAME, value="jobs-unified-top-card__primary-description"
@@ -27,14 +28,24 @@ def get_posted_date(driver):
     try:
         location_and_posted_date = primary_description.text.split(" · ")[1]
     except Exception as e:
+        logger.error(
+            "cannot find the datetime for a primary "
+            f"description of [{primary_description}] due to error\n{e}"
+        )
         return False
     dividing_index = len(location_and_posted_date)
     word_index = 0
     while word_index <= 3:
         dividing_index = location_and_posted_date[:dividing_index].rfind(" ")
         word_index += 1
-    date_posted = location_and_posted_date[dividing_index:].strip()
-
+    try:
+        date_posted = location_and_posted_date[dividing_index:].strip()
+    except Exception as e:
+        logger.error(
+            "cannot find the datetime for a primary "
+            f"description of [{location_and_posted_date}] due to error\n{e}"
+        )
+        return False
     post_date = datetime.datetime.now(
         tz=tz.gettz('Canada/Pacific')
     ).replace(second=0).replace(microsecond=0)
@@ -57,7 +68,10 @@ def get_posted_date(driver):
     elif 'minute' in date_posted:
         post_date -= datetime.timedelta(minutes=duration)
     else:
-        logger.info(date_posted)
+        logger.error(
+            "cannot find the datetime for date_posted "
+            f"[{date_posted}] as it doesn't contain a time indicator"
+        )
         raise Exception(date_posted)
     return post_date
 
