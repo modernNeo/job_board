@@ -72,7 +72,7 @@ class Command(BaseCommand):
         today = datetime.datetime.today().astimezone(tz.gettz('Canada/Pacific'))
 
         opts = FirefoxOptions()
-        opts.add_argument("--headless")
+        # opts.add_argument("--headless")
         driver = webdriver.Firefox(options=opts)
         driver.set_page_load_timeout(30)
         driver.get("https://www.linkedin.com/uas/login")
@@ -81,7 +81,10 @@ class Command(BaseCommand):
         word.send_keys(settings.LINKEDIN_PASSWORD)
         word.submit()
         time.sleep(6)
-        input("clear to go ahead?")
+        page_loaded = len([item for item in BeautifulSoup(driver.page_source, 'html.parser').findAll("span") if
+                 'class' in item.attrs and 'artdeco-button__text' in item.attrs['class']]) > 10
+        if not page_loaded:
+            return
         exports = open(f'{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
         exports_writer = csv.writer(exports, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         exports_writer.writerow(
