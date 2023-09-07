@@ -94,7 +94,7 @@ class Command(BaseCommand):
         word = driver.find_element(value='password')
         word.send_keys(settings.LINKEDIN_PASSWORD)
         word.submit()
-        time.sleep(6)
+        time.sleep(30)
         page_loaded = (
             len(BeautifulSoup(driver.page_source, 'html.parser').findAll("span")) > 10
         )
