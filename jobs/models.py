@@ -132,6 +132,7 @@ class PSTDateTimeField(models.DateTimeField):
 
 # Create your models here.
 
+
 class Job(models.Model):
     linkedin_id = models.PositiveBigIntegerField(
 
@@ -182,6 +183,21 @@ class Job(models.Model):
             return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
 
 
+class JobLocation(models.Model):
+    job_posting = models.ForeignKey(
+        Job, on_delete=models.CASCADE
+    )
+    linkedin_id = models.PositiveBigIntegerField(
+
+    )
+    location = models.CharField(
+        max_length=500
+    )
+    linkedin_link = models.CharField(
+        max_length=5000
+    )
+
+
 class List(models.Model):
     name = models.CharField(
         max_length=500
@@ -203,6 +219,7 @@ class Item(models.Model):
         Job, on_delete=models.CASCADE,
     )
 
+    @property
     def list_name(self):
         return self.list.name
 

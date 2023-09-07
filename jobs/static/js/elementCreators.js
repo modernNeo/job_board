@@ -63,10 +63,10 @@ function createCompanyInfoLine(label, pTagID, value){
     return companyInfo;
 
 }
-function createLink(link) {
+function createLink(text_to_display, link) {
     let linkElement = document.createElement("a");
     linkElement.href = link;
     linkElement.target = '_blank';
-    linkElement.innerHTML = link;
+    linkElement.innerHTML = text_to_display;
     return linkElement;
 }

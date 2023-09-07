@@ -220,6 +220,16 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             async: false
         }
     ).responseText);
+
+    let locations = JSON.parse($.ajax({
+            'url': `${getCookie('job_location_endpoint')}?job_id=${job.id}`,
+            'type': 'GET',
+            'cache': false,
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json; charset=utf-8',
+            async: false
+    }
+    ).responseText);
     userSpecificItems = new Map(userSpecificItems.map(job_list_for_user => [job_list_for_user.list, job_list_for_user]))
     const userSpecificAppliedItem = userSpecificItems.get(appliedListId)
     const userSpecificArchivedItem = userSpecificItems.get(archivedListId);
@@ -247,7 +257,9 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.appendChild(createCompanyInfoLine("Applied : ", "none", userSpecificItems.get(appliedListId) !== undefined))
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
-    jobPostingInfo.append(createLink(job.linkedin_link), document.createElement("br"), document.createElement("br"));
+    for (let i = 0; i < locations.length; i++) {
+        jobPostingInfo.append(createLink(locations[i].location, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
+    }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
     jobPostingInfo.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
     jobPostingInfo.appendChild(createCompanyInfoLine("Remote Work Allowed : ", "remote_work_allowed_label", job.remote_work_allowed))
