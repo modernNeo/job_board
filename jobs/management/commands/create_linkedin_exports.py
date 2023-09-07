@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 
 from jobs.models import Job
 
+COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover']
 
 def get_posted_date(driver):
     primary_description = driver.find_element(
@@ -174,7 +175,7 @@ class Command(BaseCommand):
                                 end=''
                             )
                             retry_attempt_to_get_job_details = 0
-                    else:
+                    elif job.organisation_name not in COMPANIES_TO_SKIP:
                         retry_attempt_to_get_job_details = 0
                         if job_closed or job_already_applied:
                             timestamp = timestamp.timestamp()
@@ -335,7 +336,7 @@ class Command(BaseCommand):
                                             end=''
                                         )
                                         retry_attempt_to_get_job_details = 0
-                                else:
+                                elif company_name not in COMPANIES_TO_SKIP:
                                     timestamp = timestamp.timestamp()
                                     exports_writer.writerow([
                                         job_id, job_title, company_name, timestamp,
