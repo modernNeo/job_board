@@ -6,7 +6,7 @@ import os.path
 from dateutil.tz import tz
 from django.core.management import BaseCommand
 
-from jobs.models import Job, ETLFile, create_pst_time, List, Item
+from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation
 
 JOB_ID_KEY = 'jobId'
 JOB_TITLE_KEY = 'jobTitle'
@@ -66,6 +66,8 @@ class Command(BaseCommand):
         job_closed_list, new = List.objects.all().get_or_create(name='Job Closed', user_id=1)
         number_of_new_jobs = {}
         new_ids = []
+        print("first run in debugging to ensure the date_posted check is working on line 88ish")
+        return
         for linkedin_export_obj in ETLFile.objects.all():
             if os.path.exists(linkedin_export_obj.file_path):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
@@ -82,25 +84,32 @@ class Command(BaseCommand):
                     for line in csvFile:
                         if line[csv_mapping[COMPANY_NAME_KEY]] not in ["Canonical", 'Aha!']:
                             job = Job.objects.all().filter(
-                                linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                linkedin_link=line[csv_mapping[JOB_URL_KEY]]
+                                organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
+                                date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
                             ).first()
                             new_job = job is None
                             if new_job:
                                 print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
                                 number_of_new_jobs[linkedin_export_obj.file_path]+=1
-                                job = Job(linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
-                                          job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                          linkedin_link=line[csv_mapping[JOB_URL_KEY]])
+                                job = Job(
+                                    job_title=line[csv_mapping[JOB_TITLE_KEY]],
+                                    organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
+                                    date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
+                                )
                             elif job.id not in new_ids:  # needed to distinguish new jobs that were created in
                                 # previous iteration of this loop
                                 print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
-                            job.organisation_name = line[csv_mapping[COMPANY_NAME_KEY]]
-                            job.location = line[csv_mapping[LOCATION_KEY]]
-                            job.remote_work_allowed = 'remote' in job.job_title.lower()
-                            job.date_posted = datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
-                            job.linkedin_link = line[csv_mapping[JOB_URL_KEY]]
+
+                            if job.id is not None:
+                                JobLocation.objects.all().get_or_create(
+                                    job_posting_id=job.id,
+                                    linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
+                                    location=line[csv_mapping[LOCATION_KEY]],
+                                    linkedin_link=line[csv_mapping[JOB_URL_KEY]]
+                                )
+                            job.remote_work_allowed = 'remote' in line[csv_mapping[LOCATION_KEY]].lower()
+
                             job.easy_apply = line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
                             job.save()
                             if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':

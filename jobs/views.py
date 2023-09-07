@@ -8,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, ETLFile, List, Item, JobNote
+from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -166,6 +166,23 @@ class ItemSet(viewsets.ModelViewSet):
         if 'job_id' in self.request.query_params:
             items = items.filter(job_id=self.request.query_params['job_id'])
         return items
+
+
+class JobLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobLocation
+        fields = '__all__'
+
+
+class JobLocationSet(viewsets.ModelViewSet):
+    serializer_class = JobLocationSerializer
+    queryset = JobLocation.objects.all()
+
+    def get_queryset(self):
+        locations = self.queryset
+        if 'job_id' in self.request.query_params:
+            locations = locations.filter(job_posting_id=self.request.query_params['job_id'])
+        return locations
 
 
 class JobNoteSerializer(serializers.ModelSerializer):

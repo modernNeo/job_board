@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 
 from jobs.models import Job
 
+COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover']
 
 def get_posted_date(driver):
     primary_description = driver.find_element(
@@ -71,7 +72,7 @@ class Command(BaseCommand):
         today = datetime.datetime.today().astimezone(tz.gettz('Canada/Pacific'))
 
         opts = FirefoxOptions()
-        opts.add_argument("--headless")
+        # opts.add_argument("--headless")
         driver = webdriver.Firefox(options=opts)
         driver.set_page_load_timeout(30)
         driver.get("https://www.linkedin.com/uas/login")
@@ -80,7 +81,10 @@ class Command(BaseCommand):
         word.send_keys(settings.LINKEDIN_PASSWORD)
         word.submit()
         time.sleep(6)
-        input("clear to go ahead?")
+        page_loaded = len([item for item in BeautifulSoup(driver.page_source, 'html.parser').findAll("span") if
+                 'class' in item.attrs and 'artdeco-button__text' in item.attrs['class']]) > 10
+        if not page_loaded:
+            return
         exports = open(f'{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
         exports_writer = csv.writer(exports, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         exports_writer.writerow(
@@ -174,7 +178,7 @@ class Command(BaseCommand):
                                 end=''
                             )
                             retry_attempt_to_get_job_details = 0
-                    else:
+                    elif job.organisation_name not in COMPANIES_TO_SKIP:
                         retry_attempt_to_get_job_details = 0
                         if job_closed or job_already_applied:
                             timestamp = timestamp.timestamp()
@@ -335,7 +339,7 @@ class Command(BaseCommand):
                                             end=''
                                         )
                                         retry_attempt_to_get_job_details = 0
-                                else:
+                                elif company_name not in COMPANIES_TO_SKIP:
                                     timestamp = timestamp.timestamp()
                                     exports_writer.writerow([
                                         job_id, job_title, company_name, timestamp,
