@@ -306,6 +306,7 @@ class Command(BaseCommand):
                                 jobs_list = get_job(driver)
                                 retry_attempt += 1
                         if job_info_item is not None:
+                            logger.info(f"job_info_item for job {index} obtained")
                             job_title = job_info_item.contents[1].text.replace("\n", "").strip()
                             job_link = re.search(r"/jobs/view/\d*/", job_info_item.contents[1].contents[1].attrs["href"])[0]
                             job_id = int(re.findall(r'\d+', job_link)[0])
@@ -320,6 +321,7 @@ class Command(BaseCommand):
                                                                job_closed_or_applied_text) is not None
                             except (NoSuchElementException, StaleElementReferenceException):
                                 pass
+                            logger.info(f"job {index} => job_closed = {job_closed}, job_already_applied = {job_already_applied}")
                             try:
                                 if not job_already_applied:
                                     job_already_applied = driver.find_element(
@@ -327,6 +329,7 @@ class Command(BaseCommand):
                                     ).text.split("\n")[0] == 'Applied on company site'
                             except (NoSuchElementException, StaleElementReferenceException):
                                 pass
+                            logger.info(f"job {index} => job_already_applied = {job_already_applied}")
                             try:
                                 apply_text = driver.find_element(by=By.CLASS_NAME,
                                                                  value="jobs-apply-button").text
@@ -336,6 +339,10 @@ class Command(BaseCommand):
                                     job_already_applied = False
                             except (NoSuchElementException, StaleElementReferenceException):
                                 pass
+                            logger.info(
+                                f"job {index} => job_open_for_application = {job_open_for_application}, "
+                                f"easy_apply = {easy_apply}, job_already_applied = {job_already_applied}"
+                            )
                             if not (job_closed or job_already_applied or job_open_for_application):
                                 if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                     retry_attempt_to_get_job_details += 1
