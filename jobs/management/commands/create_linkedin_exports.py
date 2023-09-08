@@ -375,20 +375,28 @@ class Command(BaseCommand):
                                             f"with {skipped_jobs} skipped jobs"
                                         )
                                         retry_attempt_to_get_job_details = 0
-                                elif company_name not in COMPANIES_TO_SKIP:
-                                    timestamp = timestamp.timestamp()
-                                    exports_writer.writerow([
-                                        job_id, job_title, company_name, timestamp,
-                                        location, f"https://www.linkedin.com{job_link}", job_already_applied, easy_apply,
-                                        job_closed
-                                    ])
-                                    exports.flush()
-                                    number_of_jobs_processed += 1
-                                    logger.info(
-                                        f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} for "
-                                        f"{search_filter}"
-                                    )
-                                    index += 1
+                                else:
+                                    if company_name not in COMPANIES_TO_SKIP:
+                                        timestamp = timestamp.timestamp()
+                                        exports_writer.writerow([
+                                            job_id, job_title, company_name, timestamp,
+                                            location, f"https://www.linkedin.com{job_link}", job_already_applied, easy_apply,
+                                            job_closed
+                                        ])
+                                        exports.flush()
+                                        number_of_jobs_processed += 1
+                                        logger.info(
+                                            f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
+                                            f"for {search_filter}"
+                                        )
+                                        index += 1
+                                    else:
+                                        skipped_jobs += 1
+                                        index += 1
+                                        logger.info(
+                                            f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
+                                            f"for {search_filter}"
+                                        )
                         else:
                             logger.info(f"could not get job_info_item for job at index {index}")
             search_filter_time2 = time.perf_counter()
