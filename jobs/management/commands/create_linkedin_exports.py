@@ -155,7 +155,6 @@ class Command(BaseCommand):
                 easy_apply = False
                 job_already_applied = False
                 job_closed = False
-                job_closed_or_applied_text = None
                 job_open_for_application = False
                 try:
                     job_closed_or_applied_text = driver.find_element(
@@ -244,6 +243,7 @@ class Command(BaseCommand):
             f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}"
         ]
         for search_filter in search_filters:
+            logger.info(f"searching using {search_filter}")
             search_filter_time1 = time.perf_counter()
             more_jobs_to_search = True
             page = 0
@@ -274,12 +274,14 @@ class Command(BaseCommand):
                     )
                 except (NoSuchElementException, StaleElementReferenceException):
                     more_jobs_to_search = False
+                    logger.info(f"no more jobs to search for with filter {search_filter}")
                 if more_jobs_to_search and jobs is not None:
                     jobs_list = get_job(driver)
                     index = 0
                     retry_attempt_to_get_job_details = 0
                     retry_max_to_get_job_details = 5
                     while index < len(jobs):
+                        logger.info(f"trying to get job at index {index} for {search_filter}")
                         job = jobs[index]
                         if retry_attempt_to_get_job_details == 0:
                             job.click()
@@ -291,9 +293,7 @@ class Command(BaseCommand):
                         easy_apply = False
                         job_closed = False
                         job_already_applied = False
-                        job_closed_or_applied_text = None
                         job_open_for_application = False
-                        apply_text = None
                         while not (job_item_obtained or retry_attempt == retry_max):
                             try:
                                 if retry_attempt > 0:
@@ -340,6 +340,9 @@ class Command(BaseCommand):
                                 if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                     retry_attempt_to_get_job_details += 1
                                     driver.refresh()
+                                    logger.info(
+                                        f"refreshing page in order to parse job at index {index}"
+                                    )
                                 else:
                                     index += 1
                                     skipped_jobs += 1
@@ -354,6 +357,9 @@ class Command(BaseCommand):
                                     if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                         retry_attempt_to_get_job_details += 1
                                         driver.refresh()
+                                        logger.info(
+                                            f"refreshing page in order to parse job at index {index}"
+                                        )
                                     else:
                                         index+=1
                                         skipped_jobs+=1
@@ -376,6 +382,8 @@ class Command(BaseCommand):
                                         f"{search_filter}"
                                     )
                                     index += 1
+                        else:
+                            logger.info(f"could not get job_info_item for job at index {index}")
             search_filter_time2 = time.perf_counter()
             time_run[search_filter] = search_filter_time2 - search_filter_time1
 
