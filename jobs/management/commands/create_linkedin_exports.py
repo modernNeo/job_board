@@ -124,6 +124,7 @@ class Command(BaseCommand):
 
         time_run = {}
         jobs = Job.objects.all().filter(item__isnull=True)
+        jobs = []
         total_number_of_jobs = len(jobs)
         number_of_jobs_processed = 0
         retry_attempt_to_get_job_details = 0
@@ -299,6 +300,7 @@ class Command(BaseCommand):
                                 except StaleElementReferenceException:
                                     retry_attempt_to_get_job_details += 1
                                     driver.refresh()
+                                    time.sleep(10)
                         if successful_click_on_job:
                             time.sleep(4)
                             retry_max = 5
@@ -317,7 +319,7 @@ class Command(BaseCommand):
                                     job_item_obtained = True
                                 except AttributeError:
                                     driver.execute_script("arguments[0].scrollIntoView();", job)
-                                    time.sleep(4)
+                                    time.sleep(10)
                                     jobs_list = get_job(driver)
                                     retry_attempt += 1
                             if job_info_item is not None:
@@ -369,6 +371,7 @@ class Command(BaseCommand):
                                     if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                         retry_attempt_to_get_job_details += 1
                                         driver.refresh()
+                                        time.sleep(10)
                                         logger.info(
                                             f"refreshing page in order to parse job at index {index}"
                                         )
@@ -386,6 +389,7 @@ class Command(BaseCommand):
                                         if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                             retry_attempt_to_get_job_details += 1
                                             driver.refresh()
+                                            time.sleep(10)
                                             logger.info(
                                                 f"refreshing page in order to parse job at index {index}"
                                             )
@@ -422,7 +426,9 @@ class Command(BaseCommand):
                             else:
                                 logger.error(f"could not get job_info_item for job at index {index}")
                         else:
+                            skipped_jobs+=1
                             logger.error(f"could not execute successful click on job at index {index}")
+                            index+=1
             search_filter_time2 = time.perf_counter()
             time_run[search_filter] = search_filter_time2 - search_filter_time1
 
