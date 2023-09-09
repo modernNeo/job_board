@@ -283,84 +283,89 @@ class Command(BaseCommand):
                     while index < len(jobs):
                         logger.info(f"trying to get job at index {index} for {search_filter}")
                         job = jobs[index]
+                        successful_click_on_job = False
                         if retry_attempt_to_get_job_details == 0:
-                            job.click()
-                        time.sleep(4)
-                        retry_max = 5
-                        retry_attempt = 0
-                        job_info_item = None
-                        job_item_obtained = False
-                        easy_apply = False
-                        job_closed = False
-                        job_already_applied = False
-                        job_open_for_application = False
-                        while not (job_item_obtained or retry_attempt == retry_max):
-                            try:
-                                if retry_attempt > 0:
-                                    logger.info(f"attempt {retry_attempt}/{retry_max} to get job info")
-                                job_info_item = jobs_list[index].contents[1].contents[1].contents[1].contents[3]
-                                job_item_obtained = True
-                            except AttributeError:
-                                driver.execute_script("arguments[0].scrollIntoView();", job)
-                                time.sleep(4)
-                                jobs_list = get_job(driver)
-                                retry_attempt += 1
-                        if job_info_item is not None:
-                            logger.info(f"job_info_item for job {index} obtained")
-                            job_title = job_info_item.contents[1].text.replace("\n", "").strip()
-                            job_link = re.search(r"/jobs/view/\d*/", job_info_item.contents[1].contents[1].attrs["href"])[0]
-                            job_id = int(re.findall(r'\d+', job_link)[0])
-                            company_name = job_info_item.contents[3].text.replace("\n", "").strip()
-                            location = job_info_item.contents[5].text.replace("\n", "").strip()
-                            try:
-                                job_closed_or_applied_text = driver.find_element(
-                                    by=By.CLASS_NAME, value='artdeco-inline-feedback__message'
-                                ).text
-                                job_closed = job_closed_or_applied_text == 'No longer accepting applications'
-                                job_already_applied = re.match(r"Applied \d* \w* ago",
-                                                               job_closed_or_applied_text) is not None
-                            except (NoSuchElementException, StaleElementReferenceException):
-                                pass
-                            logger.info(f"job {index} => job_closed = {job_closed}, job_already_applied = {job_already_applied}")
-                            try:
-                                if not job_already_applied:
-                                    job_already_applied = driver.find_element(
-                                        by=By.CLASS_NAME, value='post-apply-timeline__entity'
-                                    ).text.split("\n")[0] == 'Applied on company site'
-                            except (NoSuchElementException, StaleElementReferenceException):
-                                pass
-                            logger.info(f"job {index} => job_already_applied = {job_already_applied}")
-                            try:
-                                apply_text = driver.find_element(by=By.CLASS_NAME,
-                                                                 value="jobs-apply-button").text
-                                job_open_for_application = apply_text in ["Apply", 'Easy Apply']
-                                easy_apply = apply_text == "Easy Apply"
-                                if easy_apply:
-                                    job_already_applied = False
-                            except (NoSuchElementException, StaleElementReferenceException):
-                                pass
-                            logger.info(
-                                f"job {index} => job_open_for_application = {job_open_for_application}, "
-                                f"easy_apply = {easy_apply}, job_already_applied = {job_already_applied}"
-                            )
-                            if not (job_closed or job_already_applied or job_open_for_application):
-                                if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
+                            job_click_attempt = 0
+                            job_click_max_attempts = 5
+                            while (job_click_attempt <= job_click_max_attempts) and not successful_click_on_job:
+                                try:
+                                    job.click()
+                                    if retry_attempt_to_get_job_details > 0:
+                                        logger.info(
+                                            f"attempt {job_click_attempt}/{job_click_max_attempts} to click on "
+                                            f"job at index {index}"
+                                        )
+                                    successful_click_on_job = True
+                                except StaleElementReferenceException:
                                     retry_attempt_to_get_job_details += 1
                                     driver.refresh()
-                                    logger.info(
-                                        f"refreshing page in order to parse job at index {index}"
-                                    )
-                                else:
-                                    index += 1
-                                    skipped_jobs += 1
-                                    logger.info(
-                                        f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} "
-                                        f"with {skipped_jobs} skipped jobs"
-                                    )
-                                    retry_attempt_to_get_job_details = 0
-                            else:
-                                timestamp = get_posted_date(driver)
-                                if timestamp is False:
+                        if successful_click_on_job:
+                            time.sleep(4)
+                            retry_max = 5
+                            retry_attempt = 0
+                            job_info_item = None
+                            job_item_obtained = False
+                            easy_apply = False
+                            job_closed = False
+                            job_already_applied = False
+                            job_open_for_application = False
+                            while not (job_item_obtained or retry_attempt == retry_max):
+                                try:
+                                    if retry_attempt > 0:
+                                        logger.info(f"attempt {retry_attempt}/{retry_max} to get job info")
+                                    job_info_item = jobs_list[index].contents[1].contents[1].contents[1].contents[3]
+                                    job_item_obtained = True
+                                except AttributeError:
+                                    driver.execute_script("arguments[0].scrollIntoView();", job)
+                                    time.sleep(4)
+                                    jobs_list = get_job(driver)
+                                    retry_attempt += 1
+                            if job_info_item is not None:
+                                logger.info(f"job_info_item for job {index} obtained")
+                                job_title = job_info_item.contents[1].text.replace("\n", "").strip()
+                                job_link = re.search(r"/jobs/view/\d*/", job_info_item.contents[1].contents[1].attrs["href"])[0]
+                                job_id = int(re.findall(r'\d+', job_link)[0])
+                                company_name = job_info_item.contents[3].text.replace("\n", "").strip()
+                                location = job_info_item.contents[5].text.replace("\n", "").strip()
+                                stable_error_encountered = False
+                                try:
+                                    job_closed_or_applied_text = driver.find_element(
+                                        by=By.CLASS_NAME, value='artdeco-inline-feedback__message'
+                                    ).text
+                                    job_closed = job_closed_or_applied_text == 'No longer accepting applications'
+                                    job_already_applied = re.match(r"Applied \d* \w* ago",
+                                                                   job_closed_or_applied_text) is not None
+                                except NoSuchElementException:
+                                    pass
+                                except StaleElementReferenceException:
+                                    stable_error_encountered = True
+                                logger.info(f"job {index} => job_closed = {job_closed}, job_already_applied = {job_already_applied}")
+                                try:
+                                    if not job_already_applied:
+                                        job_already_applied = driver.find_element(
+                                            by=By.CLASS_NAME, value='post-apply-timeline__entity'
+                                        ).text.split("\n")[0] == 'Applied on company site'
+                                except NoSuchElementException:
+                                    pass
+                                except StaleElementReferenceException:
+                                    stable_error_encountered = True
+                                logger.info(f"job {index} => job_already_applied = {job_already_applied}")
+                                try:
+                                    apply_text = driver.find_element(by=By.CLASS_NAME,
+                                                                     value="jobs-apply-button").text
+                                    job_open_for_application = apply_text in ["Apply", 'Easy Apply']
+                                    easy_apply = apply_text == "Easy Apply"
+                                    if easy_apply:
+                                        job_already_applied = False
+                                except NoSuchElementException:
+                                    pass
+                                except StaleElementReferenceException:
+                                    stable_error_encountered = True
+                                logger.info(
+                                    f"job {index} => job_open_for_application = {job_open_for_application}, "
+                                    f"easy_apply = {easy_apply}, job_already_applied = {job_already_applied}"
+                                )
+                                if (not (job_closed or job_already_applied or job_open_for_application)) or stable_error_encountered:
                                     if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
                                         retry_attempt_to_get_job_details += 1
                                         driver.refresh()
@@ -368,37 +373,56 @@ class Command(BaseCommand):
                                             f"refreshing page in order to parse job at index {index}"
                                         )
                                     else:
-                                        index+=1
-                                        skipped_jobs+=1
-                                        logger.info(
+                                        index += 1
+                                        skipped_jobs += 1
+                                        logger.error(
                                             f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} "
                                             f"with {skipped_jobs} skipped jobs"
                                         )
                                         retry_attempt_to_get_job_details = 0
                                 else:
-                                    if company_name not in COMPANIES_TO_SKIP:
-                                        timestamp = timestamp.timestamp()
-                                        exports_writer.writerow([
-                                            job_id, job_title, company_name, timestamp,
-                                            location, f"https://www.linkedin.com{job_link}", job_already_applied, easy_apply,
-                                            job_closed
-                                        ])
-                                        exports.flush()
-                                        number_of_jobs_processed += 1
-                                        logger.info(
-                                            f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
-                                            f"for {search_filter}"
-                                        )
-                                        index += 1
+                                    timestamp = get_posted_date(driver)
+                                    if timestamp is False:
+                                        if retry_attempt_to_get_job_details < retry_max_to_get_job_details:
+                                            retry_attempt_to_get_job_details += 1
+                                            driver.refresh()
+                                            logger.info(
+                                                f"refreshing page in order to parse job at index {index}"
+                                            )
+                                        else:
+                                            index+=1
+                                            skipped_jobs+=1
+                                            logger.error(
+                                                f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} "
+                                                f"with {skipped_jobs} skipped jobs"
+                                            )
+                                            retry_attempt_to_get_job_details = 0
                                     else:
-                                        skipped_jobs += 1
-                                        index += 1
-                                        logger.info(
-                                            f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
-                                            f"for {search_filter}"
-                                        )
+                                        if company_name not in COMPANIES_TO_SKIP:
+                                            timestamp = timestamp.timestamp()
+                                            exports_writer.writerow([
+                                                job_id, job_title, company_name, timestamp,
+                                                location, f"https://www.linkedin.com{job_link}", job_already_applied, easy_apply,
+                                                job_closed
+                                            ])
+                                            exports.flush()
+                                            number_of_jobs_processed += 1
+                                            logger.info(
+                                                f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
+                                                f"for {search_filter}"
+                                            )
+                                            index += 1
+                                        else:
+                                            skipped_jobs += 1
+                                            index += 1
+                                            logger.info(
+                                                f"parsed job {number_of_jobs_processed}/{total_number_of_jobs} with {skipped_jobs} skipped jobs "
+                                                f"for {search_filter}"
+                                            )
+                            else:
+                                logger.error(f"could not get job_info_item for job at index {index}")
                         else:
-                            logger.info(f"could not get job_info_item for job at index {index}")
+                            logger.error(f"could not execute successful click on job at index {index}")
             search_filter_time2 = time.perf_counter()
             time_run[search_filter] = search_filter_time2 - search_filter_time1
 
