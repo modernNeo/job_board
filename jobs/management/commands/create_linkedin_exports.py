@@ -175,7 +175,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                 url += f"&start={25 * page}"
             logger.info(f"getting page {url} for page {(page + 1)}")
             page += 1
-            more_jobs_to_search, total_number_of_inbox_jobs, jobs = load_page(driver, url, search_filter)
+            more_jobs_to_search, total_number_of_inbox_jobs, jobs = load_search_result_page(driver, url, search_filter)
             if more_jobs_to_search:
                 jobs_list = get_jobs(driver)
                 index = 0
@@ -338,7 +338,7 @@ def get_jobs(driver):
     ]
 
 
-def load_page(driver, url, search_filter):
+def load_search_result_page(driver, url, search_filter):
     driver.get(url)
     time.sleep(5)
     total_number_of_jobs = int(
@@ -395,48 +395,50 @@ def get_job_item(driver, jobs_list, index, job, number_of_job_on_current_page):
 
 
 def get_job_info(driver, job_info_item=None):
-    job_open_for_application = None
-    easy_apply = None
     job_title = None
+    company_name = None
+    timestamp = None
+    location = None
     job_link = None
     job_id = None
-    company_name = None
-    location = None
     job_closed = None
     job_already_applied = None
-    job_status_detected = False
-    job_info_detected = False
-    timestamp = None
-    iteration = 0
-    initial_time = time.perf_counter()
-    latest_attempt_time = time.perf_counter()
-    success = job_status_detected and job_info_detected
-    if job_info_item is not None:
+    job_open_for_application = None
+    easy_apply = None
+    if job_info_item is None:
+        job_title = driver.find_element(by=By.CLASS_NAME, value="jobs-unified-top-card__job-title").text.strip()
+
+        company_and_location_and_date_posted_string = driver.find_element(
+            by=By.CLASS_NAME, value="jobs-unified-top-card__primary-description"
+        ).text.strip()
+        company_name = company_and_location_and_date_posted_string.split("·")[0].strip()
+
+        timestamp, dividing_index = get_posted_date(driver)
+        timestamp = timestamp.timestamp()
+
+        location_and_timestamp = company_and_location_and_date_posted_string.split("·")[1]
+        potentialIndexOfRepostedWord = location_and_timestamp[:dividing_index].rfind(" ")
+        ending_index = potentialIndexOfRepostedWord \
+            if location_and_timestamp[potentialIndexOfRepostedWord:dividing_index].strip().lower() == 'reposted' \
+            else dividing_index
+        location = location_and_timestamp[:ending_index].strip()
+    else:
         job_title = job_info_item.contents[1].text.replace("\n", "").strip()
+
+        company_name = job_info_item.contents[3].text.replace("\n", "").strip()
+
+        timestamp = get_posted_date(driver)[0].timestamp()
+
+        location = job_info_item.contents[5].text.replace("\n", "").strip()
+
         job_link = (
             re.search(
                 r"/jobs/view/\d*/",
                 job_info_item.contents[1].contents[1].attrs["href"]
             )[0]
         )
-        company_name = job_info_item.contents[3].text.replace("\n", "").strip()
-        location = job_info_item.contents[5].text.replace("\n", "").strip()
         job_id = int(re.findall(r'\d+', job_link)[0])
-        timestamp = get_posted_date(driver)[0].timestamp()
-    else:
-        job_title = driver.find_element(by=By.CLASS_NAME, value="jobs-unified-top-card__job-title").text.strip()
-        company_and_location_and_date_posted_string = driver.find_element(
-            by=By.CLASS_NAME, value="jobs-unified-top-card__primary-description"
-        ).text.strip()
-        company_name = company_and_location_and_date_posted_string.split("·")[0].strip()
-        timestamp, dividing_index = get_posted_date(driver)
-        timestamp = timestamp.timestamp()
-        location_and_timestamp = company_and_location_and_date_posted_string.split("·")[1]
-        potentialIndexOfRepostedWord = location_and_timestamp[:dividing_index].rfind(" ")
-        if location_and_timestamp[potentialIndexOfRepostedWord:dividing_index].strip().lower() == 'reposted':
-            location = location_and_timestamp[:potentialIndexOfRepostedWord].strip()
-        else:
-            location = location_and_timestamp[:dividing_index].strip()
+
     try:
         job_closed_or_applied_text = driver.find_element(
             by=By.CLASS_NAME, value='artdeco-inline-feedback__message'
@@ -444,15 +446,17 @@ def get_job_info(driver, job_info_item=None):
         job_closed = job_closed_or_applied_text == 'No longer accepting applications'
         job_already_applied = re.match(r"Applied \d* \w* ago",
                                        job_closed_or_applied_text) is not None
-    except (NoSuchElementException, StaleElementReferenceException):
+    except NoSuchElementException:
         pass
+
     try:
         if not job_already_applied:
             job_already_applied = driver.find_element(
                 by=By.CLASS_NAME, value='post-apply-timeline__entity'
             ).text.split("\n")[0] == 'Applied on company site'
-    except (NoSuchElementException, StaleElementReferenceException):
+    except NoSuchElementException:
         pass
+
     try:
         apply_text = driver.find_element(by=By.CLASS_NAME,
                                          value="jobs-apply-button").text
@@ -460,25 +464,26 @@ def get_job_info(driver, job_info_item=None):
         easy_apply = apply_text == "Easy Apply"
         if easy_apply:
             job_already_applied = False
-    except (NoSuchElementException, StaleElementReferenceException):
+    except NoSuchElementException:
         pass
+
     job_status_detected = (
-        (job_open_for_application is not None) or
         (easy_apply is not None and job_open_for_application is not None) or
+        (job_open_for_application is not None) or
         job_closed is not None or
         job_already_applied is not None
     )
+    job_info_detected = (
+        job_title is not None and company_name is not None and
+        location is not None and timestamp is not None
+    )
     if job_info_item is not None:
         job_info_detected = (
-            job_title is not None and job_link is not None and job_id is not None and company_name is not None and
-            location is not None and timestamp is not None
-        )
-    else:
-        job_info_detected = (
-            job_title is not None and company_name is not None and
-            location is not None and timestamp is not None
+            job_info_detected and job_link is not None and job_id is not None
         )
     success = job_status_detected and job_info_detected
+    if job_info_item is None and not success:
+        print(1)
     return (
         success, job_title, job_link, job_id, company_name, location, job_closed, job_already_applied,
         job_open_for_application, easy_apply, timestamp
