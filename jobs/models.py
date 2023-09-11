@@ -155,11 +155,6 @@ class Job(models.Model):
         max_length=500
     )
 
-    date_posted = PSTDateTimeField(
-        null=True,
-        blank=True
-    )
-
     source_domain = models.CharField(
         max_length=500
     )
@@ -196,6 +191,11 @@ class JobLocation(models.Model):
     linkedin_link = models.CharField(
         max_length=5000
     )
+    date_posted = PSTDateTimeField(
+        null=True,
+        blank=True
+    )
+
 
 
 class List(models.Model):
