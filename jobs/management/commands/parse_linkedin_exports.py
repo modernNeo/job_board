@@ -67,7 +67,6 @@ class Command(BaseCommand):
         number_of_new_jobs = {}
         new_ids = []
         print("first run in debugging to ensure the date_posted check is working on line 88ish")
-        return
         for linkedin_export_obj in ETLFile.objects.all():
             if os.path.exists(linkedin_export_obj.file_path):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
@@ -82,56 +81,55 @@ class Command(BaseCommand):
                         csv_mapping[column] = idx
                     csvFile = csvFile[1:]
                     for line in csvFile:
-                        if line[csv_mapping[COMPANY_NAME_KEY]] not in ["Canonical", 'Aha!']:
-                            job = Job.objects.all().filter(
+                        job_location = JobLocation.objects.all().filter(
+                            linkedin_id=line[csv_mapping[JOB_ID_KEY]],
+                            location=line[csv_mapping[LOCATION_KEY]],
+                            linkedin_link=line[csv_mapping[JOB_URL_KEY]],
+                            job_posting__job_title=line[csv_mapping[JOB_TITLE_KEY]],
+                            job_posting__organisation_name=line[csv_mapping[COMPANY_NAME_KEY]]
+                        )
+                        new_job = job_location is None
+                        if new_job:
+                            print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
+                            number_of_new_jobs[linkedin_export_obj.file_path]+=1
+                            job = Job(
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                 organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
-                                date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
-                            ).first()
-                            new_job = job is None
-                            if new_job:
-                                print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
-                                number_of_new_jobs[linkedin_export_obj.file_path]+=1
-                                job = Job(
-                                    job_title=line[csv_mapping[JOB_TITLE_KEY]],
-                                    organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
-                                    date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific'))
-                                )
-                            elif job.id not in new_ids:  # needed to distinguish new jobs that were created in
-                                # previous iteration of this loop
-                                print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
-
-                            if job.id is not None:
-                                JobLocation.objects.all().get_or_create(
-                                    job_posting_id=job.id,
-                                    linkedin_id=int(line[csv_mapping[JOB_ID_KEY]]),
-                                    location=line[csv_mapping[LOCATION_KEY]],
-                                    linkedin_link=line[csv_mapping[JOB_URL_KEY]]
-                                )
-                            job.remote_work_allowed = 'remote' in line[csv_mapping[LOCATION_KEY]].lower()
-
-                            job.easy_apply = line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
+                                easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]],
+                            )
                             job.save()
-                            if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':
-                                if job.item_set.all().filter(list__name="Applied").first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=applied_list)
-                                if job.item_set.all().filter(list__name="Archived").first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=archived_list)
-                                if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
-                                    job.item_set.all().filter(list__name="ETL_updated").delete()
-                            if line[csv_mapping[JOB_CLOSED_KEY]] == 'True':
-                                if job.item_set.all().filter(list__name="Job Closed").first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=job_closed_list)
-                                if job.item_set.all().filter(list__name="Archived").first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=archived_list)
-                                if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
-                                    job.item_set.all().filter(list__name="ETL_updated").delete()
-                            if new_job and job.date_posted is not None:
-                                if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
-                                    new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
-                            new_ids.append(job.id)
-                        else:
-                            aha_or_canonical_job_posting_encountered[linkedin_export_obj.file_path] += 1
+                            job_location = JobLocation(
+                                job_posting=job,
+                                linkedin_id=line[csv_mapping[JOB_ID_KEY]],
+                                location=line[csv_mapping[LOCATION_KEY]],
+                                linkedin_link=line[csv_mapping[JOB_URL_KEY]],
+                                date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific')),
+                            )
+                            job_location.save()
+                        elif job_location.id not in new_ids:  # needed to distinguish new jobs that were created in
+                            # previous iteration of this loop
+                            job = job_location.first().job_posting
+                            print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
+
+
+                        if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':
+                            if job.item_set.all().filter(list__name="Applied").first() is None:
+                                Item.objects.all().get_or_create(job=job, list=applied_list)
+                            if job.item_set.all().filter(list__name="Archived").first() is None:
+                                Item.objects.all().get_or_create(job=job, list=archived_list)
+                            if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
+                                job.item_set.all().filter(list__name="ETL_updated").delete()
+                        if line[csv_mapping[JOB_CLOSED_KEY]] == 'True':
+                            if job.item_set.all().filter(list__name="Job Closed").first() is None:
+                                Item.objects.all().get_or_create(job=job, list=job_closed_list)
+                            if job.item_set.all().filter(list__name="Archived").first() is None:
+                                Item.objects.all().get_or_create(job=job, list=archived_list)
+                            if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
+                                job.item_set.all().filter(list__name="ETL_updated").delete()
+                        if new_job and job.date_posted is not None:
+                            if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
+                                new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
+                        new_ids.append(job.id)
                         index += 1
 
                 print(f"\nparsed {linkedin_export_obj.file_path}")
