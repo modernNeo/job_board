@@ -103,71 +103,106 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
         number_of_jobs_closed_or_already_applied = 0
         unable_to_retrieve_jobs = 0
         jobs_from_companies_to_skip = 0
+        unclickable_jobs = 0
         while more_jobs_to_search:
             url = f"https://www.linkedin.com/jobs/search/?{search_filter}&refresh=true&sortBy=DD"
             if page > 0:
                 url += f"&start={25 * page}"
             logger.info(f"getting page {url} for page {(page + 1)}")
             page += 1
-            more_jobs_to_search, total_number_of_inbox_jobs, jobs = load_search_result_page(driver, url, search_filter)
+            more_jobs_to_search, total_number_of_inbox_jobs, selenium_jobs_list = load_search_result_page(
+                driver, url, search_filter
+            )
             if more_jobs_to_search:
-                jobs_list = get_jobs(driver)
+                bs4_jobs_list = get_jobs(driver)
                 index = 0
-                number_of_job_on_current_page = len(jobs)
+                number_of_job_on_current_page = len(selenium_jobs_list)
                 while index < number_of_job_on_current_page:
                     logger.info(f"trying to get job at index {index} for {search_filter}")
-                    job = jobs[index]
-                    job.click()
-                    success, job_info_item, error, jobs_list = get_job_item(
-                        driver, jobs_list, index, job, number_of_job_on_current_page
-                    )
-                    if success:
-                        job_title = job_info_item[1]
-                        job_link = job_info_item[2]
-                        job_id = job_info_item[3]
-                        company_name = job_info_item[4]
-                        location = job_info_item[5]
-                        job_closed = job_info_item[6]
-                        job_already_applied = job_info_item[7]
-                        easy_apply = job_info_item[9]
-                        timestamp = job_info_item[10]
-                        errors = job_info_item[11]
+                    selenium_job = selenium_jobs_list[index]
+
+                    # tries to perform a job click
+                    successful_job_click = False
+                    initial_job_click_time = time.perf_counter()
+                    latest_job_click_attempt_time = time.perf_counter()
+                    iteration = 1
+                    latest_error = None
+                    while (not successful_job_click) and ((latest_job_click_attempt_time - initial_job_click_time) <= 64):
+                        try:
+                            selenium_job.click()
+                            successful_job_click = True
+                        except Exception as e:
+                            random_number_milliseconds = random.randint(0, 1000) / 1000
+                            logger.info(f"attempt {iteration} trying to get index {index}/{len(bs4_jobs_list)}")
+                            bs4_jobs_list = get_jobs(driver)
+                            driver.execute_script("arguments[0].scrollIntoView();", selenium_job)
+                            time.sleep(math.pow(3, iteration) + random_number_milliseconds)
+                            latest_error = e
+                            latest_job_click_attempt_time = time.perf_counter()
+                        iteration += 1
+
+                    if successful_job_click:
+                        success, job_info_item, error, bs4_jobs_list = get_job_item(
+                            driver, bs4_jobs_list, index, selenium_job, number_of_job_on_current_page
+                        )
                         if success:
-                            if company_name not in COMPANIES_TO_SKIP:
-                                if job_id not in new_jobs:
-                                    new_jobs[job_id] = f"{company_name}_{job_title}"
-                                exports_writer.writerow([
-                                    job_id, job_title, company_name, timestamp,
-                                    location, f"https://www.linkedin.com{job_link}", job_already_applied,
-                                    easy_apply,
-                                    job_closed
-                                ])
-                                exports.flush()
-                                number_of_jobs_closed_or_already_applied += 1
+                            job_title = job_info_item[1]
+                            job_link = job_info_item[2]
+                            job_id = job_info_item[3]
+                            company_name = job_info_item[4]
+                            location = job_info_item[5]
+                            job_closed = job_info_item[6]
+                            job_already_applied = job_info_item[7]
+                            easy_apply = job_info_item[9]
+                            timestamp = job_info_item[10]
+                            errors = job_info_item[11]
+                            if success:
+                                if company_name not in COMPANIES_TO_SKIP:
+                                    if job_id not in new_jobs:
+                                        new_jobs[job_id] = f"{company_name}_{job_title}"
+                                    exports_writer.writerow([
+                                        job_id, job_title, company_name, timestamp,
+                                        location, f"https://www.linkedin.com{job_link}", job_already_applied,
+                                        easy_apply,
+                                        job_closed
+                                    ])
+                                    exports.flush()
+                                    number_of_jobs_closed_or_already_applied += 1
+                                else:
+                                    jobs_from_companies_to_skip += 1
+                                logger.info(
+                                    f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                                    f"Jobs Unable to Retrieve = "
+                                    f"{unable_to_retrieve_jobs}, Skipped Companies = {jobs_from_companies_to_skip} / "
+                                    f"{total_number_of_inbox_jobs}\n"
+                                )
+                                index += 1
                             else:
-                                jobs_from_companies_to_skip += 1
-                            logger.info(
-                                f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                f"Jobs Unable to Retrieve = "
-                                f"{unable_to_retrieve_jobs}, Skipped Companies = {jobs_from_companies_to_skip} / "
-                                f"{total_number_of_inbox_jobs}\n"
-                            )
-                            index += 1
+                                unable_to_retrieve_jobs += 1
+                                logger.error(
+                                    f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                                    f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                                    f"Skipped Companies = {jobs_from_companies_to_skip} / "
+                                    f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
+                                )
+                                index += 1
                         else:
                             unable_to_retrieve_jobs += 1
                             logger.error(
                                 f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                f"Jobs Unable to Retrieve = "
-                                f"{unable_to_retrieve_jobs}, Skipped Companies = {jobs_from_companies_to_skip} / "
+                                f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                                f"Skipped Companies = {jobs_from_companies_to_skip} / "
                                 f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
                             )
                             index += 1
                     else:
-                        unable_to_retrieve_jobs += 1
+                        unclickable_jobs += 1
                         logger.error(
-                            f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, Jobs Unable to Retrieve = "
-                            f"{unable_to_retrieve_jobs}, Skipped Companies = {jobs_from_companies_to_skip} / "
-                            f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
+                            f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                            f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                            f"Jobs Unable to Click On = {unclickable_jobs}, "
+                            f"Skipped Companies = {jobs_from_companies_to_skip} / "
+                            f"{total_number_of_inbox_jobs} due to error\n{latest_error}\n\n"
                         )
                         index += 1
         search_filter_time2 = time.perf_counter()
@@ -178,12 +213,12 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
 def load_search_result_page(driver, url, search_filter):
     driver.get(url)
     time.sleep(5)
-    total_number_of_jobs = int(
-        driver.find_element(
-            by=By.CLASS_NAME, value='jobs-search-results-list__subtitle'
-        ).text.split(" ")[0].replace(",", "")
-    )
     try:
+        total_number_of_jobs = int(
+            driver.find_element(
+                by=By.CLASS_NAME, value='jobs-search-results-list__subtitle'
+            ).text.split(" ")[0].replace(",", "")
+        )
         jobs = driver.find_element(
             by=By.CLASS_NAME, value='scaffold-layout__list-container'
         ).find_elements(
@@ -332,8 +367,6 @@ def get_job_info(driver, job_info_item=None):
     if not job_status_detected:
         error_message += "\n".join(errors)
 
-    if job_info_item is None and not success:
-        print(1)
     return (
         success, job_title, job_link, job_id, company_name, location, job_closed, job_already_applied,
         job_open_for_application, easy_apply, timestamp, error_message
@@ -363,8 +396,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 index += 1
                 exports_writer.writerow([
                     job.linkedin_id, job.job_posting.job_title, job.job_posting.organisation_name,
-                    job.job_posting.date_posted, job.location,
-                    job.linkedin_link, None, None, True
+                    job.date_posted, job.location, job.linkedin_link, None, None, True
                 ])
                 exports.flush()
                 success = True
