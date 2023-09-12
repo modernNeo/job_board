@@ -134,9 +134,6 @@ class PSTDateTimeField(models.DateTimeField):
 
 
 class Job(models.Model):
-    linkedin_id = models.PositiveBigIntegerField(
-
-    )
     job_title = models.CharField(
         max_length=500
     )
@@ -145,11 +142,6 @@ class Job(models.Model):
     )
     organisation_name = models.CharField(
         max_length=500
-    )
-    location = models.CharField(
-        max_length=500
-    )
-    remote_work_allowed = models.BooleanField(
     )
     workplace_type = models.CharField(
         max_length=500
@@ -160,9 +152,6 @@ class Job(models.Model):
     )
     easy_apply = models.BooleanField(
 
-    )
-    linkedin_link = models.CharField(
-        max_length=5000
     )
 
     @property
