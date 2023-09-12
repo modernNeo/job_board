@@ -254,19 +254,21 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     }
     jobPostingInfo.append(document.createElement("br"), document.createElement("br"));
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
-    jobPostingInfo.appendChild(createCompanyInfoLine("Applied : ", "none", userSpecificItems.get(appliedListId) !== undefined))
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
+    let vancouver_index = -1;
     for (let i = 0; i < locations.length; i++) {
+        if (locations[i].location.indexOf("Vancouver") !== -1){
+            vancouver_index = i;
+        }
         jobPostingInfo.append(createLink(locations[i].location, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
+    }
+    if (vancouver_index === -1){
+        vancouver_index = 0;
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
     jobPostingInfo.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Remote Work Allowed : ", "remote_work_allowed_label", job.remote_work_allowed))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Workplace Type : ", "workplace_type_label", job.workplace_type))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", job.date_posted))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Source : ", "source_label", job.source_domain))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Link : ", "link_label", job.organisation_name))
+    jobPostingInfo.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", locations[vancouver_index].date_posted))
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
