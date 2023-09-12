@@ -87,7 +87,7 @@ class Command(BaseCommand):
                             linkedin_link=line[csv_mapping[JOB_URL_KEY]],
                             job_posting__job_title=line[csv_mapping[JOB_TITLE_KEY]],
                             job_posting__organisation_name=line[csv_mapping[COMPANY_NAME_KEY]]
-                        )
+                        ).first()
                         new_job = job_location is None
                         if new_job:
                             print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
@@ -95,7 +95,7 @@ class Command(BaseCommand):
                             job = Job(
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                 organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
-                                easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]],
+                                easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
                             )
                             job.save()
                             job_location = JobLocation(
@@ -108,7 +108,7 @@ class Command(BaseCommand):
                             job_location.save()
                         elif job_location.id not in new_ids:  # needed to distinguish new jobs that were created in
                             # previous iteration of this loop
-                            job = job_location.first().job_posting
+                            job = job_location.job_posting
                             print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
 
 
@@ -126,9 +126,9 @@ class Command(BaseCommand):
                                 Item.objects.all().get_or_create(job=job, list=archived_list)
                             if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
                                 job.item_set.all().filter(list__name="ETL_updated").delete()
-                        if new_job and job.date_posted is not None:
-                            if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job.date_posted:
-                                new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job.date_posted
+                        if new_job and job_location.date_posted is not None:
+                            if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job_location.date_posted:
+                                new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job_location.date_posted
                         new_ids.append(job.id)
                         index += 1
 
