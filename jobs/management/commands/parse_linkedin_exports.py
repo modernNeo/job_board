@@ -92,12 +92,18 @@ class Command(BaseCommand):
                         if new_job:
                             print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
                             number_of_new_jobs[linkedin_export_obj.file_path]+=1
-                            job = Job(
+                            job = Job.objects.all().filter(
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                 organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
                                 easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
-                            )
-                            job.save()
+                            ).first()
+                            if job is None:
+                                job = Job(
+                                    job_title=line[csv_mapping[JOB_TITLE_KEY]],
+                                    organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
+                                    easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
+                                )
+                                job.save()
                             job_location = JobLocation(
                                 job_posting=job,
                                 linkedin_id=line[csv_mapping[JOB_ID_KEY]],
