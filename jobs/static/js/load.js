@@ -267,7 +267,6 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
         vancouver_index = 0;
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Location: ", "location_label", job.location))
     jobPostingInfo.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", locations[vancouver_index].date_posted))
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
