@@ -58,7 +58,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         new_post_with_oldest_posted_date = {}
-        aha_or_canonical_job_posting_encountered = {}
         current_date = datetime.datetime.now()
         today_date = create_pst_time(year=current_date.year, month=current_date.month, day=current_date.day)
         applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
@@ -72,7 +71,6 @@ class Command(BaseCommand):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
                     number_of_new_jobs[linkedin_export_obj.file_path] = 0
                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = today_date
-                    aha_or_canonical_job_posting_encountered[linkedin_export_obj.file_path] = 0
                     print(f"parsing {linkedin_export_obj.file_path}")
                     csvFile = [line for line in csv.reader(linkedin_export)]
                     index = 1
@@ -144,5 +142,3 @@ class Command(BaseCommand):
         print(json.dumps(new_post_with_oldest_posted_date, indent=4, default=str))
         print(f"number_of_new_jobs=")
         print(json.dumps(number_of_new_jobs, indent=4))
-        print(f"aha_or_canonical_job_posting_encountered=")
-        print(json.dumps(aha_or_canonical_job_posting_encountered, indent=4))
