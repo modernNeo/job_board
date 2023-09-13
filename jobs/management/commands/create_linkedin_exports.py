@@ -115,15 +115,15 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
         f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
     }
     new_jobs = {}
+    number_of_jobs_closed_or_already_applied = 0
+    jobs_from_companies_to_skip = 0
+    unable_to_retrieve_jobs = 0
+    unclickable_jobs = 0
     for url_filter, human_readable_string in search_queries.items():
         logger.info(f"searching using {human_readable_string}")
         search_filter_time1 = time.perf_counter()
         more_jobs_to_search = True
         page = 0
-        number_of_jobs_closed_or_already_applied = 0
-        unable_to_retrieve_jobs = 0
-        jobs_from_companies_to_skip = 0
-        unclickable_jobs = 0
         while more_jobs_to_search:
             url = f"https://www.linkedin.com/jobs/search/?{url_filter}&refresh=true&sortBy=DD"
             if page > 0:
@@ -464,27 +464,21 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
             if not success:
                 index += 1
                 unable_to_retrieve_jobs += 1
+        message = (
+            f"Job [{index}] => "
+            f"\n\tInbox Jobs Closed Or Already Applied = {number_of_jobs_closed_or_already_applied}, "
+            f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+            f"\n\tJobs Still Open = {jobs_still_open}, "
+            f"\n\tJobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
+            f"\n\tJob Links Reused for New Posting = {job_links_reused_for_new_posting} "
+            f"/ {total_number_of_inbox_jobs}"
+            f" for existing url {job.linkedin_link}",
+        )
         if success:
-            logger.info(
-                f"parsed job[{index + 1}] => "
-                f"Inbox Jobs Closed Or Already Applied = {number_of_jobs_closed_or_already_applied}, "
-                f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                f"Jobs Still Open = {jobs_still_open}, "
-                f"Jobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
-                f"Job Links Reused for New Posting = {job_links_reused_for_new_posting} "
-                f"/ {total_number_of_inbox_jobs}"
-                f" for existing url {job.linkedin_link}",
-            )
+            logger.info(message)
         else:
             logger.error(
-                f"parsed job[{index + 1}] => "
-                f"Inbox Jobs Closed Or Already Applied = {number_of_jobs_closed_or_already_applied}, "
-                f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                f"Jobs Still Open = {jobs_still_open}, "
-                f"Jobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
-                f"Job Links Reused for New Posting = {job_links_reused_for_new_posting} "
-                f"/ {total_number_of_inbox_jobs}"
-                f" for existing url {job.linkedin_link} due to an error\n{last_error}"
+                f"{message} due to an error\n{last_error}"
             )
 
 
