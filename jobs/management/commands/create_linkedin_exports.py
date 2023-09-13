@@ -131,13 +131,25 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                         try:
                             selenium_job.click()
                             successful_job_click = True
-                        except Exception as e:
+                        except Exception as click_error:
                             random_number_milliseconds = random.randint(0, 1000) / 1000
                             logger.info(f"attempt {iteration} trying to get index {index}/{len(bs4_jobs_list)}")
-                            bs4_jobs_list = get_jobs(driver)
-                            driver.execute_script("arguments[0].scrollIntoView();", selenium_job)
+                            try:
+                                _, _, selenium_jobs_list = load_search_result_page(
+                                    driver, url, search_filter
+                                )
+                                time.sleep(10)  # sleeping for 10 extra seconds just in case cause
+                                # the code only goes here if there might already be some problems with LinkedIn
+                                bs4_jobs_list = get_jobs(driver)
+                                selenium_job = selenium_jobs_list[index]
+                                driver.execute_script("arguments[0].scrollIntoView();", selenium_job)
+                            except Exception as reload_error:
+                                logger.error(
+                                    f"Could not load any job {index} on page {url} even after a reload due to"
+                                    f" error:\n{reload_error}\n\n"
+                                )
                             time.sleep(math.pow(3, iteration) + random_number_milliseconds)
-                            latest_error = e
+                            latest_error = click_error
                             latest_job_click_attempt_time = time.perf_counter()
                         iteration += 1
 
@@ -171,37 +183,40 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                                 else:
                                     jobs_from_companies_to_skip += 1
                                 logger.info(
-                                    f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                    f"Jobs Unable to Retrieve = "
-                                    f"{unable_to_retrieve_jobs}, Skipped Companies = {jobs_from_companies_to_skip} / "
+                                    f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                                    f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                                    f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
+                                    f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
                                     f"{total_number_of_inbox_jobs}\n"
                                 )
                                 index += 1
                             else:
                                 unable_to_retrieve_jobs += 1
                                 logger.error(
-                                    f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                    f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                                    f"Skipped Companies = {jobs_from_companies_to_skip} / "
+                                    f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                                    f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                                    f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
+                                    f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
                                     f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
                                 )
                                 index += 1
                         else:
                             unable_to_retrieve_jobs += 1
                             logger.error(
-                                f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                                f"Skipped Companies = {jobs_from_companies_to_skip} / "
+                                f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                                f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                                f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
+                                f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
                                 f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
                             )
                             index += 1
                     else:
                         unclickable_jobs += 1
                         logger.error(
-                            f"Job {index}  => Parsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                            f"Jobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                            f"Jobs Unable to Click On = {unclickable_jobs}, "
-                            f"Skipped Companies = {jobs_from_companies_to_skip} / "
+                            f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                            f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
+                            f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
+                            f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
                             f"{total_number_of_inbox_jobs} due to error\n{latest_error}\n\n"
                         )
                         index += 1
