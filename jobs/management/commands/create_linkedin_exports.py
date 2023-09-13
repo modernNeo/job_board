@@ -79,24 +79,44 @@ class Command(BaseCommand):
 
 
 def get_new_jobs(driver, exports_writer, exports, time_run):
-    EXPERIENCE_LEVEL_FILTER = "f_E=2%2C3%2C4"
-    FT_OR_CONTRACT_FILTER = "f_JT=F%2CC"
-    FILTER_FOR_ALL_JOBS = f"{EXPERIENCE_LEVEL_FILTER}&{FT_OR_CONTRACT_FILTER}"
-    REMOTE_FILTER = "f_WT=2"
-    WFH_AND_REMOTE_FILTER = f"{REMOTE_FILTER}%2C3"
+    INTERN_EXPERIENCE_LEVEl = "1"
+    ENTRY_EXPERIENCE_LEVEL = "2"
+    ASSOCIATE_EXPERIENCE_LEVEL = "3"
+    MID_SENIOR_EXPERIENCE_LEVEL = "4"
+    DIRECTOR_LEVEL = "5"
+    EXPERIENCE_LEVEL_FILTER = "f_E=" + "%2C".join(
+        [ENTRY_EXPERIENCE_LEVEL, ASSOCIATE_EXPERIENCE_LEVEL, MID_SENIOR_EXPERIENCE_LEVEL]
+    )
+
+    FULL_TIME_JOB = "F"
+    PART_TIME_JOB = "P"
+    CONTRACT_JOB = "C"
+    TEMPORARY_JOB = "T"
+    INTERNSHIP = "I"
+    JOB_TYPE_FILTER = "f_JT=" + "%2C".join(
+        [FULL_TIME_JOB, CONTRACT_JOB]
+    )
+
+    FILTER_FOR_ALL_JOBS = f"{EXPERIENCE_LEVEL_FILTER}&{JOB_TYPE_FILTER}"
+
+    ON_SITE_JOB = "1"
+    REMOTE_JOB = "2"
+    HYBRID_JOB = "3"
+    FILTER_FOR_CANADA_JOBS = "f_WT=" + "%2C".join([REMOTE_JOB])
+
     JAVA_KEYWORD = "keywords=intermediate%20java%20developer"
     SOFTWARE_KEYWORD = "keywords=intermediate%20software%20developer"
     CANADA = "location=Canada"
     VANCOUVER = "location=Vancouver%2C%20British%20Columbia%2C%20Canada"
-    search_filters = [
-        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{JAVA_KEYWORD}&{REMOTE_FILTER}",
-        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{SOFTWARE_KEYWORD}&{REMOTE_FILTER}",
-        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}",
-        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}"
-    ]
+    search_queries = {
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{SOFTWARE_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Software Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}": "Vancouver Software Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
+    }
     new_jobs = {}
-    for search_filter in search_filters:
-        logger.info(f"searching using {search_filter}")
+    for url_filter, human_readable_string in search_queries.items():
+        logger.info(f"searching using {human_readable_string}")
         search_filter_time1 = time.perf_counter()
         more_jobs_to_search = True
         page = 0
@@ -105,20 +125,21 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
         jobs_from_companies_to_skip = 0
         unclickable_jobs = 0
         while more_jobs_to_search:
-            url = f"https://www.linkedin.com/jobs/search/?{search_filter}&refresh=true&sortBy=DD"
+            url = f"https://www.linkedin.com/jobs/search/?{url_filter}&refresh=true&sortBy=DD"
             if page > 0:
                 url += f"&start={25 * page}"
             logger.info(f"getting page {url} for page {(page + 1)}")
             page += 1
             more_jobs_to_search, total_number_of_inbox_jobs, selenium_jobs_list = load_search_result_page(
-                driver, url, search_filter
+                driver, url, url_filter
             )
             if more_jobs_to_search:
                 bs4_jobs_list = get_jobs(driver)
                 index = 0
                 number_of_job_on_current_page = len(selenium_jobs_list)
                 while index < number_of_job_on_current_page:
-                    logger.info(f"trying to get job at index {index} for {search_filter}")
+                    log_error = None
+                    logger.info(f"trying to get job at index {index} for {human_readable_string}")
                     selenium_job = selenium_jobs_list[index]
 
                     # tries to perform a job click
@@ -126,7 +147,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                     initial_job_click_time = time.perf_counter()
                     latest_job_click_attempt_time = time.perf_counter()
                     iteration = 1
-                    latest_error = None
+                    click_on_job_error = None
                     while (not successful_job_click) and ((latest_job_click_attempt_time - initial_job_click_time) <= 64):
                         try:
                             selenium_job.click()
@@ -136,7 +157,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                             logger.info(f"attempt {iteration} trying to get index {index}/{len(bs4_jobs_list)}")
                             try:
                                 _, _, selenium_jobs_list = load_search_result_page(
-                                    driver, url, search_filter
+                                    driver, url, url_filter
                                 )
                                 time.sleep(10)  # sleeping for 10 extra seconds just in case cause
                                 # the code only goes here if there might already be some problems with LinkedIn
@@ -149,12 +170,12 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                                     f" error:\n{reload_error}\n\n"
                                 )
                             time.sleep(math.pow(3, iteration) + random_number_milliseconds)
-                            latest_error = click_error
+                            click_on_job_error = click_error
                             latest_job_click_attempt_time = time.perf_counter()
                         iteration += 1
 
                     if successful_job_click:
-                        success, job_info_item, error, bs4_jobs_list = get_job_item(
+                        success, job_info_item, get_job_item_error, bs4_jobs_list = get_job_item(
                             driver, bs4_jobs_list, index, selenium_job, number_of_job_on_current_page
                         )
                         if success:
@@ -167,61 +188,46 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                             job_already_applied = job_info_item[7]
                             easy_apply = job_info_item[9]
                             timestamp = job_info_item[10]
-                            errors = job_info_item[11]
-                            if success:
-                                if company_name not in COMPANIES_TO_SKIP:
-                                    if job_id not in new_jobs:
-                                        new_jobs[job_id] = f"{company_name}_{job_title}"
-                                    exports_writer.writerow([
-                                        job_id, job_title, company_name, timestamp,
-                                        location, f"https://www.linkedin.com{job_link}", job_already_applied,
-                                        easy_apply,
-                                        job_closed
-                                    ])
-                                    exports.flush()
-                                    number_of_jobs_closed_or_already_applied += 1
-                                else:
-                                    jobs_from_companies_to_skip += 1
-                                logger.info(
-                                    f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                    f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                                    f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
-                                    f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
-                                    f"{total_number_of_inbox_jobs}\n"
-                                )
-                                index += 1
+                            if company_name not in COMPANIES_TO_SKIP:
+                                if job_id not in new_jobs:
+                                    new_jobs[job_id] = f"{company_name}_{job_title}"
+                                exports_writer.writerow([
+                                    job_id, job_title, company_name, timestamp,
+                                    location, f"https://www.linkedin.com{job_link}", job_already_applied,
+                                    easy_apply, job_closed
+                                ])
+                                exports.flush()
+                                number_of_jobs_closed_or_already_applied += 1
                             else:
-                                unable_to_retrieve_jobs += 1
-                                logger.error(
-                                    f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                    f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                                    f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
-                                    f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
-                                    f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
-                                )
-                                index += 1
+                                jobs_from_companies_to_skip += 1
+                            index += 1
                         else:
                             unable_to_retrieve_jobs += 1
-                            logger.error(
-                                f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
-                                f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
-                                f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
-                                f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
-                                f"{total_number_of_inbox_jobs} due to error\n{error}\n\n"
-                            )
+                            log_error = get_job_item_error
                             index += 1
                     else:
                         unclickable_jobs += 1
-                        logger.error(
-                            f"Job {index}  => \n\tParsed Jobs {number_of_jobs_closed_or_already_applied}, "
+                        log_error = click_on_job_error
+                        index += 1
+                    message = (
+                            f"Job {index}  => "
+                            f"\n\tJobs Successfully Processed {number_of_jobs_closed_or_already_applied}, "
+                            f"\n\tPage = {page} for filter {human_readable_string}, "
                             f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
                             f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
                             f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
-                            f"{total_number_of_inbox_jobs} due to error\n{latest_error}\n\n"
+                            f"{total_number_of_inbox_jobs}"
                         )
-                        index += 1
+                    if log_error is None:
+                        logger.info(
+                            f"{message}\n"
+                        )
+                    else:
+                        logger.error(
+                            f"{message} due to error\n{log_error}\n\n"
+                        )
         search_filter_time2 = time.perf_counter()
-        time_run[search_filter] = search_filter_time2 - search_filter_time1
+        time_run[human_readable_string] = search_filter_time2 - search_filter_time1
     return time_run, new_jobs
 
 
@@ -271,7 +277,7 @@ def get_job_item(driver, jobs_list, index, job, number_of_job_on_current_page):
                 job_info_item=jobs_list[index].contents[1].contents[1].contents[1].contents[3]
             )
             if not job_info_obj[0]:
-                raise Exception()
+                raise Exception(job_info_obj[11])
             success = job_info_obj[0]
         except Exception as error:
             random_number_milliseconds = random.randint(0, 1000) / 1000
