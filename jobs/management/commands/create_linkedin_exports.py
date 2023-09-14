@@ -472,7 +472,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
             f"\n\tJobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
             f"\n\tJob Links Reused for New Posting = {job_links_reused_for_new_posting} "
             f"/ {total_number_of_inbox_jobs}"
-            f" for existing url {job.linkedin_link}",
+            f" for existing url {job.linkedin_link}"
         )
         if success:
             logger.info(message)
