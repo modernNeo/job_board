@@ -68,8 +68,7 @@ class Command(BaseCommand):
         total_number_of_new_job_locations = 0
         new_ids = []
         daily_stat = DailyStat()
-        date = datetime.datetime.now()
-        earliest_job_location_date_updated = create_pst_time(date.year, date.month, date.day)
+        earliest_job_location_date_updated = today_date
         daily_stat.save()
         print("first run in debugging to ensure the date_posted check is working on line 88ish")
         for linkedin_export_obj in ETLFile.objects.all():
@@ -117,11 +116,11 @@ class Command(BaseCommand):
                                 linkedin_link=line[csv_mapping[JOB_URL_KEY]],
                                 date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific')),
                             )
+                            job_location.save()
                             JobLocationDailyStat(
                                 daily_stat=daily_stat,
                                 job_location=job_location
                             ).save()
-                            job_location.save()
                         elif job_location.id not in new_ids:  # needed to distinguish new jobs that were created in
                             # previous iteration of this loop
                             job = job_location.job_posting
