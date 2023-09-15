@@ -18,7 +18,7 @@ from selenium.webdriver.common.by import By
 from jobs.models import JobLocation
 from jobs.setup_logger import Loggers
 
-COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover']
+COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover', 'Clevertech']
 
 logger = Loggers.get_logger()
 
