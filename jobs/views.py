@@ -77,7 +77,8 @@ class JobSerializer(serializers.ModelSerializer):
         return note.note if note is not None else note
 
     def latest_job_date_posted(self, job):
-        return job.get_latest_parsed_date().strftime("%Y %b %d %I:%m:%S %p")
+        date = job.get_latest_parsed_date()
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     class Meta:
         model = Job
@@ -174,6 +175,13 @@ class ItemSet(viewsets.ModelViewSet):
 
 
 class JobLocationSerializer(serializers.ModelSerializer):
+
+    date_posted = serializers.SerializerMethodField("date_posted_to_linkedin")
+
+    def date_posted_to_linkedin(self, job_location):
+        date = job_location.date_posted
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+
     class Meta:
         model = JobLocation
         fields = '__all__'
