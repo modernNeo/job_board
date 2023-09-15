@@ -124,6 +124,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
         search_filter_time1 = time.perf_counter()
         more_jobs_to_search = True
         page = 0
+        number_of_jobs_added_to_csv_for_current_filter = 0
         while more_jobs_to_search:
             url = f"https://www.linkedin.com/jobs/search/?{url_filter}&refresh=true&sortBy=DD"
             if page > 0:
@@ -198,6 +199,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                                 ])
                                 exports.flush()
                                 number_of_jobs_added_to_csv += 1
+                                number_of_jobs_added_to_csv_for_current_filter += 1
                             else:
                                 jobs_from_companies_to_skip += 1
                             index += 1
@@ -211,13 +213,15 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                         index += 1
                     message = (
                             f"Job {index}  => "
-                            f"\n\tJobs Successfully Added to CSV {number_of_jobs_added_to_csv}, "
+                            f"\n\tJobs Successfully Added to CSV For Current Filter = "
+                            f"{number_of_jobs_added_to_csv_for_current_filter}, "
                             f"\n\tPage = {page} for filter {human_readable_string}, "
                             f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
                             f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
                             f"\n\tSkipped Companies = {jobs_from_companies_to_skip} / "
-                            f"{total_number_of_inbox_jobs}"
-                        )
+                            f"{total_number_of_inbox_jobs}. "
+                            f"\n\tTotal Number of Jobs Successfully Added to CSV So Far = {number_of_jobs_added_to_csv}"
+                    )
                     if log_error is None:
                         logger.info(
                             f"{message}\n"
