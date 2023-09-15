@@ -115,7 +115,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
         f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
     }
     new_jobs = {}
-    number_of_jobs_closed_or_already_applied = 0
+    number_of_jobs_added_to_csv = 0
     jobs_from_companies_to_skip = 0
     unable_to_retrieve_jobs = 0
     unclickable_jobs = 0
@@ -197,7 +197,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                                     easy_apply, job_closed
                                 ])
                                 exports.flush()
-                                number_of_jobs_closed_or_already_applied += 1
+                                number_of_jobs_added_to_csv += 1
                             else:
                                 jobs_from_companies_to_skip += 1
                             index += 1
@@ -211,7 +211,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                         index += 1
                     message = (
                             f"Job {index}  => "
-                            f"\n\tJobs Successfully Processed {number_of_jobs_closed_or_already_applied}, "
+                            f"\n\tJobs Successfully Added to CSV {number_of_jobs_added_to_csv}, "
                             f"\n\tPage = {page} for filter {human_readable_string}, "
                             f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
                             f"\n\tJobs Unable to Click On = {unclickable_jobs}, "
@@ -403,6 +403,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
     jobs_still_open = 0
     jobs_already_processed_in_scrape = 0
     job_links_reused_for_new_posting = 0
+    number_of_new_jobs = len(new_jobs)
     while index < len(job_links):
         success = False
         job = job_links[index]
@@ -412,6 +413,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 jobs_already_processed_in_scrape += 1
                 index += 1
                 success = True
+                number_of_new_jobs -= 1
             else:
                 job_links_reused_for_new_posting += 1
                 index += 1
@@ -467,8 +469,8 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
         message = (
             f"Job [{index}] => "
             f"\n\tInbox Jobs Closed Or Already Applied = {number_of_jobs_closed_or_already_applied}, "
-            f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
             f"\n\tJobs Still Open = {jobs_still_open}, "
+            f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
             f"\n\tJobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
             f"\n\tJob Links Reused for New Posting = {job_links_reused_for_new_posting} "
             f"/ {total_number_of_inbox_jobs}"
@@ -480,6 +482,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
             logger.error(
                 f"{message} due to an error\n{last_error}"
             )
+    logger.info(f"Total Number of New Jobs = {number_of_new_jobs}")
 
 
 def get_time_string(total_seconds):
