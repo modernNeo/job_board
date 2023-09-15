@@ -263,18 +263,10 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
-    let vancouver_index = -1;
     for (let i = 0; i < locations.length; i++) {
-        if (locations[i].location.indexOf("Vancouver") !== -1){
-            vancouver_index = i;
-        }
-        jobPostingInfo.append(createLink(locations[i].location, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
-    }
-    if (vancouver_index === -1){
-        vancouver_index = 0;
+        jobPostingInfo.append(createLink(`${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
-    jobPostingInfo.appendChild(createCompanyInfoLine("Date Posted : ", "date_posted_label", locations[vancouver_index].date_posted))
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
