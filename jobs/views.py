@@ -8,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation
+from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -218,3 +218,20 @@ class JobNoteSet(viewsets.ModelViewSet):
         if 'pk' in self.kwargs:
             job_note = job_note.filter(job_id=self.kwargs['pk'])
         return job_note
+
+
+class DailyStatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DailyStat
+        fields = '__all__'
+
+
+class DailyStatSet(viewsets.ModelViewSet):
+    serializer_class = DailyStatSerializer
+    queryset = DailyStat.objects.all()
+
+    def get_queryset(self):
+        daily_stat = self.queryset
+        if 'pk' in self.kwargs:
+            daily_stat = daily_stat.filter(job_id=self.kwargs['pk'])
+        return daily_stat

@@ -16,6 +16,7 @@
 <script src="{%  static 'js/updateNote.js' %}"></script>
 <script src="{%  static 'js/showListSpecifier.js' %}"></script>
 <script src="{%  static 'js/updateLists.js' %}"></script>
+<script src="{%  static 'js/update_daily_stat.js' %}"></script>
 <script>
     $(document).ready(function () {
         setCookie("list_of_jobs_endpoint","{% url "api:job-list" %}");
@@ -24,6 +25,7 @@
         setCookie('item_endpoint', "{% url "api:item-list" %}");
         setCookie('note_endpoint', "{% url "api:note-list" %}");
         setCookie('job_location_endpoint', "{% url "api:location-list" %}");
+        setCookie('daily_stat_endpoint', "{% url "api:daily_stat-list" %}");
         browserReady();
     });
 </script>
@@ -33,6 +35,7 @@
     <a href="/admin/logout/?next=/">Logout</a>
     <button onclick="clearCookies()">Clear Cookies</button>
 {%  endif %}
+<div id="daily_stat"></div>
 <br><br>
 {%  if user == "jace" %}
     <form method="post" class="form" enctype="multipart/form-data">

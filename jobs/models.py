@@ -133,13 +133,15 @@ class PSTDateTimeField(models.DateTimeField):
 
 # Create your models here.
 
-class NumberOfJobsAdded(models.Model):
+
+class DailyStat(models.Model):
     date_added = PSTDateTimeField(
         default=timezone.now
     )
     number_of_new_jobs = models.IntegerField(
         default=None
     )
+
 
 
 class Job(models.Model):
@@ -194,6 +196,14 @@ class JobLocation(models.Model):
         blank=True
     )
 
+
+class JobLocationDailyStat(models.Model):
+    daily_stat = models.ForeignKey(
+        DailyStat, on_delete=models.CASCADE
+    )
+    job_location = models.ForeignKey(
+        JobLocation, on_delete=models.CASCADE
+    )
 
 
 class List(models.Model):

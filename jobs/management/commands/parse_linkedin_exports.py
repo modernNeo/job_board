@@ -6,7 +6,7 @@ import os.path
 from dateutil.tz import tz
 from django.core.management import BaseCommand
 
-from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation, NumberOfJobsAdded
+from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation, JobLocationDailyStat, DailyStat
 
 JOB_ID_KEY = 'jobId'
 JOB_TITLE_KEY = 'jobTitle'
@@ -63,13 +63,19 @@ class Command(BaseCommand):
         applied_list, new = List.objects.all().get_or_create(name='Applied', user_id=1)
         archived_list, new = List.objects.all().get_or_create(name='Archived', user_id=1)
         job_closed_list, new = List.objects.all().get_or_create(name='Job Closed', user_id=1)
-        number_of_new_jobs = {}
+        number_of_new_jobs_per_file = {}
+        total_number_of_new_jobs = 0
+        total_number_of_new_job_locations = 0
         new_ids = []
+        daily_stat = DailyStat()
+        date = datetime.datetime.now()
+        earliest_job_location_date_updated = create_pst_time(date.year, date.month, date.day)
+        daily_stat.save()
         print("first run in debugging to ensure the date_posted check is working on line 88ish")
         for linkedin_export_obj in ETLFile.objects.all():
             if os.path.exists(linkedin_export_obj.file_path):
                 with open(linkedin_export_obj.file_path, 'r') as linkedin_export:
-                    number_of_new_jobs[linkedin_export_obj.file_path] = 0
+                    number_of_new_jobs_per_file[linkedin_export_obj.file_path] = 0
                     new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = today_date
                     print(f"parsing {linkedin_export_obj.file_path}")
                     csvFile = [line for line in csv.reader(linkedin_export)]
@@ -88,8 +94,9 @@ class Command(BaseCommand):
                         ).first()
                         new_job = job_location is None
                         if new_job:
-                            print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
-                            number_of_new_jobs[linkedin_export_obj.file_path]+=1
+                            print(f"\rparsing new job at line {index}/{len(csvFile)} with {number_of_new_jobs_per_file[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
+                            number_of_new_jobs_per_file[linkedin_export_obj.file_path]+=1
+                            total_number_of_new_job_locations += 1
                             job = Job.objects.all().filter(
                                 job_title=line[csv_mapping[JOB_TITLE_KEY]],
                                 organisation_name=line[csv_mapping[COMPANY_NAME_KEY]],
@@ -102,6 +109,7 @@ class Command(BaseCommand):
                                     easy_apply=line[csv_mapping[IS_EASY_APPLY_KEY]] == 'True'
                                 )
                                 job.save()
+                                total_number_of_new_jobs += 1
                             job_location = JobLocation(
                                 job_posting=job,
                                 linkedin_id=line[csv_mapping[JOB_ID_KEY]],
@@ -109,11 +117,15 @@ class Command(BaseCommand):
                                 linkedin_link=line[csv_mapping[JOB_URL_KEY]],
                                 date_posted=datetime.datetime.fromtimestamp(float(line[csv_mapping[POST_DATE_KEY]])).astimezone(tz.gettz('Canada/Pacific')),
                             )
+                            JobLocationDailyStat(
+                                daily_stat=daily_stat,
+                                job_location=job_location
+                            ).save()
                             job_location.save()
                         elif job_location.id not in new_ids:  # needed to distinguish new jobs that were created in
                             # previous iteration of this loop
                             job = job_location.job_posting
-                            print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
+                            print(f"\rparsing existing job at line {index}/{len(csvFile)} with {number_of_new_jobs_per_file[linkedin_export_obj.file_path]} new jobs so far                        ", end='')
 
 
                         if line[csv_mapping[APPLIED_TO_JOB_KEY]] == 'True':
@@ -131,6 +143,8 @@ class Command(BaseCommand):
                             if job.item_set.all().filter(list__name="ETL_updated").first() is not None:
                                 job.item_set.all().filter(list__name="ETL_updated").delete()
                         if new_job and job_location.date_posted is not None:
+                            if earliest_job_location_date_updated > job_location.date_posted:
+                                earliest_job_location_date_updated = job_location.date_posted
                             if new_post_with_oldest_posted_date[linkedin_export_obj.file_path] > job_location.date_posted:
                                 new_post_with_oldest_posted_date[linkedin_export_obj.file_path] = job_location.date_posted
                         new_ids.append(job.id)
@@ -141,9 +155,8 @@ class Command(BaseCommand):
         print(f"new_post_with_oldest_posted_date=")
         print(json.dumps(new_post_with_oldest_posted_date, indent=4, default=str))
         print(f"number_of_new_jobs=")
-        print(json.dumps(number_of_new_jobs, indent=4))
-        number_of_new_jobs = [
-            int(number_of_new_jobs)
-            for number_of_new_jobs in list(number_of_new_jobs.values())
-        ]
-        NumberOfJobsAdded(number_of_new_jobs=sum(number_of_new_jobs)).save()
+        print(json.dumps(number_of_new_jobs_per_file, indent=4))
+        daily_stat.number_of_new_jobs=total_number_of_new_jobs
+        daily_stat.number_of_new_job_locations=total_number_of_new_job_locations
+        daily_stat.earliest_date_for_new_job_location=earliest_job_location_date_updated
+        daily_stat.save()
