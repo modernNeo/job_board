@@ -134,7 +134,7 @@ async function updateJobList(listOfJobs, allLists) {
         let jobItem = document.createElement("b");
         jobItem.setAttribute("id", listOfJobs[i].id + "_list_item");
         jobItem.setAttribute("onclick", "updateSelectedJobInList(" + i + ", " + listOfJobs[i].id + ")");
-        jobItem.innerHTML = listOfJobs[i].job_title + " || " + listOfJobs[i].organisation_name;
+        jobItem.innerHTML = listOfJobs[i].date_posted + " => " + listOfJobs[i].job_title + " || " + listOfJobs[i].organisation_name;
         if (listOfJobs[i].note !== null) {
             jobItem.innerHTML += ` *`;
         }

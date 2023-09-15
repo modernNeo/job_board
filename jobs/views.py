@@ -65,6 +65,8 @@ class JobSerializer(serializers.ModelSerializer):
     """
     note = serializers.SerializerMethodField('user_has_note')
 
+    date_posted = serializers.SerializerMethodField("latest_job_date_posted")
+
     @property
     def user_id_for_request(self):
         request = self.context.get('request', None)
@@ -73,6 +75,9 @@ class JobSerializer(serializers.ModelSerializer):
     def user_has_note(self, job):
         note = JobNote.objects.all().filter(job_id=job.id, user_id=self.user_id_for_request).first()
         return note.note if note is not None else note
+
+    def latest_job_date_posted(self, job):
+        return job.get_latest_parsed_date().strftime("%Y %b %d %I:%m:%S %p")
 
     class Meta:
         model = Job

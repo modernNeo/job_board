@@ -139,7 +139,8 @@ class DailyStat(models.Model):
         default=timezone.now
     )
     number_of_new_jobs = models.IntegerField(
-        default=None
+        default=None,
+        null=True
     )
 
 
@@ -169,6 +170,19 @@ class Job(models.Model):
     def note(self):
         return self.jobnote.note if self.jobnote is not None else None
 
+    def get_latest_parsed_date(self):
+        job_locations = self.joblocation_set.all()
+        latest_date_added = None
+        if len(job_locations) > 0:
+            latest_date_added = job_locations[0].get_latest_parsed_date()
+            for job_location in job_locations:
+                try:
+                    if job_location.updated_more_recently(latest_date_added):
+                        latest_date_added = job_location.get_latest_parsed_date()
+                except Exception as e:
+                    print(e)
+        return latest_date_added
+
     @property
     def lists(self):
         lists = List.objects.all().filter(item__job_id=self.id)
@@ -196,6 +210,25 @@ class JobLocation(models.Model):
         blank=True
     )
 
+    def updated_more_recently(self, date_to_compare_to):
+        job_location_daily_stats = self.joblocationdailystat_set.all()
+        if len(job_location_daily_stats) == 0:
+            return False
+        if date_to_compare_to is None:
+            return True
+        for job_location_daily_stat in job_location_daily_stats:
+            if job_location_daily_stat.daily_stat.date_added > date_to_compare_to:
+                return True
+        return False
+
+    def get_latest_parsed_date(self):
+        job_location_daily_stats = self.joblocationdailystat_set.all()
+        latest_date_added = None
+        for job_location_daily_stat in job_location_daily_stats:
+            if job_location_daily_stat.updated_more_recently(latest_date_added):
+                latest_date_added = job_location_daily_stat.daily_stat.date_added
+        return latest_date_added
+
 
 class JobLocationDailyStat(models.Model):
     daily_stat = models.ForeignKey(
@@ -204,6 +237,13 @@ class JobLocationDailyStat(models.Model):
     job_location = models.ForeignKey(
         JobLocation, on_delete=models.CASCADE
     )
+
+    def updated_more_recently(self, date_to_compare_to):
+        if self.daily_stat.date_added is None:
+            return date_to_compare_to
+        if date_to_compare_to is None:
+            return self.daily_stat.date_added
+        return self.daily_stat.date_added >= date_to_compare_to
 
 
 class List(models.Model):
