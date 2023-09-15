@@ -30,18 +30,21 @@ function getCookie(name, value) {
 
 async function browserReady() {
     clearCookies();
-    setCookie("pageNumber", 1);
-    const allLists = JSON.parse($.ajax({
-        'url': `${getCookie('list_endpoint')}`,
-        'type': 'GET',
-        'cache': false,
-        headers: {'X-CSRFToken': getCookie('csrftoken')},
-        contentType: 'application/json; charset=utf-8',
-        async: false
-    }).responseText)
-    await refreshDeleteListDropDown(allLists)
-    await showListButton(allLists)
-    await showInbox(allLists)
+    if (getCookie("logged_in_user") === "jace") {
+        setCookie("pageNumber", 1);
+        await updateDailyStat();
+        const allLists = JSON.parse($.ajax({
+            'url': `${getCookie('list_endpoint')}`,
+            'type': 'GET',
+            'cache': false,
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json; charset=utf-8',
+            async: false
+        }).responseText)
+        await refreshDeleteListDropDown(allLists)
+        await showListButton(allLists)
+        await showInbox(allLists)
+    }
 }
 
 function clearCookies() {

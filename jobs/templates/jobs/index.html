@@ -19,6 +19,7 @@
 <script src="{%  static 'js/update_daily_stat.js' %}"></script>
 <script>
     $(document).ready(function () {
+        setCookie("logged_in_user","{{ user }}");
         setCookie("list_of_jobs_endpoint","{% url "api:job-list" %}");
         setCookie("num_pages_endpoint","{% url "page_numbers" %}");
         setCookie('list_endpoint', "{% url "api:list-list" %}");
