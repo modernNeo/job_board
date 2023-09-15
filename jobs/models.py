@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from dateutil.tz import tz
+from django.utils import timezone
 
 TIME_ZONE = 'Canada/Pacific'
 PACIFIC_TZ = tz.gettz(TIME_ZONE)
@@ -131,6 +132,14 @@ class PSTDateTimeField(models.DateTimeField):
 
 
 # Create your models here.
+
+class NumberOfJobsAdded(models.Model):
+    date_added = PSTDateTimeField(
+        default=timezone.now
+    )
+    number_of_new_jobs = models.IntegerField(
+        default=None
+    )
 
 
 class Job(models.Model):

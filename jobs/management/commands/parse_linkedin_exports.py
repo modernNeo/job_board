@@ -6,7 +6,7 @@ import os.path
 from dateutil.tz import tz
 from django.core.management import BaseCommand
 
-from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation
+from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation, NumberOfJobsAdded
 
 JOB_ID_KEY = 'jobId'
 JOB_TITLE_KEY = 'jobTitle'
@@ -142,3 +142,8 @@ class Command(BaseCommand):
         print(json.dumps(new_post_with_oldest_posted_date, indent=4, default=str))
         print(f"number_of_new_jobs=")
         print(json.dumps(number_of_new_jobs, indent=4))
+        number_of_new_jobs = [
+            int(number_of_new_jobs)
+            for number_of_new_jobs in list(number_of_new_jobs.values())
+        ]
+        NumberOfJobsAdded(number_of_new_jobs=sum(number_of_new_jobs)).save()
