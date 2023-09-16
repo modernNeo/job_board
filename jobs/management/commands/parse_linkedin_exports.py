@@ -108,13 +108,13 @@ class Command(BaseCommand):
 
                         job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] == TRUE_String
                         job_marked_as_closed = line[MAPPING[JOB_CLOSED_KEY]] == TRUE_String
-                        if job_marked_as_closed or job_marked_as_closed:
-                            if job_marked_as_closed:
-                                if job.item_set.all().filter(list__name=JOB_CLOSED_LIST_NAME).first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=job_closed_list)
-                            if job_marked_as_applied:
-                                if job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first() is None:
-                                    Item.objects.all().get_or_create(job=job, list=applied_list)
+                        if job_marked_as_closed:
+                            if job.item_set.all().filter(list__name=JOB_CLOSED_LIST_NAME).first() is None:
+                                Item.objects.all().get_or_create(job=job, list=job_closed_list)
+                        if job_marked_as_applied:
+                            if job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first() is None:
+                                Item.objects.all().get_or_create(job=job, list=applied_list)
+                        if job_marked_as_applied or job_marked_as_closed:
                             if job.item_set.all().filter(list__name=ARCHIVED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=archived_list)
                             if job.item_set.all().filter(list__name=ETL_UPDATED_LIST_NAME).first() is not None:
