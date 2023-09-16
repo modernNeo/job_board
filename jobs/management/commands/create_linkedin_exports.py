@@ -76,7 +76,7 @@ class Command(BaseCommand):
         exports.flush()
 
         for key, value in time_run.items():
-            exports_writer.writerow(["key", value])
+            exports_writer.writerow([key, value])
             exports.flush()
 
         driver.quit()
