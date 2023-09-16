@@ -6,7 +6,7 @@ from enum import Enum
 from dateutil.tz import tz
 from django.core.management import BaseCommand
 
-from jobs.management.commands.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, \
+from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, \
     COMPANY_NAME_KEY, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
 from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation, JobLocationDailyStat, DailyStat, \
     ExportRunTime

@@ -15,7 +15,7 @@ from selenium.common import NoSuchElementException, StaleElementReferenceExcepti
 from selenium.webdriver import FirefoxOptions
 from selenium.webdriver.common.by import By
 
-from jobs.management.commands.csv_header import MAPPING
+from jobs.csv_header import MAPPING
 from jobs.models import JobLocation
 from jobs.setup_logger import Loggers
 
