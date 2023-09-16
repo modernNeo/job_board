@@ -417,7 +417,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
         job = job_links[index]
         last_error = None
         if job.linkedin_id in new_jobs:
-            if f"{job.job_posting.organisation_name}_{job.job_posting.job_title}" == new_jobs[job.linkedin_id]:
+            if f"{job.job_posting.company_name}_{job.job_posting.job_title}" == new_jobs[job.linkedin_id]:
                 jobs_already_processed_in_scrape += 1
                 index += 1
                 success = True
@@ -426,7 +426,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 job_links_reused_for_new_posting += 1
                 index += 1
                 exports_writer.writerow([
-                    job.linkedin_id, job.job_posting.job_title, job.job_posting.organisation_name,
+                    job.linkedin_id, job.job_posting.job_title, job.job_posting.company_name,
                     job.date_posted, job.location, job.linkedin_link, None, None, True
                 ])
                 exports.flush()

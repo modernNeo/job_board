@@ -68,20 +68,20 @@ class Command(BaseCommand):
                             location=line[MAPPING[LOCATION_KEY]],
                             linkedin_link=line[MAPPING[JOB_URL_KEY]],
                             job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
-                            job_posting__organisation_name=line[MAPPING[COMPANY_NAME_KEY]]
+                            job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]]
                         ).first()
                         new_job_location = job_location is None
                         if new_job_location:
                             daily_stat.number_of_new_job_locations += 1
                             job = Job.objects.all().filter(
                                 job_title=line[MAPPING[JOB_TITLE_KEY]],
-                                organisation_name=line[MAPPING[COMPANY_NAME_KEY]],
+                                company_name=line[MAPPING[COMPANY_NAME_KEY]],
                                 easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                             ).first()
                             if job is None:
                                 job = Job(
                                     job_title=line[MAPPING[JOB_TITLE_KEY]],
-                                    organisation_name=line[MAPPING[COMPANY_NAME_KEY]],
+                                    company_name=line[MAPPING[COMPANY_NAME_KEY]],
                                     easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                                 )
                                 job.save()
