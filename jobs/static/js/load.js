@@ -141,7 +141,7 @@ async function updateJobList(listOfJobs, allLists) {
         if (listOfJobs[i].date_posted !== null){
             message = listOfJobs[i].date_posted + " => "
         }
-        jobItem.innerHTML = message + listOfJobs[i].job_title + " || " + listOfJobs[i].organisation_name;
+        jobItem.innerHTML = message + listOfJobs[i].job_title + " || " + listOfJobs[i].company_name;
         if (listOfJobs[i].note !== null) {
             jobItem.innerHTML += ` *`;
         }
@@ -266,7 +266,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     for (let i = 0; i < locations.length; i++) {
         jobPostingInfo.append(createLink(`${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
     }
-    jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.organisation_name))
+    jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
