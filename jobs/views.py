@@ -24,7 +24,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     elif f"{list_parameter}".isdigit():
         job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
     ordered_postings = job_postings.order_by(
-        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True), 'organisation_name', 'job_title', 'id'
+        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True), 'company_name', 'job_title', 'id'
     ).distinct()
     return Paginator(ordered_postings, 25), len(job_postings)
 
