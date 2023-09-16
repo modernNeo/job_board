@@ -15,6 +15,7 @@ from selenium.common import NoSuchElementException, StaleElementReferenceExcepti
 from selenium.webdriver import FirefoxOptions
 from selenium.webdriver.common.by import By
 
+from jobs.management.commands.csv_header import MAPPING
 from jobs.models import JobLocation
 from jobs.setup_logger import Loggers
 
@@ -33,8 +34,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        status_file_name = 'linkedin_scrape_in_progress'
-        # open(status_file_name, 'x')
         time1 = time.perf_counter()
         today = datetime.datetime.today().astimezone(tz.gettz('Canada/Pacific'))
 
@@ -54,13 +53,13 @@ class Command(BaseCommand):
         )
         if not page_loaded:
             driver.quit()
-            os.remove(status_file_name)
             return
         exports = open(f'{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
         exports_writer = csv.writer(exports, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         exports_writer.writerow(
-            ["jobId", "jobTitle", "companyName", "postDate", "location", "jobUrl", "applied", "isEasyApply", "closed"]
+            list(MAPPING.keys())
         )
+        exports.flush()
 
         time_run = {}
         time_run, new_jobs = get_new_jobs(driver, exports_writer, exports, time_run)
@@ -70,12 +69,17 @@ class Command(BaseCommand):
         time_run["existing_jobs_processed"] = search_filter_time2 - search_filter_time1
 
         time2 = time.perf_counter()
-        logger.info(f"run time = {get_time_string(time2 - time1)}")
+        exports_writer.writerow(
+            ["export_type", "run time [seconds]"]
+        )
+        exports_writer.writerow(["overall_task", time2-time1])
+        exports.flush()
+
         for key, value in time_run.items():
-            logger.info(f" {key} run time = {get_time_string(value)}")
+            exports_writer.writerow(["key", value])
+            exports.flush()
 
         driver.quit()
-        # os.remove(status_file_name)
 
 
 def get_new_jobs(driver, exports_writer, exports, time_run):
@@ -487,44 +491,6 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 f"{message} due to an error\n{last_error}"
             )
     logger.info(f"Total Number of New Jobs = {number_of_new_jobs}")
-
-
-def get_time_string(total_seconds):
-    hours, minutes = 0, 0
-    if total_seconds >= 60:
-        minutes = int(int(total_seconds) / 60)
-        if minutes >= 60:
-            hours = int(int(minutes) / 60)
-            minutes = minutes % 60
-    seconds = int(total_seconds % 60)
-    run_time_str = ""
-    if hours > 0:
-        if hours >= 10:
-            run_time_str += f"{hours:{3}} "
-        else:
-            run_time_str += f"{hours:{2}} "
-        run_time_str += "hours"
-    if minutes > 0:
-        if len(run_time_str) > 0:
-            run_time_str += ","
-        if seconds == 0 and hours > 0:
-            run_time_str += " and "
-        if minutes >= 10:
-            run_time_str += f"{minutes:{3}} "
-        else:
-            run_time_str += f"{minutes:{2}} "
-        run_time_str += "minutes"
-    if seconds > 0:
-        if len(run_time_str) > 0:
-            run_time_str += ", and"
-        if seconds >= 10:
-            run_time_str += f"{seconds:{3}} "
-        else:
-            run_time_str += f"{seconds:{2}} "
-        run_time_str += "seconds"
-    if run_time_str == "":
-        run_time_str = " 0 seconds"
-    return run_time_str
 
 
 def get_posted_date(driver):
