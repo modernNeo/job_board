@@ -195,7 +195,12 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                             timestamp = job_info_item[10]
                             if company_name not in COMPANIES_TO_SKIP:
                                 if job_id not in new_jobs:
-                                    new_jobs[job_id] = f"{company_name}_{job_title}"
+                                    new_jobs[job_id] = {
+                                        "job_posting": f"{company_name}_{job_title}",
+                                        "job_already_applied": job_already_applied,
+                                        "job_closed": job_closed
+
+                                    }
                                 exports_writer.writerow([
                                     job_id, job_title, company_name, timestamp,
                                     location, f"https://www.linkedin.com{job_link}", job_already_applied,
@@ -405,7 +410,8 @@ def get_job_info(driver, job_info_item=None):
 def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
     job_links = JobLocation.objects.all().filter(job_posting__item__isnull=True)
     total_number_of_inbox_jobs = len(job_links)
-    number_of_jobs_closed_or_already_applied = 0
+    number_of_jobs_closed = 0
+    number_of_jobs_already_applied = 0
     index = 0
     unable_to_retrieve_jobs = 0
     jobs_still_open = 0
@@ -417,13 +423,18 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
         job = job_links[index]
         last_error = None
         if job.linkedin_id in new_jobs:
-            if f"{job.job_posting.company_name}_{job.job_posting.job_title}" == new_jobs[job.linkedin_id]:
+            if f"{job.job_posting.company_name}_{job.job_posting.job_title}" == new_jobs[job.linkedin_id]['job_posting']:
+                if new_jobs[job.linkedin_id]['job_already_applied']:
+                    number_of_jobs_already_applied += 1
+                if new_jobs[job.linkedin_id]['job_closed']:
+                    number_of_jobs_closed += 1
                 jobs_already_processed_in_scrape += 1
                 index += 1
                 success = True
                 number_of_new_jobs -= 1
             else:
                 job_links_reused_for_new_posting += 1
+                number_of_jobs_closed += 1
                 index += 1
                 exports_writer.writerow([
                     job.linkedin_id, job.job_posting.job_title, job.job_posting.company_name,
@@ -459,7 +470,10 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                                 job.linkedin_link, job_already_applied, easy_apply, job_closed
                             ])
                             exports.flush()
-                            number_of_jobs_closed_or_already_applied += 1
+                        if job_closed:
+                            number_of_jobs_closed += 1
+                        if job_already_applied:
+                            number_of_jobs_already_applied += 1
                         if job_open_for_application:
                             jobs_still_open += 1
                         index += 1
@@ -476,7 +490,8 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 unable_to_retrieve_jobs += 1
         message = (
             f"Job [{index}] => "
-            f"\n\tInbox Jobs Closed Or Already Applied = {number_of_jobs_closed_or_already_applied}, "
+            f"\n\tInbox Jobs Closed = {number_of_jobs_closed}, "
+            f"\n\tInbox Jobs Already Applied = {number_of_jobs_already_applied}, "
             f"\n\tJobs Still Open = {jobs_still_open}, "
             f"\n\tJobs Unable to Retrieve = {unable_to_retrieve_jobs}, "
             f"\n\tJobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
