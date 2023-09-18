@@ -34,6 +34,7 @@ class Command(BaseCommand):
 
         if len(csv_files) != 1:
             print(f"got an unexpected number of csv files [{len(csv_files)}]")
+            return
         csv_file = csv_files[0]
         if os.path.exists(csv_file.file_path):
             jobs_updated_so_far = []
