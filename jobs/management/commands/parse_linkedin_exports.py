@@ -61,7 +61,7 @@ class Command(BaseCommand):
                     elif mode == LineType.EXPORT_RUN_TIME:
                         ExportRunTime(
                             daily_stat=daily_stat, export_type=line[0],
-                            run_time_seconds=line[1]
+                            run_time_seconds=int(float(line[1]))
                         ).save()
                     elif mode == LineType.JOB_POSTING:
                         job_location = JobLocation.objects.all().filter(
