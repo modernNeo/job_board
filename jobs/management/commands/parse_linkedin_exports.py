@@ -41,6 +41,7 @@ class Command(BaseCommand):
                 csv_file.file_path[-43:-21], "%Y-%m-%d_%I-%M-%S_%p"
             )
             daily_stat = DailyStat(
+                date_added=create_pst_time_from_datetime(etl_extraction_start_time),
                 earliest_date_for_new_job_location=create_pst_time_from_datetime(etl_extraction_start_time),
                 number_of_new_jobs=0,
                 number_of_new_job_locations=0

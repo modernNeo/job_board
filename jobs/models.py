@@ -138,6 +138,9 @@ class DailyStat(models.Model):
     date_added = PSTDateTimeField(
         default=timezone.now
     )
+    earliest_date_for_new_job_location = PSTDateTimeField(
+        default=timezone.now
+    )
     number_of_new_jobs = models.IntegerField(
         default=None,
         null=True
