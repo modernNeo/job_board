@@ -36,14 +36,15 @@ class Command(BaseCommand):
             print(f"got an unexpected number of csv files [{len(csv_files)}]")
         csv_file = csv_files[0]
         if os.path.exists(csv_file.file_path):
+            jobs_updated_so_far = []
             etl_extraction_start_time = datetime.datetime.strptime(
                 csv_file.file_path[-43:-21], "%Y-%m-%d_%I-%M-%S_%p"
             )
             daily_stat = DailyStat(
                 date_added=create_pst_time_from_datetime(etl_extraction_start_time),
                 earliest_date_for_new_job_location=create_pst_time_from_datetime(etl_extraction_start_time),
-                number_of_new_jobs=0,
-                number_of_new_job_locations=0
+                number_of_new_jobs=0, number_of_new_job_locations=0, number_of_inbox_jobs_closed=0,
+                number_of_inbox_jobs_applied=0
             )
             daily_stat.save()
             with open(csv_file.file_path, 'r') as linkedin_export:
@@ -105,9 +106,13 @@ class Command(BaseCommand):
                         job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] == TRUE_String
                         job_marked_as_closed = line[MAPPING[JOB_CLOSED_KEY]] == TRUE_String
                         if job_marked_as_closed:
+                            if not new_job_location and job.id not in jobs_updated_so_far:
+                                daily_stat.number_of_inbox_jobs_closed += 1
                             if job.item_set.all().filter(list__name=JOB_CLOSED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=job_closed_list)
                         if job_marked_as_applied:
+                            if not new_job_location and job.id not in jobs_updated_so_far:
+                                daily_stat.number_of_inbox_jobs_applied += 1
                             if job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=applied_list)
                         if job_marked_as_applied or job_marked_as_closed:
@@ -118,7 +123,7 @@ class Command(BaseCommand):
                         if new_job_location and job_location.date_posted is not None:
                             if daily_stat.earliest_date_for_new_job_location > job_location.date_posted:
                                 daily_stat.earliest_date_for_new_job_location = job_location.date_posted
-
+                        jobs_updated_so_far.append(job.id)
                         index += 1
                         print(
                             f"parsing new job at line {index}/{len(csvFile)} "
