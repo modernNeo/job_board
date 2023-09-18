@@ -29,7 +29,6 @@ class Command(BaseCommand):
         archived_list, new = List.objects.all().get_or_create(name=ARCHIVED_LIST_NAME, user_id=1)
         job_closed_list, new = List.objects.all().get_or_create(name=JOB_CLOSED_LIST_NAME, user_id=1)
 
-        new_job_location_ids = []
         mode = LineType.JOB_POSTING
         csv_files = ETLFile.objects.all()
 
@@ -101,11 +100,7 @@ class Command(BaseCommand):
                                 daily_stat=daily_stat,
                                 job_location=job_location
                             ).save()
-
-                        elif job_location.id not in new_job_location_ids:
-                            # needed to distinguish new jobs that were created in
-                            # previous iteration of this loop
-                            job = job_location.job_posting
+                        job = job_location.job_posting
 
                         job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] == TRUE_String
                         job_marked_as_closed = line[MAPPING[JOB_CLOSED_KEY]] == TRUE_String
@@ -123,7 +118,7 @@ class Command(BaseCommand):
                         if new_job_location and job_location.date_posted is not None:
                             if daily_stat.earliest_date_for_new_job_location > job_location.date_posted:
                                 daily_stat.earliest_date_for_new_job_location = job_location.date_posted
-                        new_job_location_ids.append(job_location.id)
+
                         index += 1
                         print(
                             f"parsing new job at line {index}/{len(csvFile)} "
