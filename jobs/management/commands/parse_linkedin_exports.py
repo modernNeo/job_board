@@ -8,8 +8,8 @@ from django.core.management import BaseCommand
 
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, \
     COMPANY_NAME_KEY, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
-from jobs.models import Job, ETLFile, create_pst_time, List, Item, JobLocation, JobLocationDailyStat, DailyStat, \
-    ExportRunTime
+from jobs.models import Job, ETLFile, List, Item, JobLocation, JobLocationDailyStat, DailyStat, \
+    ExportRunTime, create_pst_time_from_datetime
 
 
 class LineType(Enum):
@@ -20,7 +20,6 @@ class LineType(Enum):
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        current_date = datetime.datetime.now()
         APPLIED_LIST_NAME = 'Applied'
         ARCHIVED_LIST_NAME = 'Archived'
         JOB_CLOSED_LIST_NAME = 'Job Closed'
@@ -31,14 +30,6 @@ class Command(BaseCommand):
         job_closed_list, new = List.objects.all().get_or_create(name=JOB_CLOSED_LIST_NAME, user_id=1)
 
         new_job_location_ids = []
-        daily_stat = DailyStat(
-            earliest_date_for_new_job_location=create_pst_time(
-                year=current_date.year, month=current_date.month, day=current_date.day
-            ),
-            number_of_new_jobs=0,
-            number_of_new_job_locations=0
-        )
-        daily_stat.save()
         mode = LineType.JOB_POSTING
         csv_files = ETLFile.objects.all()
 
@@ -46,6 +37,15 @@ class Command(BaseCommand):
             print(f"got an unexpected number of csv files [{len(csv_files)}]")
         csv_file = csv_files[0]
         if os.path.exists(csv_file.file_path):
+            etl_extraction_start_time = datetime.datetime.strptime(
+                csv_file.file_path[-43:-21], "%Y-%m-%d_%I-%M-%S_%p"
+            )
+            daily_stat = DailyStat(
+                earliest_date_for_new_job_location=create_pst_time_from_datetime(etl_extraction_start_time),
+                number_of_new_jobs=0,
+                number_of_new_job_locations=0
+            )
+            daily_stat.save()
             with open(csv_file.file_path, 'r') as linkedin_export:
                 print(f"parsing {csv_file.file_path}")
                 csvFile = [line for line in csv.reader(linkedin_export)]
