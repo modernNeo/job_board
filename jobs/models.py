@@ -319,6 +319,10 @@ class Item(models.Model):
     job = models.ForeignKey(
         Job, on_delete=models.CASCADE,
     )
+    date_added = PSTDateTimeField(
+        default=timezone.now,
+        null=True
+    )
 
     @property
     def list_name(self):

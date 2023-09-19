@@ -8,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat
+from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat, PSTDateTimeField
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -143,6 +143,13 @@ class ListSet(viewsets.ModelViewSet):
 
 class ItemSerializer(serializers.ModelSerializer):
     list_name = serializers.CharField(read_only=True)
+
+    date_added = serializers.SerializerMethodField("pst_date_added")
+
+    def pst_date_added(self, item):
+        # needed this func cause apparently the automatic serialization doesn't respect
+        # from_db_value in PSTDateTimeField
+        return item.date_added
 
     class Meta:
         model = Item
