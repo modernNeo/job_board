@@ -149,11 +149,19 @@ class DailyStat(models.Model):
         default=None,
         null=True
     )
-    number_of_inbox_jobs_closed = models.IntegerField(
+    number_of_existing_inbox_jobs_closed = models.IntegerField(
         default=None,
         null=True
     )
-    number_of_inbox_jobs_applied = models.IntegerField(
+    number_of_new_inbox_jobs_closed = models.IntegerField(
+        default=None,
+        null=True
+    )
+    number_of_existing_inbox_jobs_applied = models.IntegerField(
+        default=None,
+        null=True
+    )
+    number_of_new_inbox_jobs_applied = models.IntegerField(
         default=None,
         null=True
     )

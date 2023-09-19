@@ -44,8 +44,9 @@ class Command(BaseCommand):
             daily_stat = DailyStat(
                 date_added=create_pst_time_from_datetime(etl_extraction_start_time),
                 earliest_date_for_new_job_location=create_pst_time_from_datetime(etl_extraction_start_time),
-                number_of_new_jobs=0, number_of_new_job_locations=0, number_of_inbox_jobs_closed=0,
-                number_of_inbox_jobs_applied=0
+                number_of_new_jobs=0, number_of_new_job_locations=0, number_of_existing_inbox_jobs_closed=0,
+                number_of_new_inbox_jobs_closed=0, number_of_existing_inbox_jobs_applied=0,
+                number_of_new_inbox_jobs_applied=0
             )
             daily_stat.save()
             with open(csv_file.file_path, 'r') as linkedin_export:
@@ -73,6 +74,7 @@ class Command(BaseCommand):
                             job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]]
                         ).first()
                         new_job_location = job_location is None
+                        existing_job_that_was_unlisted = False
                         if new_job_location:
                             daily_stat.number_of_new_job_locations += 1
                             job = Job.objects.all().filter(
@@ -102,18 +104,26 @@ class Command(BaseCommand):
                                 daily_stat=daily_stat,
                                 job_location=job_location
                             ).save()
+                        else:
+                            existing_job_that_was_unlisted = len(job_location.job_posting.item_set.all()) == 0
                         job = job_location.job_posting
 
                         job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] == TRUE_String
                         job_marked_as_closed = line[MAPPING[JOB_CLOSED_KEY]] == TRUE_String
                         if job_marked_as_closed:
-                            if not new_job_location and job.id not in jobs_updated_so_far:
-                                daily_stat.number_of_inbox_jobs_closed += 1
+                            if job.id not in jobs_updated_so_far:
+                                if existing_job_that_was_unlisted:
+                                    daily_stat.number_of_existing_inbox_jobs_closed += 1
+                                if new_job_location:
+                                    daily_stat.number_of_new_inbox_jobs_closed += 1
                             if job.item_set.all().filter(list__name=JOB_CLOSED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=job_closed_list)
                         if job_marked_as_applied:
-                            if not new_job_location and job.id not in jobs_updated_so_far:
-                                daily_stat.number_of_inbox_jobs_applied += 1
+                            if job.id not in jobs_updated_so_far:
+                                if existing_job_that_was_unlisted:
+                                    daily_stat.number_of_existing_inbox_jobs_applied += 1
+                                if new_job_location:
+                                    daily_stat.number_of_new_inbox_jobs_applied += 1
                             if job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=applied_list)
                         if job_marked_as_applied or job_marked_as_closed:
