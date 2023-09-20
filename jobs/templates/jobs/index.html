@@ -17,11 +17,13 @@
 <script src="{%  static 'js/showListSpecifier.js' %}"></script>
 <script src="{%  static 'js/updateLists.js' %}"></script>
 <script src="{%  static 'js/update_daily_stat.js' %}"></script>
+<script src="{% static 'js/update_applied_stats.js' %}"></script>
 <script>
     $(document).ready(function () {
         setCookie("logged_in_user","{{ user }}");
         setCookie("list_of_jobs_endpoint","{% url "api:job-list" %}");
         setCookie("num_pages_endpoint","{% url "page_numbers" %}");
+        setCookie("applied_stats_endpoint","{% url "jobs_applied_numbers" %}");
         setCookie('list_endpoint', "{% url "api:list-list" %}");
         setCookie('item_endpoint', "{% url "api:item-list" %}");
         setCookie('note_endpoint', "{% url "api:note-list" %}");
@@ -36,14 +38,18 @@
     <a href="/admin/logout/?next=/">Logout</a>
     <button onclick="clearCookies()">Clear Cookies</button>
 {%  endif %}
-<div id="daily_stat"></div>
 <br><br>
 {%  if user == "jace" %}
-    <form method="post" class="form" enctype="multipart/form-data">
-        {% csrf_token %}
-        <br><input id="media_uploads" type="file" name="linkedin_exports" multiple="multiple">
-        <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br><br>
-    </form>
+    <div style="width: 100%; overflow: hidden">
+        <div style="width: 70%; float: left">
+            <form method="post" class="form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <br><input id="media_uploads" type="file" name="linkedin_exports" multiple="multiple">
+                <br><br><input type="submit" name="submit" formaction="" value="Upload Files" /><br><br><br>
+            </form>
+        </div>
+        <div style="width: 30%; float: right" id="applied_stats"></div>
+    </div>
     <div style="width: 100%; overflow: hidden">
         <div style="width: 70%; float: left">
             {%  if user != "" %}
@@ -57,8 +63,9 @@
             <div id="number_of_jobs"></div>
             <button onclick="goToPreviousPage()">Previous Page</button>
             <button onclick="goToNextPage()">Next Page</button><br>
-        </div>
+        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
         <div style="width: 30%; float: right" id="company_info"></div>
 
     </div>
+    <div id="daily_stat"></div>
 {%  endif %}

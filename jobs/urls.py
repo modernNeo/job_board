@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework import routers
 
-from jobs.views import IndexPage, JobViewSet, PageNumbers, ListSet, ItemSet, JobNoteSet, JobLocationSet, DailyStatSet
+from jobs.views import IndexPage, JobViewSet, PageNumbers, ListSet, ItemSet, JobNoteSet, JobLocationSet, DailyStatSet, \
+    JobsAppliedNumbers
 
 router = routers.DefaultRouter()
 router.register(r'jobs', JobViewSet, basename="job")
@@ -14,5 +15,6 @@ router.register(f'daily_stats', DailyStatSet, basename='daily_stat')
 urlpatterns = [
     path(r'api/', include((router.urls, 'jobs'), namespace="api")),
     path(r'page_numbers', PageNumbers.as_view(), name='page_numbers'),
+    path(r'applied_stats', JobsAppliedNumbers.as_view(), name='jobs_applied_numbers'),
     path("", IndexPage.as_view(), name="index"),
 ]

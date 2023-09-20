@@ -58,6 +58,25 @@ class PageNumbers(View):
         return HttpResponse(json.dumps(response))
 
 
+class JobsAppliedNumbers(View):
+
+    def get(self, request):
+        applied_jobs = List.objects.get(name='Applied').item_set.all()
+        applied_stats = {}
+        for applied_job in applied_jobs:
+            if applied_job.date_added is not None:
+                easy_apply = applied_job.job.easy_apply
+                date_str = applied_job.date_added.strftime("%Y-%m-%d")
+                if date_str not in applied_stats:
+                    applied_stats[date_str] = {
+                        'easy_apply' : 1 if easy_apply else 0,
+                        'company_website_apply' : 0 if easy_apply else 1
+                    }
+                else:
+                    applied_stats[date_str]['easy_apply' if easy_apply else 'company_website_apply'] += 1
+        return HttpResponse(json.dumps(applied_stats))
+
+
 class JobSerializer(serializers.ModelSerializer):
     lists = serializers.CharField(read_only=True)
     """
@@ -241,6 +260,13 @@ class JobNoteSet(viewsets.ModelViewSet):
 
 
 class DailyStatSerializer(serializers.ModelSerializer):
+
+    date_added = serializers.SerializerMethodField("date_exported_from_linkedin")
+
+    def date_exported_from_linkedin(self, job_location):
+        date = job_location.date_added
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+
     class Meta:
         model = DailyStat
         fields = '__all__'
@@ -251,7 +277,7 @@ class DailyStatSet(viewsets.ModelViewSet):
     queryset = DailyStat.objects.all()
 
     def get_queryset(self):
-        daily_stat = self.queryset
+        daily_stat = self.queryset.order_by('-date_added')
         if 'pk' in self.kwargs:
             daily_stat = daily_stat.filter(job_id=self.kwargs['pk'])
         return daily_stat
