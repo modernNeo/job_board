@@ -319,23 +319,31 @@ def get_job_info(driver, job_info_item=None):
     job_already_applied = None
     job_open_for_application = None
     easy_apply = None
+    errors = []
     if job_info_item is None:
-        job_title = driver.find_element(by=By.CLASS_NAME, value="jobs-unified-top-card__job-title").text.strip()
+        job_title_element = get_obj(driver, "jobs-unified-top-card__primary-description")
+        if job_title_element is None:
+            errors.append("Unable to get the job title")
+        else:
+            job_title = job_title_element.text.strip()
 
-        company_and_location_and_date_posted_string = driver.find_element(
-            by=By.CLASS_NAME, value="jobs-unified-top-card__primary-description"
-        ).text.strip()
-        company_name = company_and_location_and_date_posted_string.split("·")[0].strip()
+        company_and_location_and_date_posted_element = get_obj(driver, "jobs-unified-top-card__primary-description")
+        if company_and_location_and_date_posted_element is None:
+            errors.append("Unable to get the div that contains company name, location and the date the job was posted")
+        else:
+            company_and_location_and_date_posted_string = company_and_location_and_date_posted_element.text.strip()
 
-        timestamp, dividing_index = get_posted_date(driver)
-        timestamp = timestamp.timestamp()
+            company_name = company_and_location_and_date_posted_string.split("·")[0].strip()
 
-        location_and_timestamp = company_and_location_and_date_posted_string.split("·")[1]
-        potentialIndexOfRepostedWord = location_and_timestamp[:dividing_index].rfind(" ")
-        ending_index = potentialIndexOfRepostedWord \
-            if location_and_timestamp[potentialIndexOfRepostedWord:dividing_index].strip().lower() == 'reposted' \
-            else dividing_index
-        location = location_and_timestamp[:ending_index].strip()
+            timestamp, dividing_index = get_posted_date(driver)
+            timestamp = timestamp.timestamp()
+
+            location_and_timestamp = company_and_location_and_date_posted_string.split("·")[1]
+            potentialIndexOfRepostedWord = location_and_timestamp[:dividing_index].rfind(" ")
+            ending_index = potentialIndexOfRepostedWord \
+                if location_and_timestamp[potentialIndexOfRepostedWord:dividing_index].strip().lower() == 'reposted' \
+                else dividing_index
+            location = location_and_timestamp[:ending_index].strip()
     else:
         job_title = job_info_item.contents[1].text.replace("\n", "").strip()
 
@@ -354,7 +362,6 @@ def get_job_info(driver, job_info_item=None):
         job_id = int(re.findall(r'\d+', job_link)[0])
 
     error_message = "Unable to get job details due to error[s]:\n"
-    errors = []
     try:
         job_closed_or_applied_text = driver.find_element(
             by=By.CLASS_NAME, value='artdeco-inline-feedback__message'
@@ -406,6 +413,22 @@ def get_job_info(driver, job_info_item=None):
         success, job_title, job_link, job_id, company_name, location, job_closed, job_already_applied,
         job_open_for_application, easy_apply, timestamp, error_message
     )
+
+
+def get_obj(driver, class_name):
+    element = None
+    try:
+        element = driver.find_element(
+            by=By.CLASS_NAME, value=class_name
+        )
+    except NoSuchElementException:
+        try:
+            element = driver.find_element(
+                by=By.CLASS_NAME, value=f"job-details-{class_name}"
+            )
+        except NoSuchElementException:
+            pass
+    return element
 
 
 def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
@@ -592,9 +615,14 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
 
 
 def get_posted_date(driver):
-    primary_description = driver.find_element(
-        by=By.CLASS_NAME, value="jobs-unified-top-card__primary-description"
-    )
+    primary_description = get_obj(driver, "jobs-unified-top-card__primary-description")
+    if primary_description is None:
+        message = (
+            "cannot find the datetime for a primary description because the class names seem to have"
+            " changed"
+        )
+        logger.error(message)
+        raise Exception(message)
     try:
         location_and_posted_date = primary_description.text.split(" · ")[1]
     except Exception as e:
