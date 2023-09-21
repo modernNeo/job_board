@@ -33,7 +33,6 @@ async function browserReady() {
     if (getCookie("logged_in_user") === "jace") {
         setCookie("pageNumber", 1);
         await updateDailyStat();
-        await updateAppliedStat();
         const allLists = JSON.parse($.ajax({
             'url': `${getCookie('list_endpoint')}`,
             'type': 'GET',
@@ -62,6 +61,7 @@ async function showAppliedJobs(allLists) {
 }
 
 async function goToPage(allLists, newPageDifference, listObjectId) {
+    await updateAppliedStat();
     let param = '';
     if (listObjectId !== undefined) {
         param += `list=${listObjectId}`;
