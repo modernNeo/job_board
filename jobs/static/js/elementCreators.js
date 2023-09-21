@@ -27,6 +27,8 @@ function createCompanyTitle(companyTitle){
     return header;
 }
 function createListSelectSection(allLists, userSpecificJobList, jobId) {
+    let max_width = 27;
+    let current_width = max_width;
     let jobListDiv = document.createElement("div");
     for (let i = 0; i < allLists.length; i++) {
         if (allLists[i].name !== 'Archived' && allLists[i].name !== 'Applied') {
@@ -39,10 +41,16 @@ function createListSelectSection(allLists, userSpecificJobList, jobId) {
             } else {
                 option.setAttribute("onclick", "addJobToList(" + jobId + ", " + allLists[i].id + ")");
             }
-            jobListDiv.append(option);
             let optionLabel = document.createElement("label");
             optionLabel.setAttribute("for", `job_list_${allLists[i].id}`);
             optionLabel.textContent = allLists[i].name;
+
+            if (current_width - allLists[i].name.length < 0) {
+                jobListDiv.append(document.createElement("br"));
+                current_width = max_width;
+            }
+            current_width -= allLists[i].name.length;
+            jobListDiv.append(option);
             jobListDiv.append(optionLabel);
         }
     }

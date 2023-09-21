@@ -261,13 +261,13 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
         jobPostingInfo.appendChild(addButton(archivedFunctionCall, userSpecificArchivedItem === undefined ? "Archive" : 'Un-Archive'))
     }
     jobPostingInfo.append(document.createElement("br"), document.createElement("br"));
-    jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
     for (let i = 0; i < locations.length; i++) {
         jobPostingInfo.append(createLink(`${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
+    jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {

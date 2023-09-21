@@ -50,22 +50,24 @@
         </div>
         <div style="width: 30%; float: right" id="applied_stats"></div>
     </div>
+
+
+    {%  if user != "" %}
+        <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name">
+        <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button><br>
+    {%  endif %}
+    <div id="delete_list"></div>
+    <div id="lists_buttons"></div>
+
     <div style="width: 100%; overflow: hidden">
         <div style="width: 70%; float: left">
-            {%  if user != "" %}
-                <label for="new_list_name">New List Name:</label><input type="text" id="new_list_name">
-                <button onclick="createNewList('{% url "api:list-list" %}')">Create List</button><br>
-            {%  endif %}
-            <div id="delete_list"></div>
-            <div id="lists_buttons"></div>
             <div id="job_list_header"></div>
             <div id="job_list" class="overflow_box"></div>
             <div id="number_of_jobs"></div>
             <button onclick="goToPreviousPage()">Previous Page</button>
             <button onclick="goToNextPage()">Next Page</button><br>
-        </div><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        </div>
         <div style="width: 30%; float: right" id="company_info"></div>
-
     </div>
     <div id="daily_stat"></div>
 {%  endif %}
