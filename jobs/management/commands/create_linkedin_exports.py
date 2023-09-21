@@ -2,7 +2,6 @@ import csv
 import datetime
 import json
 import math
-import os
 import random
 import re
 import time
@@ -17,7 +16,7 @@ from selenium.webdriver import FirefoxOptions
 from selenium.webdriver.common.by import By
 
 from jobs.csv_header import MAPPING
-from jobs.models import JobLocation
+from jobs.models import JobLocation, ExperienceLevel
 from jobs.setup_logger import Loggers
 
 COMPANIES_TO_SKIP = ["Canonical", 'Aha!', 'Crossover', 'Clevertech']
@@ -194,6 +193,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
                             job_already_applied = job_info_item[7]
                             easy_apply = job_info_item[9]
                             timestamp = job_info_item[10]
+                            experience_level = job_info_item[11]
                             if company_name not in COMPANIES_TO_SKIP:
                                 if job_id not in new_jobs:
                                     new_jobs[job_id] = {
@@ -203,7 +203,7 @@ def get_new_jobs(driver, exports_writer, exports, time_run):
 
                                     }
                                 exports_writer.writerow([
-                                    job_id, job_title, company_name, timestamp,
+                                    job_id, job_title, company_name, timestamp, experience_level,
                                     location, f"https://www.linkedin.com{job_link}", job_already_applied,
                                     easy_apply, job_closed
                                 ])
@@ -291,7 +291,7 @@ def get_job_item(driver, jobs_list, index, job, number_of_job_on_current_page):
                 job_info_item=jobs_list[index].contents[1].contents[1].contents[1].contents[3]
             )
             if not job_info_obj[0]:
-                raise Exception(job_info_obj[11])
+                raise Exception(job_info_obj[12])
             success = job_info_obj[0]
         except Exception as error:
             random_number_milliseconds = random.randint(0, 1000) / 1000
@@ -319,6 +319,7 @@ def get_job_info(driver, job_info_item=None):
     job_already_applied = None
     job_open_for_application = None
     easy_apply = None
+    experience_level = None
     errors = []
     if job_info_item is None:
         job_title_element = get_obj(driver, "jobs-unified-top-card__primary-description")
@@ -344,12 +345,14 @@ def get_job_info(driver, job_info_item=None):
                 if location_and_timestamp[potentialIndexOfRepostedWord:dividing_index].strip().lower() == 'reposted' \
                 else dividing_index
             location = location_and_timestamp[:ending_index].strip()
+        experience_level = get_experience_level(driver)
     else:
         job_title = job_info_item.contents[1].text.replace("\n", "").strip()
 
         company_name = job_info_item.contents[3].text.replace("\n", "").strip()
 
         timestamp = get_posted_date(driver)[0].timestamp()
+        experience_level = get_experience_level(driver)
 
         location = job_info_item.contents[5].text.replace("\n", "").strip()
 
@@ -399,7 +402,7 @@ def get_job_info(driver, job_info_item=None):
     )
     job_info_detected = (
         job_title is not None and company_name is not None and
-        location is not None and timestamp is not None
+        location is not None and timestamp is not None and experience_level is not None
     )
     if job_info_item is not None:
         job_info_detected = (
@@ -411,7 +414,7 @@ def get_job_info(driver, job_info_item=None):
 
     return (
         success, job_title, job_link, job_id, company_name, location, job_closed, job_already_applied,
-        job_open_for_application, easy_apply, timestamp, error_message
+        job_open_for_application, easy_apply, timestamp, experience_level, error_message
     )
 
 
@@ -513,7 +516,8 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                 index += 1
                 exports_writer.writerow([
                     job_location.linkedin_id, job_location.job_posting.job_title, job_location.job_posting.company_name,
-                    job_location.date_posted, job_location.location, job_location.linkedin_link, None, None, True
+                    job_location.date_posted, job_location.experience_level, job_location.location,
+                    job_location.linkedin_link, None, None, True
                 ])
                 exports.flush()
                 success = True
@@ -528,7 +532,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                     latest_attempt_time = time.perf_counter()
                     job_info_obj = get_job_info(driver)
                     if not job_info_obj[0]:
-                        raise Exception(job_info_obj[11])
+                        raise Exception(job_info_obj[12])
                     success = job_info_obj[0]
                     job_title = job_info_obj[1]
                     company_name = job_info_obj[4]
@@ -538,11 +542,12 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                     job_open_for_application = job_info_obj[8]
                     easy_apply = job_info_obj[9]
                     timestamp = job_info_obj[10]
+                    experience_level = job_info_obj[11]
                     if company_name not in COMPANIES_TO_SKIP:
                         if job_closed or job_already_applied:
                             exports_writer.writerow([
-                                job_location.linkedin_id, job_title, company_name, timestamp, location,
-                                job_location.linkedin_link, job_already_applied, easy_apply, job_closed
+                                job_location.linkedin_id, job_title, company_name, timestamp, experience_level,
+                                location, job_location.linkedin_link, job_already_applied, easy_apply, job_closed
                             ])
                             exports.flush()
                         if job_closed:
@@ -674,7 +679,18 @@ def get_posted_date(driver):
     return post_date, dividing_index
 
 
-
+def get_experience_level(driver):
+    experience_level = get_obj(driver, "jobs-unified-top-card__job-insight")
+    if experience_level is None:
+        raise Exception("Unable to get experience level")
+    else:
+        experience_level_str = experience_level.text
+        endingStr = experience_level_str.index("·")
+        if endingStr != -1:
+            experience_level_str = (experience_level_str[endingStr+2:]).strip().replace(" ", "_").replace("-", "_")
+            return getattr(ExperienceLevel, experience_level_str).value
+        else:
+            raise Exception(f"Unable to get the experience level from string [{experience_level_str}]")
 
 
 

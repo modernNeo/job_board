@@ -1,5 +1,6 @@
 import datetime
 import re
+from enum import Enum
 
 import pytz
 from dateutil.tz import tzfile
@@ -253,6 +254,14 @@ class Job(models.Model):
             return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
 
 
+class ExperienceLevel(Enum):
+    Internship = 0
+    Entry_level = 1
+    Associate = 2
+    Mid_Senior_level = 3
+    Director = 4
+
+
 class JobLocation(models.Model):
     job_posting = models.ForeignKey(
         Job, on_delete=models.CASCADE
@@ -269,6 +278,11 @@ class JobLocation(models.Model):
     date_posted = PSTDateTimeField(
         null=True,
         blank=True
+    )
+
+    experience_level = models.IntegerField(
+        default=None,
+        null=True
     )
 
     def updated_more_recently(self, date_to_compare_to):

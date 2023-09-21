@@ -264,7 +264,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
     for (let i = 0; i < locations.length; i++) {
-        jobPostingInfo.append(createLink(`${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
+        jobPostingInfo.append(createLink(`${locations[i].experience_level} - ${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
