@@ -27,7 +27,8 @@ function createCompanyTitle(companyTitle){
     return header;
 }
 function createListSelectSection(allLists, userSpecificJobList, jobId) {
-    let max_width = 27;
+    let company_pane = document.getElementById("company_info");
+    let max_width = (company_pane.offsetWidth === 763) ? 68 : 27;
     let current_width = max_width;
     let jobListDiv = document.createElement("div");
     for (let i = 0; i < allLists.length; i++) {
