@@ -62,22 +62,23 @@ class Command(BaseCommand):
         exports.flush()
 
         time_run = {}
-        time_run, new_jobs = get_new_jobs(driver, exports_writer, exports, time_run)
-        search_filter_time1 = time.perf_counter()
+        new_jobs = {}
+        # time_run, new_jobs = get_new_jobs(driver, exports_writer, exports, time_run)
+        # search_filter_time1 = time.perf_counter()
         get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs)
-        search_filter_time2 = time.perf_counter()
-        time_run["existing_jobs_processed"] = search_filter_time2 - search_filter_time1
-
-        time2 = time.perf_counter()
-        exports_writer.writerow(
-            ["export_type", "run time [seconds]"]
-        )
-        exports_writer.writerow(["overall_task", time2-time1])
-        exports.flush()
-
-        for key, value in time_run.items():
-            exports_writer.writerow([key, value])
-            exports.flush()
+        # search_filter_time2 = time.perf_counter()
+        # time_run["existing_jobs_processed"] = search_filter_time2 - search_filter_time1
+        #
+        # time2 = time.perf_counter()
+        # exports_writer.writerow(
+        #     ["export_type", "run time [seconds]"]
+        # )
+        # exports_writer.writerow(["overall_task", time2-time1])
+        # exports.flush()
+        #
+        # for key, value in time_run.items():
+        #     exports_writer.writerow([key, value])
+        #     exports.flush()
 
         driver.quit()
 

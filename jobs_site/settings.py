@@ -34,6 +34,14 @@ LINKEDIN_PASSWORD = None
 if 'LINKEDIN_PASSWORD' in os.environ:
     LINKEDIN_PASSWORD = os.environ['LINKEDIN_PASSWORD']
 
+AJAX = None
+if 'AJAX' in os.environ:
+    AJAX = os.environ['AJAX']
+
+LI_AT = None
+if 'LI_AT' in os.environ:
+    LI_AT = os.environ['LI_AT']
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
