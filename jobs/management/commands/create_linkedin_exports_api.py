@@ -94,7 +94,7 @@ def get_new_jobs(exports_writer, exports):
             print(f"getting page {page}")
             if page > 0:
                 url += f"&start={25 * page}"
-            jobs_list_bs4 = BeautifulSoup(requests.get(url, headers=header).text, 'html.parser')
+            jobs_list_bs4 = BeautifulSoup(requests.get(url).text, 'html.parser')
             job_posting_linkedin_ids = [
                 job_posting_linkedin_id.contents[1].attrs['data-entity-urn'][18:]
                 for job_posting_linkedin_id in jobs_list_bs4.findAll("li")
@@ -174,7 +174,7 @@ def get_job_item(job_id):
         job_already_applied = job_info['applyingInfo']['applied']
         easy_apply = 'com.linkedin.voyager.jobs.ComplexOnsiteApply' in job_info['applyMethod']
         timestamp = job_info['createdAt']
-        experience_level = job_info['formattedExperienceLevel']
+        experience_level = job_info['formattedExperienceLevel'].replace(" ", "_").replace("-", "_")
         job_info = {
             "job_title": job_title, "location": location,
             "job_already_applied": job_already_applied, "easy_apply": easy_apply, "timestamp": timestamp,
