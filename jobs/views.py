@@ -62,7 +62,7 @@ class PageNumbers(View):
 class JobsAppliedNumbers(View):
 
     def get(self, request):
-        applied_jobs = List.objects.get(name='Applied').item_set.all()
+        applied_jobs = Item.objects.all().filter(list__name='Applied').order_by('-date_added')
         applied_stats = {}
         for applied_job in applied_jobs:
             if applied_job.date_added is not None:
