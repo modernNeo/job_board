@@ -8,7 +8,7 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat, PSTDateTimeField
+from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat, PSTDateTimeField, ExperienceLevel
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -75,7 +75,13 @@ class JobsAppliedNumbers(View):
                     }
                 else:
                     applied_stats[date_str]['easy_apply' if easy_apply else 'company_website_apply'] += 1
-        return HttpResponse(json.dumps(applied_stats))
+        final_applied_stats = {}
+        index = 0
+        for (key, value) in applied_stats.items():
+            if index < 3:
+                final_applied_stats[key] = value
+                index += 1
+        return HttpResponse(json.dumps(final_applied_stats))
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -205,9 +211,17 @@ class JobLocationSerializer(serializers.ModelSerializer):
 
     date_posted = serializers.SerializerMethodField("date_posted_to_linkedin")
 
+    experience_level = serializers.SerializerMethodField('get_experience_level')
+
     def date_posted_to_linkedin(self, job_location):
         date = job_location.date_posted
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+
+    def get_experience_level(self, job_location):
+        for experience_level in ExperienceLevel:
+            if experience_level.value == job_location.experience_level:
+                return experience_level.name
+        return None
 
     class Meta:
         model = JobLocation
@@ -264,8 +278,8 @@ class DailyStatSerializer(serializers.ModelSerializer):
 
     date_added = serializers.SerializerMethodField("date_exported_from_linkedin")
 
-    def date_exported_from_linkedin(self, job_location):
-        date = job_location.date_added
+    def date_exported_from_linkedin(self, daily_stat):
+        date = daily_stat.date_added
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     class Meta:

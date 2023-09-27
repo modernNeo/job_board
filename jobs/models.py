@@ -120,6 +120,8 @@ class PSTDateTimeField(models.DateTimeField):
                 setattr(model_instance, self.attname, create_utc_time(year, month, day))
             elif date.tzinfo == tzfile('/usr/share/zoneinfo/Canada/Pacific'):
                 setattr(model_instance, self.attname, convert_pacific_time_to_utc(date))
+            elif date.tzinfo is None:
+                raise Exception("no timezone detected")
         return super(PSTDateTimeField, self).pre_save(model_instance, add)
 
     def from_db_value(self, value, expression, connection):

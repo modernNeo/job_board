@@ -131,13 +131,13 @@ def get_new_jobs(exports_writer, exports):
             if success:
                 job_title = job_info['job_title']
                 location = job_info['location']
-                job_already_applied = job_info['job_already_applied']
+                date_applied = job_info['date_applied']
                 easy_apply = job_info['easy_apply']
                 timestamp = job_info['timestamp']
                 experience_level = job_info['experience_level']
                 exports_writer.writerow([
                     job_id, job_title, company_name, timestamp, experience_level, location,
-                    f"https://www.linkedin.com/jobs/view/{job_id}/", job_already_applied, easy_apply, None
+                    f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None
                 ])
                 exports.flush()
                 number_of_jobs_added_to_csv += 1
@@ -171,13 +171,13 @@ def get_job_item(job_id):
         job_info = json.loads(response.text)
         job_title = job_info['title']
         location = job_info['formattedLocation']
-        job_already_applied = job_info['applyingInfo']['applied']
+        date_applied = int(int(job_info['applyingInfo']['appliedAt'])/1000) if job_info['applyingInfo']['applied'] else None
         easy_apply = 'com.linkedin.voyager.jobs.ComplexOnsiteApply' in job_info['applyMethod']
         timestamp = job_info['createdAt']
         experience_level = job_info['formattedExperienceLevel'].replace(" ", "_").replace("-", "_")
         job_info = {
             "job_title": job_title, "location": location,
-            "job_already_applied": job_already_applied, "easy_apply": easy_apply, "timestamp": timestamp,
+            "date_applied": date_applied, "easy_apply": easy_apply, "timestamp": timestamp,
             "experience_level": experience_level
         }
     else:
@@ -272,17 +272,17 @@ def get_updates_for_tracked_jobs(exports_writer, exports, new_jobs):
             if success:
                 job_title = job_info['job_title']
                 location = job_info['location']
-                job_already_applied = job_info['job_already_applied']
+                date_applied = job_info['date_applied']
                 easy_apply = job_info['easy_apply']
                 timestamp = job_info['timestamp']
                 experience_level = job_info['experience_level']
-                if job_already_applied:
+                if date_applied is not None:
                     exports_writer.writerow([
                         job_location.linkedin_id, job_title, job_location.job_posting.company_name, timestamp,
-                        experience_level, location, job_location.linkedin_link, job_already_applied, easy_apply
+                        experience_level, location, job_location.linkedin_link, date_applied, easy_apply
                     ])
                     exports.flush()
-                if job_already_applied:
+                if date_applied is not None:
                     if job_location.job_posting.id not in jobs_processed_so_far:
                         number_of_inbox_jobs_already_applied+=1
                         stats['number_of_inbox_jobs_already_applied'].append({

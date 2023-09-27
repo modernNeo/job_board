@@ -9,7 +9,7 @@ from django.core.management import BaseCommand
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, \
     COMPANY_NAME_KEY, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY, EXPERIENCE_LEVEL_KEY
 from jobs.models import Job, ETLFile, List, Item, JobLocation, JobLocationDailyStat, DailyStat, \
-    ExportRunTime, create_pst_time_from_datetime, ExperienceLevel
+    ExportRunTime, create_pst_time_from_datetime, ExperienceLevel, convert_utc_time_to_pacific
 
 
 class LineType(Enum):
@@ -28,6 +28,10 @@ class Command(BaseCommand):
         applied_list, new = List.objects.all().get_or_create(name=APPLIED_LIST_NAME, user_id=1)
         archived_list, new = List.objects.all().get_or_create(name=ARCHIVED_LIST_NAME, user_id=1)
         job_closed_list, new = List.objects.all().get_or_create(name=JOB_CLOSED_LIST_NAME, user_id=1)
+        items = Item.objects.all().filter(list__name='Applied', date_added__isnull=False)
+        for item in items:
+            item.date_added = None
+            item.save()
 
         mode = LineType.JOB_POSTING
         csv_files = ETLFile.objects.all()
@@ -110,7 +114,7 @@ class Command(BaseCommand):
                             existing_job_that_was_unlisted = len(job_location.job_posting.item_set.all()) == 0
                         job = job_location.job_posting
 
-                        job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] == TRUE_String
+                        job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] != ""
                         job_marked_as_closed = line[MAPPING[JOB_CLOSED_KEY]] == TRUE_String
                         if job_marked_as_closed:
                             if job.id not in jobs_updated_so_far:
@@ -126,8 +130,17 @@ class Command(BaseCommand):
                                     daily_stat.number_of_existing_inbox_jobs_applied += 1
                                 if new_job_location:
                                     daily_stat.number_of_new_inbox_jobs_applied += 1
-                            if job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first() is None:
-                                Item.objects.all().get_or_create(job=job, list=applied_list)
+                            applied_item = job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first()
+                            pst_date_added = convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
+                                    int(line[MAPPING[APPLIED_TO_JOB_KEY]])
+                            ))
+                            if applied_item is None:
+                                Item.objects.all().get_or_create(
+                                    job=job, list=applied_list, date_added=pst_date_added
+                                )
+                            else:
+                                applied_item.date_added = pst_date_added
+                                applied_item.save()
                         if job_marked_as_applied or job_marked_as_closed:
                             if job.item_set.all().filter(list__name=ARCHIVED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=archived_list)
