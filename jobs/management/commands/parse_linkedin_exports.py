@@ -28,10 +28,6 @@ class Command(BaseCommand):
         applied_list, new = List.objects.all().get_or_create(name=APPLIED_LIST_NAME, user_id=1)
         archived_list, new = List.objects.all().get_or_create(name=ARCHIVED_LIST_NAME, user_id=1)
         job_closed_list, new = List.objects.all().get_or_create(name=JOB_CLOSED_LIST_NAME, user_id=1)
-        items = Item.objects.all().filter(list__name='Applied', date_added__isnull=False)
-        for item in items:
-            item.date_added = None
-            item.save()
 
         mode = LineType.JOB_POSTING
         csv_files = ETLFile.objects.all()
@@ -101,7 +97,7 @@ class Command(BaseCommand):
                                 location=line[MAPPING[LOCATION_KEY]],
                                 linkedin_link=line[MAPPING[JOB_URL_KEY]],
                                 date_posted=datetime.datetime.fromtimestamp(
-                                    int(int(line[MAPPING[POST_DATE_KEY]])/1000)
+                                    int(line[MAPPING[POST_DATE_KEY]])
                                 ).astimezone(tz.gettz('Canada/Pacific')),
                                 experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value
                             )
