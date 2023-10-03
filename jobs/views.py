@@ -114,9 +114,9 @@ class JobSerializer(serializers.ModelSerializer):
 
     def job_experience_level(self, job):
         locations = job.joblocation_set.all()
-        experience = locations[0].experience_level
+        experience = -1
         for location in locations[1:]:
-            if location.experience_level > experience:
+            if location.experience_level is not None and location.experience_level > experience:
                 experience = location.experience_level
         return experience
 
