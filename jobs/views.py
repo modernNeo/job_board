@@ -97,6 +97,8 @@ class JobSerializer(serializers.ModelSerializer):
 
     date_posted = serializers.SerializerMethodField("latest_job_date_posted")
 
+    experience_level = serializers.SerializerMethodField('job_experience_level')
+
     @property
     def user_id_for_request(self):
         request = self.context.get('request', None)
@@ -109,6 +111,14 @@ class JobSerializer(serializers.ModelSerializer):
     def latest_job_date_posted(self, job):
         date = job.get_latest_parsed_date()
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+
+    def job_experience_level(self, job):
+        locations = job.joblocation_set.all()
+        experience = locations[0].experience_level
+        for location in locations[1:]:
+            if location.experience_level > experience:
+                experience = location.experience_level
+        return experience
 
     class Meta:
         model = Job
