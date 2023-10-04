@@ -8,7 +8,8 @@ from django.views import View
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat, PSTDateTimeField, ExperienceLevel
+from jobs.models import Job, ETLFile, List, Item, JobNote, JobLocation, DailyStat, PSTDateTimeField, ExperienceLevel, \
+    ExperienceLevelString
 
 
 def get_job_postings(job_postings, user_id, list_parameter=None):
@@ -115,10 +116,10 @@ class JobSerializer(serializers.ModelSerializer):
     def job_experience_level(self, job):
         locations = job.joblocation_set.all()
         experience = -1
-        for location in locations[1:]:
+        for location in locations:
             if location.experience_level is not None and location.experience_level > experience:
                 experience = location.experience_level
-        return experience
+        return ExperienceLevelString[list(ExperienceLevel)[experience].name]
 
     class Meta:
         model = Job
@@ -234,7 +235,7 @@ class JobLocationSerializer(serializers.ModelSerializer):
     def get_experience_level(self, job_location):
         for experience_level in ExperienceLevel:
             if experience_level.value == job_location.experience_level:
-                return experience_level.name
+                return ExperienceLevelString[experience_level.name]
         return None
 
     class Meta:

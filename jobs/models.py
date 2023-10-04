@@ -264,6 +264,15 @@ class ExperienceLevel(Enum):
     Director = 4
 
 
+ExperienceLevelString = {
+    ExperienceLevel.Internship.name: "Internship",
+    ExperienceLevel.Entry_level.name: "Entry Level",
+    ExperienceLevel.Associate.name: "Associate",
+    ExperienceLevel.Mid_Senior_level.name: "Mid-Senior Level",
+    ExperienceLevel.Director.name: "Director"
+}
+
+
 class JobLocation(models.Model):
     job_posting = models.ForeignKey(
         Job, on_delete=models.CASCADE
