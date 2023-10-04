@@ -119,6 +119,8 @@ class JobSerializer(serializers.ModelSerializer):
         for location in locations:
             if location.experience_level is not None and location.experience_level > experience:
                 experience = location.experience_level
+        if experience == -1:
+            return None
         return ExperienceLevelString[list(ExperienceLevel)[experience].name]
 
     class Meta:
