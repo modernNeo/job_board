@@ -97,8 +97,8 @@ class Command(BaseCommand):
                                 location=line[MAPPING[LOCATION_KEY]],
                                 linkedin_link=line[MAPPING[JOB_URL_KEY]],
                                 date_posted=datetime.datetime.fromtimestamp(
-                                    int(line[MAPPING[POST_DATE_KEY]])
-                                ).astimezone(tz.gettz('Canada/Pacific')),
+                                    int(line[MAPPING[POST_DATE_KEY]])//1000
+                                ).replace(microsecond=int(line[MAPPING[POST_DATE_KEY]]) % 1000*10).astimezone(tz.gettz('Canada/Pacific')),
                                 experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value
                             )
                             job_location.save()
