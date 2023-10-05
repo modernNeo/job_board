@@ -1,7 +1,7 @@
 import json
 
 from django.core.paginator import Paginator
-from django.db.models import F
+from django.db.models import F, Case, When
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.views import View
@@ -28,8 +28,14 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True),
         F('joblocation__experience_level').desc(nulls_last=True),
         'company_name', 'job_title', 'id'
-    ).distinct()
-    return Paginator(ordered_postings, 25), len(job_postings)
+    )
+    pk_list = []
+    for ordered_posting in ordered_postings:
+        if ordered_posting.id not in pk_list:
+            pk_list.append(ordered_posting.id)
+    preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
+    ordered_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
+    return Paginator(ordered_postings, 25), ordered_postings.count()
 
 
 class IndexPage(View):
