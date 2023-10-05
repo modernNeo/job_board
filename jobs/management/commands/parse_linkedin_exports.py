@@ -137,6 +137,31 @@ class Command(BaseCommand):
                             else:
                                 applied_item.date_added = pst_date_added
                                 applied_item.save()
+
+                        # before applying the archived tag to the job location, let's first make sure any existing
+                        # presence of that tag on this location is accurate, and the only way I have to currently
+                        # do that is just by placing it back in the inbox
+                        archived_job_item = job.item_set.all().filter(list__name=ARCHIVED_LIST_NAME).first()
+                        if archived_job_item is not None:
+                            job_properly_marked_as_applied = False
+                            other_list_item_presence_detected = False
+                            other_job_items = job.item_set.all().exclude(id=archived_job_item.id)
+                            for other_job_item in other_job_items:
+                                if other_job_item.list_name == APPLIED_LIST_NAME:
+                                    if job_marked_as_applied:
+                                        job_properly_marked_as_applied = True
+                                    else:
+                                        # job might need to be looked at to see why it might not appear in the inbox
+                                        archived_job_item.delete()
+                                        other_job_item.delete()
+
+                                else:
+                                    # job might need to be looked at to see why it might not appear in the inbox
+                                    other_list_item_presence_detected = True
+                            if other_list_item_presence_detected and not job_properly_marked_as_applied:
+                                if archived_job_item.id is not None:
+                                    archived_job_item.delete()  # putting this back in inbox, just to be safe
+
                         if job_marked_as_applied or job_marked_as_closed:
                             if job.item_set.all().filter(list__name=ARCHIVED_LIST_NAME).first() is None:
                                 Item.objects.all().get_or_create(job=job, list=archived_list)

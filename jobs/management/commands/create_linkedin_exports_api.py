@@ -67,17 +67,19 @@ def get_new_jobs(exports_writer, exports):
     HYBRID_JOB = "3"
     FILTER_FOR_CANADA_JOBS = "f_WT=" + "%2C".join([REMOTE_JOB])
 
-    JAVA_KEYWORD = "keywords=intermediate%20java%20developer"
+    JAVA_KEYWORD = "keywords=java%20developer"
+    INTERMEDIATE_JAVA_KEYWORD = "keywords=intermediate%20java%20developer"
     SOFTWARE_KEYWORD = "keywords=intermediate%20software%20developer"
     CANADA = "location=Canada"
     VANCOUVER = "location=Vancouver%2C%20British%20Columbia%2C%20Canada"
     search_queries = {
         f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{SOFTWARE_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Software Developer",
         f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{INTERMEDIATE_JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Intermediate Java Developer",
         f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}": "Vancouver Software Developer",
         f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{INTERMEDIATE_JAVA_KEYWORD}": "Vancouver Intermediate Java Developer",
     }
-    number_of_jobs_added_to_csv = 0
 
     all_jobs = {}
     overall_index = 0
@@ -120,28 +122,32 @@ def get_new_jobs(exports_writer, exports):
                 all_jobs.update(current_jobs_dict)
                 page += 1
     number_of_jobs = len(all_jobs)
-    overall_index = 0
+    processed_job_index = 0
     all_jobs = all_jobs.values()
+    processed_ids = []
     for indx, job_snippet in enumerate(all_jobs):
         company_name = job_snippet[COMPANY_NAME_KEY]
         if company_name not in COMPANIES_TO_SKIP:
             job_id = job_snippet[LINKEDIN_URN_KEY]
-            overall_index += 1
-            success, job_info = get_job_item(job_id)
-            if success:
-                job_title = job_info['job_title']
-                location = job_info['location']
-                date_applied = job_info['date_applied']
-                easy_apply = job_info['easy_apply']
-                timestamp = job_info['timestamp']
-                experience_level = job_info['experience_level']
-                exports_writer.writerow([
-                    job_id, job_title, company_name, timestamp, experience_level, location,
-                    f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None
-                ])
-                exports.flush()
-                number_of_jobs_added_to_csv += 1
-            print(f"parsed job {overall_index} out of {indx+1}/{number_of_jobs}")
+            if job_id not in processed_ids:
+                processed_ids.append(job_id)
+                processed_job_index += 1
+                success, job_info = get_job_item(job_id)
+                if success:
+                    job_title = job_info['job_title']
+                    location = job_info['location']
+                    date_applied = job_info['date_applied']
+                    easy_apply = job_info['easy_apply']
+                    timestamp = job_info['timestamp']
+                    experience_level = job_info['experience_level']
+                    exports_writer.writerow([
+                        job_id, job_title, company_name, timestamp, experience_level, location,
+                        f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None
+                    ])
+                    exports.flush()
+                print(f"parsed job {processed_job_index} out of {indx+1}/{number_of_jobs}")
+            else:
+                logger.error(f"skipping duplicate job of {indx+1}/{number_of_jobs}")
         else:
             logger.error(f"skipping job {indx+1}/{number_of_jobs}")
 
@@ -160,6 +166,9 @@ def get_job_item(job_id):
             )
             successful = response.status_code == 200
             if response.status_code != 200:
+                if response.text == 'CSRF check failed.':
+                    print("you need to update the cookies")
+                    exit(1)
                 raise Exception()
         except Exception:
             random_number_milliseconds = random.randint(0, 1000) / 1000
