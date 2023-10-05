@@ -262,6 +262,12 @@ class JobLocationSet(viewsets.ModelViewSet):
             locations = locations.filter(job_posting_id=self.request.query_params['job_id'])
         return locations
 
+    def destroy(self, request, *args, **kwargs):
+        job_location = self.queryset.filter(id=int(kwargs['pk'])).first()
+        if job_location is not None:
+            job_location.delete()
+        return Response("ok")
+
 
 class JobNoteSerializer(serializers.ModelSerializer):
     class Meta:
