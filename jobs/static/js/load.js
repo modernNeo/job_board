@@ -138,7 +138,11 @@ async function updateJobList(listOfJobs, allLists) {
         let jobItem = document.createElement("b");
         jobItem.setAttribute("id", listOfJobs[i].id + "_list_item");
         jobItem.setAttribute("onclick", "updateSelectedJobInList(" + i + ", " + listOfJobs[i].id + ")");
-        jobItem.innerHTML = listOfJobs[i].experience_level + " => " + listOfJobs[i].job_title + " || " + listOfJobs[i].company_name;
+        let message = ``;
+        if (listOfJobs[i].experience_level){
+            message = listOfJobs[i].experience_level + " => ";
+        }
+        jobItem.innerHTML = message + listOfJobs[i].job_title + " || " + listOfJobs[i].company_name;
         if (listOfJobs[i].note !== null) {
             jobItem.innerHTML += ` *`;
         }
@@ -260,7 +264,11 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
     for (let i = 0; i < locations.length; i++) {
-        jobPostingInfo.append(createLink(`${locations[i].experience_level} - ${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
+        let message = ``;
+        if (locations[i].experience_level){
+            message = `${locations[i].experience_level} - `;
+        }
+        jobPostingInfo.append(createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link), document.createElement("br"), document.createElement("br"));
         jobPostingInfo.append(createDeleteButton(locations[i].id), document.createElement("br"), document.createElement("br"));
     }
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
