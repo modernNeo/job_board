@@ -26,6 +26,11 @@ function createCompanyTitle(companyTitle){
     header.innerHTML = companyTitle;
     return header;
 }
+function createJobLocationLinkedId(linkedin_id){
+    id_tag = document.createElement("p");
+    id_tag.innerHTML = linkedin_id;
+    return id_tag;
+}
 function createListSelectSection(allLists, userSpecificJobList, jobId) {
     let company_pane = document.getElementById("company_info");
     let max_width = (company_pane.offsetWidth === 763) ? 68 : 27;
