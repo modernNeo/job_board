@@ -20,7 +20,8 @@ class Command(BaseCommand):
             with open(csv_file.file_path, 'r') as linkedin_export:
                 print(f"parsing {csv_file.file_path}")
                 csvFile = [line for line in csv.reader(linkedin_export)]
-                for line in csvFile[1:]:
+                number_of_jobs = len(csvFile)-1
+                for index, line in enumerate(csvFile[1:]):
                     linkedin_id = line[0]
                     job_location = JobLocation.objects.get(id=linkedin_id)
                     experience_level = line[1]
@@ -30,8 +31,6 @@ class Command(BaseCommand):
                         job_location.experience_level = int(experience_level)
                     if location != "":
                         job_location.location = location
-                    else:
-                        print(1)
                     if f"{date_posted}".isdigit():
                         job_location.date_posted = datetime.datetime.fromtimestamp(
                             int(date_posted) // 1000
@@ -39,3 +38,4 @@ class Command(BaseCommand):
                             tz.gettz('Canada/Pacific')
                         )
                     job_location.save()
+                    print(f"parsed job {index}/{number_of_jobs}")
