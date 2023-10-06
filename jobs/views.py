@@ -276,7 +276,7 @@ class JobLocationSet(viewsets.ModelViewSet):
         locations = self.queryset
         if 'job_id' in self.request.query_params:
             locations = locations.filter(job_posting_id=self.request.query_params['job_id'])
-        return locations
+        return locations.order_by('-date_posted')
 
     def destroy(self, request, *args, **kwargs):
         job_location = self.queryset.filter(id=int(kwargs['pk'])).first()
