@@ -23,11 +23,13 @@ class Command(BaseCommand):
         APPLIED_LIST_NAME = 'Applied'
         ARCHIVED_LIST_NAME = 'Archived'
         JOB_CLOSED_LIST_NAME = 'Job Closed'
+        RESURFACED_IN_CASE_LIST_NAME = 'Resurfaced In Case'
         ETL_UPDATED_LIST_NAME = 'ETL_updated'
         TRUE_String = "True"
         applied_list, new = List.objects.all().get_or_create(name=APPLIED_LIST_NAME, user_id=1)
         archived_list, new = List.objects.all().get_or_create(name=ARCHIVED_LIST_NAME, user_id=1)
         job_closed_list, new = List.objects.all().get_or_create(name=JOB_CLOSED_LIST_NAME, user_id=1)
+        job_resurfaced_in_case, new = List.objects.all().get_or_create(name=RESURFACED_IN_CASE_LIST_NAME, user_id=1)
 
         mode = LineType.JOB_POSTING
         csv_files = ETLFile.objects.all()
@@ -152,15 +154,13 @@ class Command(BaseCommand):
                                         job_properly_marked_as_applied = True
                                     else:
                                         # job might need to be looked at to see why it might not appear in the inbox
-                                        archived_job_item.delete()
-                                        other_job_item.delete()
+                                        Item.objects.all().get_or_create(job=job, list=job_resurfaced_in_case)
 
                                 else:
                                     # job might need to be looked at to see why it might not appear in the inbox
                                     other_list_item_presence_detected = True
                             if other_list_item_presence_detected and not job_properly_marked_as_applied:
-                                if archived_job_item.id is not None:
-                                    archived_job_item.delete()  # putting this back in inbox, just to be safe
+                                Item.objects.all().get_or_create(job=job, list=job_resurfaced_in_case)
 
                         if job_marked_as_applied or job_marked_as_closed:
                             if job.item_set.all().filter(list__name=ARCHIVED_LIST_NAME).first() is None:
