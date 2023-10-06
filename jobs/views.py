@@ -28,8 +28,8 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
 
     below_mid_senior_level_jobs = job_postings.exclude(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
     ordered_below_mid_senior_level_job_postings = below_mid_senior_level_jobs.order_by(
-        '-easy_apply', F('joblocation__experience_level').desc(nulls_last=True),
-        F('joblocation__date_posted').desc(nulls_last=True),
+        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True),
+        F('joblocation__experience_level').desc(nulls_last=True),
         'company_name', 'job_title', 'id'
     )
 
@@ -40,8 +40,8 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
 
     above_associate_level_jobs = job_postings.filter(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
     ordered_above_associate_level_jobs_postings = above_associate_level_jobs.order_by(
-        '-easy_apply', F('joblocation__experience_level').desc(nulls_last=True),
-        F('joblocation__date_posted').desc(nulls_last=True),
+        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True),
+        F('joblocation__experience_level').desc(nulls_last=True),
         'company_name', 'job_title', 'id'
     )
 
