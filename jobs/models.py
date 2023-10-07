@@ -277,10 +277,7 @@ class JobLocation(models.Model):
     job_posting = models.ForeignKey(
         Job, on_delete=models.CASCADE
     )
-    job_board_id = models.PositiveBigIntegerField(
-
-    )
-    job_board_id_str = models.CharField(
+    job_board_id = models.CharField(
         max_length=500,
         default=None,
         null=True,
