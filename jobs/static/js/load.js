@@ -269,8 +269,8 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             message = `${locations[i].experience_level} - `;
         }
         jobPostingInfo.append(
-            createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].linkedin_link),
-            createJobLocationLinkedId(locations[i].linkedin_id),
+            createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].job_board_link),
+            createJobLocationLinkedId(locations[i].job_board_id),
             createDeleteButton(locations[i].id), document.createElement("br"), document.createElement("br")
         );
     }

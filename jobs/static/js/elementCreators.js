@@ -26,9 +26,9 @@ function createCompanyTitle(companyTitle){
     header.innerHTML = companyTitle;
     return header;
 }
-function createJobLocationLinkedId(linkedin_id){
+function createJobLocationLinkedId(job_board_id){
     id_tag = document.createElement("p");
-    id_tag.innerHTML = linkedin_id;
+    id_tag.innerHTML = job_board_id;
     return id_tag;
 }
 function createListSelectSection(allLists, userSpecificJobList, jobId) {
