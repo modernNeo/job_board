@@ -300,7 +300,8 @@ class JobLocation(models.Model):
 
     job_board = models.CharField(
         max_length=500,
-        default="LinkedIn"
+        default=None,
+        null=True
     )
 
     def updated_more_recently(self, date_to_compare_to):

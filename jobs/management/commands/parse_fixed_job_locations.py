@@ -1,11 +1,10 @@
 import csv
-import datetime
 import os
 
-from dateutil.tz import tz
 from django.core.management import BaseCommand
 
 from jobs.models import JobLocation, ETLFile
+from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
 class Command(BaseCommand):
@@ -32,11 +31,7 @@ class Command(BaseCommand):
                     if location != "":
                         job_location.location = location
                     if f"{date_posted}".isdigit():
-                        job_location.date_posted = datetime.datetime.fromtimestamp(
-                            int(date_posted) // 1000
-                        ).replace(microsecond=int(date_posted) % 1000 * 10).astimezone(
-                            tz.gettz('Canada/Pacific')
-                        )
+                        job_location.date_posted = pst_epoch_datetime(date_posted)
                     job_location.save()
                     print(f"parsed job {index}/{number_of_jobs}")
             csv_file.delete()

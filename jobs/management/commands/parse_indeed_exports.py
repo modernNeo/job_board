@@ -3,13 +3,13 @@ import datetime
 import os.path
 from enum import Enum
 
-from dateutil.tz import tz
 from django.core.management import BaseCommand
 
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, \
     COMPANY_NAME_KEY, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY, EXPERIENCE_LEVEL_KEY
 from jobs.models import Job, ETLFile, List, Item, JobLocation, JobLocationDailyStat, DailyStat, \
     ExportRunTime, create_pst_time_from_datetime, ExperienceLevel, convert_utc_time_to_pacific
+from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
 class LineType(Enum):
@@ -92,10 +92,9 @@ class Command(BaseCommand):
                                     job_board_id=line[MAPPING[JOB_ID_KEY]],
                                     location=line[MAPPING[LOCATION_KEY]],
                                     job_board_link=line[MAPPING[JOB_URL_KEY]],
-                                    date_posted=datetime.datetime.fromtimestamp(
-                                        int(line[MAPPING[POST_DATE_KEY]])//1000
-                                    ).replace(microsecond=int(line[MAPPING[POST_DATE_KEY]]) % 1000*10).astimezone(tz.gettz('Canada/Pacific')),
-                                    experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value
+                                    date_posted=pst_epoch_datetime(line[MAPPING[POST_DATE_KEY]]),
+                                    experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
+                                    job_board="Indeed"
                                 )
                                 job_location.save()
                                 JobLocationDailyStat(

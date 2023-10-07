@@ -123,6 +123,8 @@ class JobSerializer(serializers.ModelSerializer):
 
     experience_level = serializers.SerializerMethodField('job_experience_level')
 
+    job_board = serializers.SerializerMethodField('posting_job_board')
+
     @property
     def user_id_for_request(self):
         request = self.context.get('request', None)
@@ -145,6 +147,9 @@ class JobSerializer(serializers.ModelSerializer):
         if experience == -1:
             return None
         return ExperienceLevelString[list(ExperienceLevel)[experience].name]
+
+    def posting_job_board(self, job):
+        return ", ".join(set([location.job_board for location in job.joblocation_set.all()]))
 
     class Meta:
         model = Job
