@@ -69,9 +69,9 @@ class Command(BaseCommand):
                         ).save()
                     elif mode == LineType.JOB_POSTING:
                         job_location = JobLocation.objects.all().filter(
-                            linkedin_id=line[MAPPING[JOB_ID_KEY]],
+                            job_board_id=line[MAPPING[JOB_ID_KEY]],
                             location=line[MAPPING[LOCATION_KEY]],
-                            linkedin_link=line[MAPPING[JOB_URL_KEY]],
+                            job_board_link=line[MAPPING[JOB_URL_KEY]],
                             job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
                             job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]],
                             experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value
@@ -95,9 +95,9 @@ class Command(BaseCommand):
                                 daily_stat.number_of_new_jobs += 1
                             job_location = JobLocation(
                                 job_posting=job,
-                                linkedin_id=line[MAPPING[JOB_ID_KEY]],
+                                job_board_id=line[MAPPING[JOB_ID_KEY]],
                                 location=line[MAPPING[LOCATION_KEY]],
-                                linkedin_link=line[MAPPING[JOB_URL_KEY]],
+                                job_board_link=line[MAPPING[JOB_URL_KEY]],
                                 date_posted=datetime.datetime.fromtimestamp(
                                     int(line[MAPPING[POST_DATE_KEY]])//1000
                                 ).replace(microsecond=int(line[MAPPING[POST_DATE_KEY]]) % 1000*10).astimezone(tz.gettz('Canada/Pacific')),

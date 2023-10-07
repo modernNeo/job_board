@@ -8,6 +8,7 @@ JOB_URL_KEY = 'url'
 APPLIED_TO_JOB_KEY = 'dateApplied'
 IS_EASY_APPLY_KEY = 'easyApplyEnabled'
 JOB_CLOSED_KEY = 'closed'
+JOB_BOARD = 'jobBoard'
 MAPPING = {
     JOB_ID_KEY: None,
     JOB_TITLE_KEY: None,
@@ -18,5 +19,6 @@ MAPPING = {
     JOB_URL_KEY: None,
     APPLIED_TO_JOB_KEY: None,
     IS_EASY_APPLY_KEY: None,
-    JOB_CLOSED_KEY: None
+    JOB_CLOSED_KEY: None,
+    JOB_BOARD : None
 }

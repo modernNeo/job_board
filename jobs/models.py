@@ -277,13 +277,13 @@ class JobLocation(models.Model):
     job_posting = models.ForeignKey(
         Job, on_delete=models.CASCADE
     )
-    linkedin_id = models.PositiveBigIntegerField(
+    job_board_id = models.PositiveBigIntegerField(
 
     )
     location = models.CharField(
         max_length=500
     )
-    linkedin_link = models.CharField(
+    job_board_link = models.CharField(
         max_length=5000
     )
     date_posted = PSTDateTimeField(
@@ -294,6 +294,11 @@ class JobLocation(models.Model):
     experience_level = models.IntegerField(
         default=None,
         null=True
+    )
+
+    job_board = models.CharField(
+        max_length=500,
+        default="LinkedIn"
     )
 
     def updated_more_recently(self, date_to_compare_to):

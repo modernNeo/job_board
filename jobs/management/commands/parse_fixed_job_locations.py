@@ -22,8 +22,8 @@ class Command(BaseCommand):
                 csvFile = [line for line in csv.reader(linkedin_export)]
                 number_of_jobs = len(csvFile)-1
                 for index, line in enumerate(csvFile[1:]):
-                    linkedin_id = line[0]
-                    job_location = JobLocation.objects.get(id=linkedin_id)
+                    job_board_id = line[0]
+                    job_location = JobLocation.objects.get(id=job_board_id)
                     experience_level = line[1]
                     location = line[2]
                     date_posted = line[3]

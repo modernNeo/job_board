@@ -458,41 +458,41 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
         success = False
         job_location = job_locations[index]
         last_error = None
-        if job_location.linkedin_id in new_jobs:
-            if f"{job_location.job_posting.company_name}_{job_location.job_posting.job_title}" == new_jobs[job_location.linkedin_id]['job_posting']:
+        if job_location.job_board_id in new_jobs:
+            if f"{job_location.job_posting.company_name}_{job_location.job_posting.job_title}" == new_jobs[job_location.job_board_id]['job_posting']:
                 if job_location.job_posting.id not in jobs_processed_so_far:
                     # job postings
-                    if new_jobs[job_location.linkedin_id]['job_already_applied']:
+                    if new_jobs[job_location.job_board_id]['job_already_applied']:
                         number_of_inbox_jobs_already_applied += 1
                         stats['number_of_inbox_jobs_already_applied'].append({
                             "id": job_location.job_posting.id,
                             "company_name": job_location.job_posting.company_name,
                             "job_title": job_location.job_posting.job_title,
-                            "linkedin_id": job_location.linkedin_id
+                            "job_board_id": job_location.job_board_id
                         })
-                    if new_jobs[job_location.linkedin_id]['job_closed']:
+                    if new_jobs[job_location.job_board_id]['job_closed']:
                         number_of_inbox_jobs_closed += 1
                         stats['number_of_inbox_jobs_closed'].append({
                             "id": job_location.job_posting.id,
                             "company_name": job_location.job_posting.company_name,
                             "job_title": job_location.job_posting.job_title,
-                            "linkedin_id": job_location.linkedin_id
+                            "job_board_id": job_location.job_board_id
                         })
-                if new_jobs[job_location.linkedin_id]['job_already_applied']:
+                if new_jobs[job_location.job_board_id]['job_already_applied']:
                     number_of_inbox_job_locations_already_applied += 1
                     stats['number_of_inbox_job_locations_already_applied'].append({
                         "id": job_location.id,
                         "company_name": job_location.job_posting.company_name,
                         "job_title": job_location.job_posting.job_title,
-                        "linkedin_id": job_location.linkedin_id
+                        "job_board_id": job_location.job_board_id
                     })
-                if new_jobs[job_location.linkedin_id]['job_closed']:
+                if new_jobs[job_location.job_board_id]['job_closed']:
                     number_of_inbox_job_locations_closed += 1
                     stats['number_of_inbox_job_locations_closed'].append({
                         "id": job_location.id,
                         "company_name": job_location.job_posting.company_name,
                         "job_title": job_location.job_posting.job_title,
-                        "linkedin_id": job_location.linkedin_id
+                        "job_board_id": job_location.job_board_id
                     })
                 jobs_already_processed_in_scrape += 1
                 index += 1
@@ -505,20 +505,20 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                         "id": job_location.job_posting.id,
                         "company_name": job_location.job_posting.company_name,
                         "job_title": job_location.job_posting.job_title,
-                        "linkedin_id": job_location.linkedin_id
+                        "job_board_id": job_location.job_board_id
                     })
                 number_of_inbox_job_locations_closed += 1
                 stats['number_of_inbox_job_locations_closed'].append({
                     "id": job_location.id,
                     "company_name": job_location.job_posting.company_name,
                     "job_title": job_location.job_posting.job_title,
-                    "linkedin_id": job_location.linkedin_id
+                    "job_board_id": job_location.job_board_id
                 })
                 index += 1
                 exports_writer.writerow([
-                    job_location.linkedin_id, job_location.job_posting.job_title, job_location.job_posting.company_name,
+                    job_location.job_board_id, job_location.job_posting.job_title, job_location.job_posting.company_name,
                     job_location.date_posted, job_location.experience_level, job_location.location,
-                    job_location.linkedin_link, None, None, True
+                    job_location.job_board_link, None, None, True
                 ])
                 exports.flush()
                 success = True
@@ -526,7 +526,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
             initial_time = time.perf_counter()
             latest_attempt_time = time.perf_counter()
             iteration = 1
-            driver.get(job_location.linkedin_link)
+            driver.get(job_location.job_board_link)
             time.sleep(5)
             while (not success) and ((latest_attempt_time - initial_time) <= 64):
                 try:
@@ -547,8 +547,8 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                     if company_name not in COMPANIES_TO_SKIP:
                         if job_closed or job_already_applied:
                             exports_writer.writerow([
-                                job_location.linkedin_id, job_title, company_name, timestamp, experience_level,
-                                location, job_location.linkedin_link, job_already_applied, easy_apply, job_closed
+                                job_location.job_board_id, job_title, company_name, timestamp, experience_level,
+                                location, job_location.job_board_link, job_already_applied, easy_apply, job_closed
                             ])
                             exports.flush()
                         if job_closed:
@@ -558,14 +558,14 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                                     "id": job_location.job_posting.id,
                                     "company_name": job_location.job_posting.company_name,
                                     "job_title": job_location.job_posting.job_title,
-                                    "linkedin_id": job_location.linkedin_id
+                                    "job_board_id": job_location.job_board_id
                                 })
                             number_of_inbox_job_locations_closed += 1
                             stats['number_of_inbox_job_locations_closed'].append({
                                 "id": job_location.id,
                                 "company_name": job_location.job_posting.company_name,
                                 "job_title": job_location.job_posting.job_title,
-                                "linkedin_id": job_location.linkedin_id
+                                "job_board_id": job_location.job_board_id
                             })
                         if job_already_applied:
                             if job_location.job_posting.id not in jobs_processed_so_far:
@@ -574,14 +574,14 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                                     "id": job_location.job_posting.id,
                                     "company_name": job_location.job_posting.company_name,
                                     "job_title": job_location.job_posting.job_title,
-                                    "linkedin_id": job_location.linkedin_id
+                                    "job_board_id": job_location.job_board_id
                                 })
                             number_of_inbox_job_locations_already_applied += 1
                             stats['number_of_inbox_job_locations_already_applied'].append({
                                 "id": job_location.id,
                                 "company_name": job_location.job_posting.company_name,
                                 "job_title": job_location.job_posting.job_title,
-                                "linkedin_id": job_location.linkedin_id
+                                "job_board_id": job_location.job_board_id
                             })
                         if job_open_for_application:
                             jobs_still_open += 1
@@ -590,7 +590,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
                     last_error = e
                     random_number_milliseconds = random.randint(0, 1000) / 1000
                     logger.info(f"attempt {iteration} trying to get index {index}/{len(job_locations)}")
-                    driver.get(job_location.linkedin_link)
+                    driver.get(job_location.job_board_link)
                     time.sleep(math.pow(3, iteration) + random_number_milliseconds)
                     latest_attempt_time = time.perf_counter()
                 iteration += 1
@@ -608,7 +608,7 @@ def get_updates_for_tracked_jobs(driver, exports_writer, exports, new_jobs):
             f"\n\tJobs Already Processed in Scrape = {jobs_already_processed_in_scrape}, "
             f"\n\tJob Links Reused for New Posting = {job_links_reused_for_new_posting} "
             f"/ {total_number_of_inbox_jobs}"
-            f" for existing url {job_location.linkedin_link}"
+            f" for existing url {job_location.job_board_link}"
         )
         if success:
             logger.info(message)
