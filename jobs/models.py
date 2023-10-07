@@ -280,6 +280,10 @@ class JobLocation(models.Model):
     job_board_id = models.PositiveBigIntegerField(
 
     )
+    job_board_id_str = models.CharField(
+        max_length=500,
+        default=None
+    )
     location = models.CharField(
         max_length=500
     )
