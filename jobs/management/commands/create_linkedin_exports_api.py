@@ -31,7 +31,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         today = datetime.datetime.today().astimezone(tz.gettz('Canada/Pacific'))
 
-        exports = open(f'{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
+        exports = open(f'exports/linkedin/{today.strftime("%Y-%m-%d_%I-%M-%S_%p")}_linkedin_exports.csv', mode='w')
         exports_writer = csv.writer(exports, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         exports_writer.writerow(
             list(MAPPING.keys())
