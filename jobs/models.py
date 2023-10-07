@@ -282,7 +282,8 @@ class JobLocation(models.Model):
     )
     job_board_id_str = models.CharField(
         max_length=500,
-        default=None
+        default=None,
+        null=True,
     )
     location = models.CharField(
         max_length=500
