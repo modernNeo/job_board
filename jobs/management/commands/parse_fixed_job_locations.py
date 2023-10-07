@@ -39,3 +39,4 @@ class Command(BaseCommand):
                         )
                     job_location.save()
                     print(f"parsed job {index}/{number_of_jobs}")
+            csv_file.delete()
