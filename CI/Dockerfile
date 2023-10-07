@@ -16,6 +16,8 @@ COPY manage.py manage.py
 COPY CI/run_docker.sh run_docker.sh
 COPY CI/wait-for-postgres.sh wait-for-postgres.sh
 
+RUN apk update && apk add python3-dev gcc libc-dev
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 
