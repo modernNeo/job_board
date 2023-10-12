@@ -1,8 +1,15 @@
 from django.urls import path, include
 from rest_framework import routers
 
-from jobs.views import IndexPage, JobViewSet, PageNumbers, ListSet, ItemSet, JobNoteSet, JobLocationSet, DailyStatSet, \
-    JobsAppliedNumbers
+from jobs.views.daily_stat_view import DailyStatSet
+from jobs.views.index import IndexPage
+from jobs.views.item_view import ItemSet
+from jobs.views.job_location_view import JobLocationSet
+from jobs.views.job_note_view import JobNoteSet
+from jobs.views.jobs_applied_numbers import JobsAppliedNumbers
+from jobs.views.jobs_views import JobViewSet
+from jobs.views.list_view import ListSet
+from jobs.views.page_numbers import PageNumbers
 
 router = routers.DefaultRouter()
 router.register(r'jobs', JobViewSet, basename="job")
