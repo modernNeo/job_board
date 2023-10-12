@@ -113,7 +113,8 @@ WSGI_APPLICATION = 'jobs_site.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-if os.environ['ENV'] == "PROD":
+PROD_ENVIRONMENT = os.environ['ENV'] == 'PROD'
+if PROD_ENVIRONMENT:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

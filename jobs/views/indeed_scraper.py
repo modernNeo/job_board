@@ -4,6 +4,8 @@ import time
 
 from bs4 import BeautifulSoup
 
+from jobs.csv_header import INDEED_KEY
+
 
 def run_indeed_scraper(exports_writer, exports):
     """
@@ -28,12 +30,12 @@ def run_indeed_scraper(exports_writer, exports):
 
     REMOTE_JOB = 'sc=0kf%3Aattr%28DSQF7%29%3B'
     search_queries = {
-        f"{CANADA}&{SOFTWARE_KEYWORD}&{REMOTE_JOB}": "Canada Intermediate Software Developer",
-        f"{CANADA}&{INTERMEDIATE_JAVA_KEYWORD}&{REMOTE_JOB}": "Canada Intermediate Java Developer",
-        f"{CANADA}&{JAVA_KEYWORD}&{REMOTE_JOB}": "Canada Java Developer",
-        f"{VANCOUVER}&{SOFTWARE_KEYWORD}": "Vancouver Intermediate Software Developer",
-        f"{VANCOUVER}&{INTERMEDIATE_JAVA_KEYWORD}": "Vancouver Intermediate Developer",
-        f"{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
+        f"{CANADA}&{SOFTWARE_KEYWORD}&{REMOTE_JOB}": "Indeed Canada Intermediate Software Developer",
+        f"{CANADA}&{INTERMEDIATE_JAVA_KEYWORD}&{REMOTE_JOB}": "Indeed Canada Intermediate Java Developer",
+        f"{CANADA}&{JAVA_KEYWORD}&{REMOTE_JOB}": "Indeed Canada Java Developer",
+        f"{VANCOUVER}&{SOFTWARE_KEYWORD}": "Indeed Vancouver Intermediate Software Developer",
+        f"{VANCOUVER}&{INTERMEDIATE_JAVA_KEYWORD}": "Indeed Vancouver Intermediate Developer",
+        f"{VANCOUVER}&{JAVA_KEYWORD}": "Indeed Vancouver Java Developer",
     }
 
     firstUrl = True
@@ -78,6 +80,7 @@ def run_indeed_scraper(exports_writer, exports):
                 exports_writer.writerow([
                     jobkey, job_title, company_name, timestamp, None, location,
                     f"https://ca.indeed.com/viewjob?jk={jobkey}", None, job_info['indeedApplyEnabled'], None,
-                    "Indeed"
+                    INDEED_KEY
                 ])
                 exports.flush()
+    driver.quit()

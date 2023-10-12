@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from django.conf import settings
 
+from jobs.csv_header import LINKED_IN_KEY
 from jobs.models import JobLocation
 from jobs.views.views_helper import COMPANIES_TO_SKIP
 
@@ -48,12 +49,12 @@ def run_linkedin_scraper(logger, exports_writer, exports):
     CANADA = "location=Canada"
     VANCOUVER = "location=Vancouver%2C%20British%20Columbia%2C%20Canada"
     search_queries = {
-        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{SOFTWARE_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Software Developer",
-        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Java Developer",
-        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{INTERMEDIATE_JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "Canada Intermediate Java Developer",
-        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}": "Vancouver Software Developer",
-        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "Vancouver Java Developer",
-        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{INTERMEDIATE_JAVA_KEYWORD}": "Vancouver Intermediate Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{SOFTWARE_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "LinkedIn Canada Software Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "LinkedIn Canada Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{CANADA}&{INTERMEDIATE_JAVA_KEYWORD}&{FILTER_FOR_CANADA_JOBS}": "LinkedIn Canada Intermediate Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{SOFTWARE_KEYWORD}": "LinkedIn Vancouver Software Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{JAVA_KEYWORD}": "LinkedIn Vancouver Java Developer",
+        f"{FILTER_FOR_ALL_JOBS}&{VANCOUVER}&{INTERMEDIATE_JAVA_KEYWORD}": "LinkedIn Vancouver Intermediate Java Developer",
     }
 
     all_jobs = {}
@@ -68,7 +69,7 @@ def run_linkedin_scraper(logger, exports_writer, exports):
                 f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search/"
                 f"?{url_filter}&refresh=true&sortBy=DD"
             )
-            print(f"getting page {page}")
+            print(f"getting page {page} for LinkedIn")
             if page > 0:
                 url += f"&start={25 * page}"
             jobs_list_bs4 = BeautifulSoup(requests.get(url).text, 'html.parser')
@@ -117,14 +118,14 @@ def run_linkedin_scraper(logger, exports_writer, exports):
                     experience_level = job_info['experience_level']
                     exports_writer.writerow([
                         job_id, job_title, company_name, timestamp, experience_level, location,
-                        f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None, "linkedIn"
+                        f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None, LINKED_IN_KEY
                     ])
                     exports.flush()
-                print(f"parsed job {processed_job_index} out of {indx + 1}/{number_of_jobs}")
+                print(f"parsed LinkedIn job {processed_job_index} out of {indx + 1}/{number_of_jobs}")
             else:
-                logger.error(f"skipping duplicate job of {indx + 1}/{number_of_jobs}")
+                logger.error(f"skipping duplicate LinkedIn job of {indx + 1}/{number_of_jobs}")
         else:
-            logger.error(f"skipping job {indx + 1}/{number_of_jobs}")
+            logger.error(f"skipping LinkedIn job {indx + 1}/{number_of_jobs}")
 
 
 def get_job_item(logger, job_id):

@@ -22,3 +22,6 @@ MAPPING = {
     JOB_CLOSED_KEY: None,
     JOB_BOARD : None
 }
+
+LINKED_IN_KEY = 'LinkedIn'
+INDEED_KEY = 'Indeed'
