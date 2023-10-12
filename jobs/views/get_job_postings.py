@@ -42,6 +42,10 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
             pk_list.append(ordered_above_associate_level_jobs_posting.id)
 
     preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
-    ordered_below_mid_senior_level_job_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
-    return Paginator(ordered_below_mid_senior_level_job_postings, 25), ordered_below_mid_senior_level_job_postings.count()
+    job_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
+
+    easy_apply_job_postings = job_postings.filter(easy_apply=True)
+    non_easy_apply_job_postings = job_postings.filter(easy_apply=False)
+
+    return Paginator(job_postings, 25), easy_apply_job_postings.count(), non_easy_apply_job_postings.count()
 

@@ -79,6 +79,7 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     const totalNumberOfPages = numPagesInfo['total_number_of_pages']
     setCookie("total_number_of_pages", totalNumberOfPages);
     setCookie("total_number_of_jobs", numPagesInfo['total_number_of_jobs']);
+    setCookie("total_number_of_easy_apply_jobs", numPagesInfo['total_number_of_easy_apply_jobs']);
     const pageNumber = getCookie("pageNumber") + newPageDifference;
     if (pageNumber < 1) {
         setCookie("pageNumber", totalNumberOfPages);
@@ -189,7 +190,7 @@ async function updateSelectedJobInList(currentlySelectedJobIndex, currentlySelec
     item = document.getElementById(currentlySelectedJobId + "_list_item");
     item.style = 'color: blue';
     updateCompanyPane(allLists, listOfJobs, currentlySelectedJobId);
-    document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/${getCookie("total_number_of_jobs")}`;
+    document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/ ${getCookie("total_number_of_easy_apply_jobs")}/${getCookie("total_number_of_jobs")} Easy/Non-Easy Apply Jobs`;
 }
 
 function updateCompanyPane(allLists, listOfJobs, jobObjId) {
