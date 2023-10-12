@@ -139,7 +139,7 @@ async function updateJobList(listOfJobs, allLists) {
         let jobItem = document.createElement("b");
         jobItem.setAttribute("id", listOfJobs[i].id + "_list_item");
         jobItem.setAttribute("onclick", "updateSelectedJobInList(" + i + ", " + listOfJobs[i].id + ")");
-        let message = listOfJobs[i].job_board + ": ";
+        let message = `${listOfJobs[i].date_posted} ${listOfJobs[i].job_board}: `;
         if (listOfJobs[i].experience_level){
             message += listOfJobs[i].experience_level + " => ";
         }
