@@ -238,11 +238,11 @@ class Job(models.Model):
         job_locations = self.joblocation_set.all()
         latest_date_added = None
         if len(job_locations) > 0:
-            latest_date_added = job_locations[0].get_latest_parsed_date()
+            latest_date_added = job_locations[0].date_posted
             for job_location in job_locations:
                 try:
-                    if job_location.updated_more_recently(latest_date_added):
-                        latest_date_added = job_location.get_latest_parsed_date()
+                    if job_location.date_posted > latest_date_added:
+                        latest_date_added = job_location.date_posted
                 except Exception as e:
                     print(e)
         return latest_date_added
