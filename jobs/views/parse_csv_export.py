@@ -47,7 +47,8 @@ def parse_csv_export(file_path, daily_stat):
                     job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
                     job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]],
                     experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
-                    job_board=line[MAPPING[JOB_BOARD]]
+                    job_board=line[MAPPING[JOB_BOARD]],
+                    easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                 ).first()
                 new_job_location = job_location is None
                 existing_job_that_was_unlisted = False
@@ -56,13 +57,11 @@ def parse_csv_export(file_path, daily_stat):
                     job = Job.objects.all().filter(
                         job_title=line[MAPPING[JOB_TITLE_KEY]],
                         company_name=line[MAPPING[COMPANY_NAME_KEY]],
-                        easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True',
                     ).first()
                     if job is None:
                         job = Job(
                             job_title=line[MAPPING[JOB_TITLE_KEY]],
                             company_name=line[MAPPING[COMPANY_NAME_KEY]],
-                            easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                         )
                         job.save()
                         daily_stat.number_of_new_jobs += 1
@@ -74,7 +73,8 @@ def parse_csv_export(file_path, daily_stat):
                         date_posted=pst_epoch_datetime(line[MAPPING[POST_DATE_KEY]]),
                         experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[
                             line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
-                        job_board=line[MAPPING[JOB_BOARD]]
+                        job_board=line[MAPPING[JOB_BOARD]],
+                        easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                     )
                     job_location.save()
                     JobLocationDailyStat(
