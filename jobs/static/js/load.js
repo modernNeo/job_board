@@ -264,6 +264,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     jobPostingInfo.append(document.createElement("br"), document.createElement("br"));
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
+    jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
     for (let i = 0; i < locations.length; i++) {
         let message = ``;
         if (locations[i].experience_level){
@@ -275,7 +276,6 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             createDeleteButton(locations[i].id), document.createElement("br"), document.createElement("br")
         );
     }
-    jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
