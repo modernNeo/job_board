@@ -37,9 +37,9 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         'company_name', 'job_title', 'id'
     )
 
-    for ordered_above_associate_level_jobs_posting in ordered_above_associate_level_jobs_postings:
-        if ordered_above_associate_level_jobs_posting.id not in pk_list:
-            pk_list.append(ordered_above_associate_level_jobs_posting.id)
+    for ordered_posting in ordered_above_associate_level_jobs_postings:
+        if ordered_posting.id not in pk_list:
+            pk_list.append(ordered_posting.id)
 
     preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
     job_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
