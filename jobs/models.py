@@ -303,6 +303,11 @@ class JobLocation(models.Model):
         default=None,
         null=True
     )
+    easy_apply = models.BooleanField(
+        default=None,
+        null=True
+    )
+
 
     def updated_more_recently(self, date_to_compare_to):
         job_location_daily_stats = self.joblocationdailystat_set.all()
