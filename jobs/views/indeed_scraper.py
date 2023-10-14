@@ -50,6 +50,8 @@ def run_indeed_scraper(exports_writer, exports):
             print(f"getting {human_readable_string} page {page}")
             driver.get(url)
             time.sleep(10)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(3)
             if firstUrl:
                 input("ok to proceed?")
                 firstUrl = False
