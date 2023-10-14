@@ -20,6 +20,7 @@
 <script src="{% static 'js/update_applied_stats.js' %}"></script>
 <script src="{% static 'js/deleteJobLocation.js' %}"></script>
 <script src="{% static 'js/toggleJobLocationEasyApply.js' %}"></script>
+<script src="{% static 'js/search_job.js' %}"></script>
 <script>
     $(document).ready(function () {
         setCookie("logged_in_user","{{ user }}");
@@ -61,6 +62,10 @@
     <div id="delete_list"></div>
     <div id="lists_buttons"></div>
     <br><br>
+    <label for="job_title">Job Title:</label><input type="text" id="job_title" name="job_title">
+    <label for="job_id">Job ID:</label><input type="text" id="job_id" name="job_id">
+    <button onclick="search_job()">Search</button>
+    <button onclick="clear_search()">Clear Search</button><br><br>
     <div style="width: 100%; overflow: hidden">
         <div style="width: 70%; float: left">
             <div id="job_list_header"></div>

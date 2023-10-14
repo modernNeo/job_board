@@ -74,9 +74,16 @@ class JobViewSet(viewsets.ModelViewSet):
         job_postings = Job.objects.all()
         if self.request.user.id is None:
             return job_postings.filter(id=None)
+        search_title = self.request.query_params.get("search_title", None)
+        search_id = self.request.query_params.get("search_id", None)
+        search_specified = search_id is not None or search_title is not None
+        if search_title is not None:
+            job_postings = job_postings.filter(job_title__contains=search_title)
+        if search_id is not None:
+            job_postings = job_postings.filter(joblocation__job_board_id__contains=search_id)
         if 'list' in self.request.query_params:
             postings = get_job_postings(job_postings, self.request.user.id,
-                                        list_parameter=self.request.query_params['list'])
+                                        list_parameter=self.request.query_params['list'] if not search_specified else None)
         else:
             postings = get_job_postings(job_postings, self.request.user.id)
         if 'page' in self.request.query_params:

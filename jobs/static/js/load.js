@@ -91,6 +91,14 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
         setCookie("pageNumber", pageNumber)
     }
     param += `&page=${getCookie("pageNumber")}`;
+    const search_title = getCookie("search_title");
+    const search_id = getCookie("search_id");
+    if (search_title !== null){
+        param += `&search_title=${search_title}`;
+    }
+    if (search_id !== null){
+        param += `&search_id=${search_id}`;
+    }
     let listOfJobs = JSON.parse($.ajax({
         'url': `${getCookie('list_of_jobs_endpoint')}?${param}`,
         'type': 'GET',
