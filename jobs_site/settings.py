@@ -49,7 +49,7 @@ LOG_LOCATION = os.environ['LOG_LOCATION'] if 'LOG_LOCATION' in os.environ else N
 if LOG_LOCATION is None:
     LOG_LOCATION = f"{Path(__file__).resolve().parent.parent}/logs"
 
-DJANGO_SETTINGS_LOG_HANDLER_NAME = "linkedin_jobs"
+DJANGO_SETTINGS_LOG_HANDLER_NAME = "jobs_site"
 
 from jobs.setup_logger import Loggers
 
