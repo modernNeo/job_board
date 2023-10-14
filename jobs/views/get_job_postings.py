@@ -20,32 +20,59 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
 
     below_mid_senior_level_jobs = job_postings.exclude(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
     ordered_below_mid_senior_level_job_postings = below_mid_senior_level_jobs.order_by(
-        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True),
+        F('joblocation__easy_apply').desc(nulls_last=True), F('joblocation__date_posted').desc(nulls_last=True),
         F('joblocation__experience_level').desc(nulls_last=True),
         'company_name', 'job_title', 'id'
     )
 
     pk_list = []
-    for ordered_posting in ordered_below_mid_senior_level_job_postings:
-        if ordered_posting.id not in pk_list:
-            pk_list.append(ordered_posting.id)
+    easy_apply_ordered_below_mid_senior_level_job_posting_pk_list = []
+    non_easy_apply_ordered_below_mid_senior_level_job_posting_pk_list = []
+    for ordered_below_mid_senior_level_job_posting in ordered_below_mid_senior_level_job_postings:
+        if ordered_below_mid_senior_level_job_posting.id not in pk_list:
+            if ordered_below_mid_senior_level_job_posting.has_easy_apply:
+                easy_apply_ordered_below_mid_senior_level_job_posting_pk_list.append(
+                    ordered_below_mid_senior_level_job_posting.id
+                )
+            else:
+                non_easy_apply_ordered_below_mid_senior_level_job_posting_pk_list.append(
+                    ordered_below_mid_senior_level_job_posting.id
+                )
+            pk_list.append(ordered_below_mid_senior_level_job_posting.id)
 
     above_associate_level_jobs = job_postings.filter(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
     ordered_above_associate_level_jobs_postings = above_associate_level_jobs.order_by(
-        '-easy_apply', F('joblocation__date_posted').desc(nulls_last=True),
+        F('joblocation__easy_apply').desc(nulls_last=True), F('joblocation__date_posted').desc(nulls_last=True),
         F('joblocation__experience_level').desc(nulls_last=True),
         'company_name', 'job_title', 'id'
     )
 
-    for ordered_posting in ordered_above_associate_level_jobs_postings:
-        if ordered_posting.id not in pk_list:
-            pk_list.append(ordered_posting.id)
+    easy_apply_ordered_above_associate_level_jobs_posting_pk_list = []
+    non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list = []
+    for ordered_above_associate_level_jobs_posting in ordered_above_associate_level_jobs_postings:
+        if ordered_above_associate_level_jobs_posting.id not in pk_list:
+            if ordered_above_associate_level_jobs_posting.has_easy_apply:
+                easy_apply_ordered_above_associate_level_jobs_posting_pk_list.append(
+                    ordered_above_associate_level_jobs_posting.id
+                )
+            else:
+                non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list.append(
+                    ordered_above_associate_level_jobs_posting.id
+                )
+            pk_list.append(ordered_above_associate_level_jobs_posting.id)
 
     preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
     job_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
 
-    easy_apply_job_postings = job_postings.filter(easy_apply=True)
-    non_easy_apply_job_postings = job_postings.filter(easy_apply=False)
+    number_of_easy_apply_below_mid_senior_job_postings = len(easy_apply_ordered_below_mid_senior_level_job_posting_pk_list)
+    number_of_non_easy_apply_below_mid_senior_job_postings = len(non_easy_apply_ordered_below_mid_senior_level_job_posting_pk_list)
 
-    return Paginator(job_postings, 25), easy_apply_job_postings.count(), non_easy_apply_job_postings.count()
+    number_of_easy_apply_above_associate_job_postings = len(easy_apply_ordered_above_associate_level_jobs_posting_pk_list)
+    number_of_non_easy_apply_above_associate_job_postings = len(non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list)
+
+    return (
+        Paginator(job_postings, 25), number_of_easy_apply_below_mid_senior_job_postings,
+        number_of_non_easy_apply_below_mid_senior_job_postings, number_of_easy_apply_above_associate_job_postings,
+        number_of_non_easy_apply_above_associate_job_postings
+    )
 

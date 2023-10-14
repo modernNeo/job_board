@@ -248,6 +248,14 @@ class Job(models.Model):
         return latest_date_added
 
     @property
+    def has_easy_apply(self):
+        easy_apply = False
+        for location in self.joblocation_set.all():
+            if location.easy_apply:
+                easy_apply = True
+        return easy_apply
+
+    @property
     def lists(self):
         lists = List.objects.all().filter(item__job_id=self.id)
         if len(lists) == 0:

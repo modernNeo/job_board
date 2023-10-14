@@ -11,12 +11,18 @@ class PageNumbers(View):
 
     def get(self, request):
         jobs = Job.objects.all().filter(id=None) if self.request.user.id is None else Job.objects.all()
-        paginated_jobs, total_number_of_easy_apply_jobs, total_number_of_jobs = get_job_postings(
+        (
+            paginated_jobs, number_of_easy_apply_below_mid_senior_job_postings,
+            number_of_non_easy_apply_below_mid_senior_job_postings, number_of_easy_apply_above_associate_job_postings,
+            number_of_non_easy_apply_above_associate_job_postings
+        ) = get_job_postings(
             jobs, request.user.id, list_parameter=request.GET['list']
         )
         response = {
             'total_number_of_pages': paginated_jobs.num_pages,
-            'total_number_of_easy_apply_jobs': total_number_of_easy_apply_jobs,
-            'total_number_of_jobs': total_number_of_jobs
+            'number_of_easy_apply_below_mid_senior_job_postings': number_of_easy_apply_below_mid_senior_job_postings,
+            'number_of_non_easy_apply_below_mid_senior_job_postings': number_of_non_easy_apply_below_mid_senior_job_postings,
+            'number_of_easy_apply_above_associate_job_postings': number_of_easy_apply_above_associate_job_postings,
+            'number_of_non_easy_apply_above_associate_job_postings': number_of_non_easy_apply_above_associate_job_postings
         }
         return HttpResponse(json.dumps(response))
