@@ -226,9 +226,6 @@ class Job(models.Model):
     company_name = models.CharField(
         max_length=500
     )
-    easy_apply = models.BooleanField(
-
-    )
 
     @property
     def note(self):
