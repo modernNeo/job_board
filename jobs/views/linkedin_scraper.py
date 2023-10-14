@@ -148,7 +148,7 @@ def get_job_item(logger, job_id):
                 raise Exception()
         except Exception:
             random_number_milliseconds = random.randint(0, 1000) / 1000
-            logger.info(f"attempt {iteration} trying to get job_board_id {job_id}")
+            logger.info(f"attempt {iteration+1} trying to get job_board_id {job_id}")
             time.sleep(math.pow(3, iteration) + random_number_milliseconds)
             latest_attempt_time = time.perf_counter()
         iteration += 1
