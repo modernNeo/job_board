@@ -33,9 +33,9 @@ def parse_job_location_fix(file):
     with open(file, newline='') as f:
         csvFile = csv.reader(f, delimiter=',', quotechar='|')
         csvFileArr = [line for line in csvFile][1:]
-        for line in csvFileArr:
+        number_of_lines = len(csvFileArr)
+        for index, line in enumerate(csvFileArr):
             location = JobLocation.objects.get(id=line[0])
-            if line[1] == 'True':
-                print(1)
             location.easy_apply = line[1] == 'True'
             location.save()
+            print(f"parsed location {index}/{number_of_lines}")
