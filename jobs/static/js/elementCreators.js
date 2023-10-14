@@ -90,3 +90,9 @@ function createDeleteButton(job_location_id) {
     button.innerHTML = "Delete";
     return button;
 }
+function createToggleEasyApplyButton(job_location_id) {
+    let button = document.createElement("button");
+    button.setAttribute("onclick", `toggleJobLocationEasyApply(${job_location_id})`);
+    button.innerHTML = "Toggle Easy Apply";
+    return button;
+}

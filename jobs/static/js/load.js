@@ -275,11 +275,18 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
         if (locations[i].experience_level){
             message = `${locations[i].experience_level} - `;
         }
+        if (locations.length > 1) {
+            message += `Easy Apply: ${locations[i].easy_apply} - `;
+        }
         jobPostingInfo.append(
             createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].job_board_link),
             createJobLocationLinkedId(locations[i].job_board_id),
-            createDeleteButton(locations[i].id), document.createElement("br"), document.createElement("br")
+            createToggleEasyApplyButton(locations[i].id)
         );
+        if (locations.length > 1){
+            jobPostingInfo.append(createDeleteButton(locations[i].id))
+        }
+        jobPostingInfo.append(document.createElement("br"), document.createElement("br"))
     }
     jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);

@@ -17,6 +17,8 @@ class JobSerializer(serializers.ModelSerializer):
 
     job_board = serializers.SerializerMethodField('posting_job_board')
 
+    easy_apply = serializers.SerializerMethodField("has_easy_apply")
+
     @property
     def user_id_for_request(self):
         request = self.context.get('request', None)
@@ -42,6 +44,9 @@ class JobSerializer(serializers.ModelSerializer):
 
     def posting_job_board(self, job):
         return ", ".join(set([location.job_board for location in job.joblocation_set.all()]))
+
+    def has_easy_apply(self, job):
+        return job.has_easy_apply
 
     class Meta:
         model = Job

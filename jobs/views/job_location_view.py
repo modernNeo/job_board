@@ -29,6 +29,13 @@ class JobLocationSet(viewsets.ModelViewSet):
     serializer_class = JobLocationSerializer
     queryset = JobLocation.objects.all()
 
+    def update(self, request, *args, **kwargs):
+        job_location = JobLocation.objects.all().filter(id=kwargs['pk']).first()
+        if job_location is not None:
+            job_location.easy_apply = not job_location.easy_apply
+            job_location.save()
+        return Response("ok")
+
     def get_queryset(self):
         locations = self.queryset
         if 'job_id' in self.request.query_params:
