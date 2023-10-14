@@ -47,11 +47,28 @@ async function browserReady() {
     }
 }
 
+function deleteCookies() {
+    var allCookies = document.cookie.split(';');
+
+    // The "expire" attribute of every cookie is
+    // Set to "Thu, 01 Jan 1970 00:00:00 GMT"
+    for (var i = 0; i < allCookies.length; i++) {
+        const key = allCookies[i].split("=")[0].trim();
+        const clearable_cookie = (
+            key !== "applied_stats_endpoint" && key !== "daily_stat_endpoint" && key !== "item_endpoint" &&
+            key !== "job_location_endpoint" && key !== "list_endpoint" && key !== "list_of_jobs_endpoint" && key !== "logged_in_user"
+            && key !== "note_endpoint" && key !== "note_endpoint" && key !== "num_pages_endpoint"
+        )
+        if (clearable_cookie) {
+            console.log(`clearing cookie [${key}]`);
+            document.cookie = allCookies[i] + "=;expires=" + new Date(0).toUTCString();
+        }else{
+            console.log(`not clearing cookie [${key}]`);
+        }
+    }
+}
 function clearCookies() {
-    setCookie("previously_selected_job_index", null);
-    setCookie("previously_selected_job_ids", null);
-    setCookie("currently_selected_job_id", null);
-    setCookie("currently_selected_job_index", null);
+    deleteCookies();
     setCookie("view","inbox")
 }
 
