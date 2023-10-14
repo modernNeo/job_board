@@ -85,4 +85,6 @@ def run_indeed_scraper(exports_writer, exports):
                     INDEED_KEY
                 ])
                 exports.flush()
+
+    driver.close()
     driver.quit()
