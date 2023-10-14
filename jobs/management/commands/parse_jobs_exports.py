@@ -33,9 +33,8 @@ class Command(BaseCommand):
                 parse_csv_export(csv_file.file_path, daily_stat)
             csv_file.delete()
         else:
-            file_path = '/media/jace/jace_docs/2_personal/jobs_site/exports/2023-10-11_07-52-53_PM_exports.csv'
-            etl_extraction_start_time = get_etl_start(file_path)
+            etl_extraction_start_time = get_etl_start(settings.EXPORT_FILE)
             daily_stat.date_added = create_pst_time_from_datetime(etl_extraction_start_time)
             daily_stat.earliest_date_for_new_job_location = create_pst_time_from_datetime(etl_extraction_start_time)
             daily_stat.save()
-            parse_csv_export(file_path, daily_stat)
+            parse_csv_export(settings.EXPORT_FILE, daily_stat)

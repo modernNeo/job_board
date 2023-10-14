@@ -42,6 +42,10 @@ LI_AT = None
 if 'LI_AT' in os.environ:
     LI_AT = os.environ['LI_AT']
 
+EXPORT_FILE = None
+if 'EXPORT_FILE' in os.environ:
+    EXPORT_FILE = os.environ['EXPORT_FILE']
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
