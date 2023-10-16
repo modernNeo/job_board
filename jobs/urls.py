@@ -9,7 +9,6 @@ from jobs.views.job_note_view import JobNoteSet
 from jobs.views.jobs_applied_numbers import JobsAppliedNumbers
 from jobs.views.jobs_views import JobViewSet
 from jobs.views.list_view import ListSet
-from jobs.views.page_numbers import PageNumbers
 
 router = routers.DefaultRouter()
 router.register(r'jobs', JobViewSet, basename="job")
@@ -21,7 +20,6 @@ router.register(f'daily_stats', DailyStatSet, basename='daily_stat')
 
 urlpatterns = [
     path(r'api/', include((router.urls, 'jobs'), namespace="api")),
-    path(r'page_numbers', PageNumbers.as_view(), name='page_numbers'),
     path(r'applied_stats', JobsAppliedNumbers.as_view(), name='jobs_applied_numbers'),
     path("", IndexPage.as_view(), name="index"),
 ]

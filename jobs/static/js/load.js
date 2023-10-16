@@ -57,7 +57,7 @@ function deleteCookies() {
         const clearable_cookie = (
             key !== "applied_stats_endpoint" && key !== "daily_stat_endpoint" && key !== "item_endpoint" &&
             key !== "job_location_endpoint" && key !== "list_endpoint" && key !== "list_of_jobs_endpoint" && key !== "logged_in_user"
-            && key !== "note_endpoint" && key !== "note_endpoint" && key !== "num_pages_endpoint" && key !== "csrftoken"
+            && key !== "note_endpoint" && key !== "note_endpoint" && key !== "csrftoken"
         )
         if (clearable_cookie) {
             console.log(`clearing cookie [${key}]`);
@@ -85,28 +85,14 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     } else {
         param += `${await getListFuncOrParameterOrHeader(allLists, "parameter")}`;
     }
-    let numPagesInfo = JSON.parse($.ajax({
-        'url': `${getCookie('num_pages_endpoint')}?${param}`,
-        'type': 'GET',
-        'cache': false,
-        headers: {'X-CSRFToken': getCookie('csrftoken')},
-        contentType: 'application/json; charset=utf-8',
-        async: false
-    }).responseText)
-    const totalNumberOfPages = numPagesInfo['total_number_of_pages']
-    setCookie("total_number_of_pages", totalNumberOfPages);
-    setCookie("number_of_easy_apply_below_mid_senior_job_postings", numPagesInfo['number_of_easy_apply_below_mid_senior_job_postings']);
-    setCookie("number_of_non_easy_apply_below_mid_senior_job_postings", numPagesInfo['number_of_non_easy_apply_below_mid_senior_job_postings']);
-    setCookie("number_of_easy_apply_above_associate_job_postings", numPagesInfo['number_of_easy_apply_above_associate_job_postings']);
-    setCookie("number_of_non_easy_apply_above_associate_job_postings", numPagesInfo['number_of_non_easy_apply_above_associate_job_postings']);
-    const pageNumber = getCookie("pageNumber") + newPageDifference;
-    if (pageNumber < 1) {
-        setCookie("pageNumber", totalNumberOfPages);
-    } else if (pageNumber > totalNumberOfPages) {
-        setCookie("pageNumber", 1)
-    } else {
-        setCookie("pageNumber", pageNumber)
+    let pageNumber = getCookie("pageNumber") + newPageDifference;
+    let totalNumberOfPages = getCookie['total_number_of_pages']
+    if (pageNumber < 1){
+        pageNumber = totalNumberOfPages;
+    }else if (pageNumber > totalNumberOfPages){
+        pageNumber = 1;
     }
+    setCookie("pageNumber", pageNumber)
     param += `&page=${getCookie("pageNumber")}`;
     const search_title = getCookie("search_title");
     const search_id = getCookie("search_id");
@@ -116,13 +102,32 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     if (search_id !== null){
         param += `&search_id=${search_id}`;
     }
-    let listOfJobs = JSON.parse($.ajax({
+    let listOfJobsResp = JSON.parse($.ajax({
         'url': `${getCookie('list_of_jobs_endpoint')}?${param}`,
         'type': 'GET',
         'cache': false,
         async: false
     }).responseText)
-    await updateJobList(listOfJobs, allLists);
+
+    setCookie("total_number_of_pages", listOfJobsResp.total_number_of_pages);
+    setCookie(
+        "number_of_easy_apply_below_mid_senior_job_postings",
+        listOfJobsResp.number_of_easy_apply_below_mid_senior_job_postings
+    );
+    setCookie(
+        "number_of_non_easy_apply_below_mid_senior_job_postings",
+        listOfJobsResp.number_of_non_easy_apply_below_mid_senior_job_postings
+    );
+    setCookie(
+        "number_of_easy_apply_above_associate_job_postings",
+        listOfJobsResp.number_of_easy_apply_above_associate_job_postings
+    );
+    setCookie(
+        "number_of_non_easy_apply_above_associate_job_postings",
+        listOfJobsResp.number_of_non_easy_apply_above_associate_job_postings
+    );
+
+    await updateJobList(listOfJobsResp.results, allLists);
 }
 
 async function getListFuncOrParameterOrHeader(allLists, returnType) {

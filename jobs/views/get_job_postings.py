@@ -1,4 +1,3 @@
-from django.core.paginator import Paginator
 from django.db.models import F, Case, When
 
 from jobs.models import Item, ExperienceLevel, Job
@@ -71,7 +70,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     number_of_non_easy_apply_above_associate_job_postings = len(non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list)
 
     return (
-        Paginator(job_postings, 25), number_of_easy_apply_below_mid_senior_job_postings,
+        job_postings, number_of_easy_apply_below_mid_senior_job_postings,
         number_of_non_easy_apply_below_mid_senior_job_postings, number_of_easy_apply_above_associate_job_postings,
         number_of_non_easy_apply_above_associate_job_postings
     )
