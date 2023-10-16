@@ -238,8 +238,11 @@ class Job(models.Model):
             latest_date_added = job_locations[0].date_posted
             for job_location in job_locations:
                 try:
-                    if job_location.date_posted > latest_date_added:
+                    if latest_date_added is None:
                         latest_date_added = job_location.date_posted
+                    elif job_location.date_posted is not None:
+                        if job_location.date_posted > latest_date_added:
+                            latest_date_added = job_location.date_posted
                 except Exception as e:
                     print(e)
         return latest_date_added
