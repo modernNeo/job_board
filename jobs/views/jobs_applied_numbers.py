@@ -21,7 +21,7 @@ class JobsAppliedNumbers(View):
             index += 1
             if applied_job.date_added is not None:
                 easy_apply = applied_job.job.has_easy_apply
-                date_str = applied_job.date_added.strftime("%Y-%m-%d")
+                date_str = applied_job.date_added.pst.strftime("%Y-%m-%d")
                 if last_date != date_str:
                     number_of_dates += 1
                     last_date = date_str

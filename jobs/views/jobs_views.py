@@ -31,7 +31,7 @@ class JobSerializer(serializers.ModelSerializer):
         return note.note if note is not None else note
 
     def latest_job_date_posted(self, job):
-        date = job.get_latest_posted_date()
+        date = job.get_latest_posted_date().pst
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     def job_experience_level(self, job):

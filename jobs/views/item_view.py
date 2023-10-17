@@ -12,7 +12,7 @@ class ItemSerializer(serializers.ModelSerializer):
     def pst_date_added(self, item):
         # needed this func cause apparently the automatic serialization doesn't respect
         # from_db_value in PSTDateTimeField
-        return item.date_added
+        return item.date_added.pst
 
     class Meta:
         model = Item

@@ -8,7 +8,7 @@ class DailyStatSerializer(serializers.ModelSerializer):
     date_added = serializers.SerializerMethodField("date_exported_from_linkedin")
 
     def date_exported_from_linkedin(self, daily_stat):
-        date = daily_stat.date_added
+        date = daily_stat.date_added.pst
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     class Meta:
