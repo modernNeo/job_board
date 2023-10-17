@@ -1,7 +1,7 @@
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import Item
+from jobs.models import Item, pstdatetime
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -12,7 +12,10 @@ class ItemSerializer(serializers.ModelSerializer):
     def pst_date_added(self, item):
         # needed this func cause apparently the automatic serialization doesn't respect
         # from_db_value in PSTDateTimeField
-        return item.date_added.pst
+        date_added = item.date_added
+        if type(date_added) != pstdatetime:
+            date_added = pstdatetime.create_instance(date_added)
+        return date_added.pst
 
     class Meta:
         model = Item

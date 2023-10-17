@@ -4,7 +4,7 @@ import datetime
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, COMPANY_NAME_KEY, \
     EXPERIENCE_LEVEL_KEY, JOB_BOARD, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
 from jobs.models import JobLocation, ExperienceLevel, JobLocationDailyStat, Item, \
-    Job, List, JobLocationDatePosted, PstDateTime
+    Job, List, JobLocationDatePosted, pstdatetime
 from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
@@ -98,7 +98,7 @@ def parse_csv_export(file_path, daily_stat):
                     if new_job_location:
                         daily_stat.number_of_new_inbox_jobs_applied += 1
                 applied_item = job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first()
-                pst_date_added = PstDateTime.convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
+                pst_date_added = pstdatetime.convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
                     int(line[MAPPING[APPLIED_TO_JOB_KEY]])
                 ))
                 if applied_item is None:

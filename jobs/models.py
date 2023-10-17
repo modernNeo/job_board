@@ -12,7 +12,7 @@ from dateutil.tz import tz
 from django.utils import timezone
 
 
-class PstDateTime(datetime.datetime):
+class pstdatetime(datetime.datetime):
 
     TIME_ZONE = 'Canada/Pacific'
     PACIFIC_TZ = tz.gettz(TIME_ZONE)
@@ -20,14 +20,14 @@ class PstDateTime(datetime.datetime):
 
     @classmethod
     def create_instance(cls, value: datetime.datetime):
-        return PstDateTime(
+        return pstdatetime(
             value.year, month=value.month, day=value.day, hour=value.hour, minute=value.minute,
             second=value.second, microsecond=value.microsecond, tzinfo=value.tzinfo
         )
 
     @property
     def pst(self):
-        return PstDateTime.convert_utc_time_to_pacific(self)
+        return pstdatetime.convert_utc_time_to_pacific(self)
 
     @property
     def utc(self):
@@ -135,9 +135,9 @@ class PSTDateTimeField(models.DateTimeField):
                 year = int(date[:4])
                 month = int(date[5:7])
                 day = int(date[8:10])
-                setattr(model_instance, self.attname, PstDateTime.create_utc_time(year, month, day))
+                setattr(model_instance, self.attname, pstdatetime.create_utc_time(year, month, day))
             elif date.tzinfo == tzfile('/usr/share/zoneinfo/Canada/Pacific'):
-                setattr(model_instance, self.attname, PstDateTime.convert_pacific_time_to_utc(date))
+                setattr(model_instance, self.attname, pstdatetime.convert_pacific_time_to_utc(date))
             elif date.tzinfo is None:
                 raise Exception("no timezone detected")
         return super(PSTDateTimeField, self).pre_save(model_instance, add)
@@ -149,7 +149,7 @@ class PSTDateTimeField(models.DateTimeField):
         # date can be None cause of end date
         if value is None:
             return None
-        return PstDateTime.create_instance(value)
+        return pstdatetime.create_instance(value)
 
 
 # Create your models here.
@@ -378,17 +378,11 @@ class JobLocation(models.Model):
         duplicate_job_locations = JobLocation.objects.all().filter(
             job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
             experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply,
-            job_posting__job_title=self.job_posting.job_title
-        ).exclude(id=self.id)
-        duplicate_job_locations_1 = JobLocation.objects.all().filter(
-            job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
-            experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply,
             job_posting__job_title=self.job_posting.job_title, job_posting__company_name=self.job_posting.company_name
         ).exclude(id=self.id)
         if len(duplicate_job_locations) > 0:
-            raise Exception(f"duplicate job location {self.id} detected")
-        if len(duplicate_job_locations_1) > 0:
-            raise Exception(f"duplicate job location-1 {self.id} detected")
+            duplicate_ids = ", ".join([str(job_location.id) for job_location in duplicate_job_locations])
+            raise Exception(f"current job location being saved {self.id} is a duplicate for job locations {duplicate_ids}")
         super(JobLocation, self).save(args, kwargs)
 
 

@@ -9,7 +9,8 @@ class Command(BaseCommand):
         job_locations = JobLocation.objects.all()
         number_of_job_locations = job_locations.count()
         for index, job_location in enumerate(job_locations):
-            JobLocationDatePosted(
-                date_posted=job_location.get_pst_posted_date,
-                job_location_posting=job_location).save()
+            job_location.save()
+            # JobLocationDatePosted(
+            #     date_posted=job_location.get_pst_posted_date,
+            #     job_location_posting=job_location).save()
             print(f"processed job location {index}/{number_of_job_locations}")
