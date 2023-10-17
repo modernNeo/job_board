@@ -11,12 +11,12 @@ from django.db import models
 from dateutil.tz import tz
 from django.utils import timezone
 
-TIME_ZONE = 'Canada/Pacific'
-PACIFIC_TZ = tz.gettz(TIME_ZONE)
-UTC_TZ = pytz.UTC
-
 
 class PstDateTime(datetime.datetime):
+
+    TIME_ZONE = 'Canada/Pacific'
+    PACIFIC_TZ = tz.gettz(TIME_ZONE)
+    UTC_TZ = pytz.UTC
 
     @classmethod
     def create_instance(cls, value: datetime.datetime):
@@ -50,7 +50,7 @@ class PstDateTime(datetime.datetime):
         datetime -- the PST timezone object
         """
         return datetime.datetime(
-            year=year, month=month, day=day, hour=hour_24, minute=minute, second=second, tzinfo=PACIFIC_TZ
+            year=year, month=month, day=day, hour=hour_24, minute=minute, second=second, tzinfo=cls.PACIFIC_TZ
         )
 
     @classmethod
@@ -73,7 +73,7 @@ class PstDateTime(datetime.datetime):
             cls.create_pst_time(
                 year=year, month=month, day=day, hour_24=hour_24, minute=minute, second=second
             ).timestamp()
-        ).astimezone(UTC_TZ)
+        ).astimezone(cls.UTC_TZ)
 
     @classmethod
     def convert_pacific_time_to_utc(cls, pacific_date):
@@ -86,7 +86,7 @@ class PstDateTime(datetime.datetime):
         Return
         datetime -- the UTC timezone equivalent of the pacific_date
         """
-        return datetime.datetime.fromtimestamp(pacific_date.timestamp()).astimezone(UTC_TZ)
+        return datetime.datetime.fromtimestamp(pacific_date.timestamp()).astimezone(cls.UTC_TZ)
 
     @classmethod
     def convert_utc_time_to_pacific(cls, utc_datetime):
@@ -99,7 +99,7 @@ class PstDateTime(datetime.datetime):
         Return
         datetime -- the PST timezone equivalent of the utc_datetime
         """
-        return utc_datetime.astimezone(PACIFIC_TZ)
+        return utc_datetime.astimezone(cls.PACIFIC_TZ)
 
     @classmethod
     def create_pst_time_from_datetime(cls, datetime_obj):
@@ -114,7 +114,7 @@ class PstDateTime(datetime.datetime):
         """
         return datetime.datetime(
             year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day, hour=datetime_obj.hour,
-            minute=datetime_obj.minute, second=datetime_obj.second, tzinfo=PACIFIC_TZ
+            minute=datetime_obj.minute, second=datetime_obj.second, tzinfo=cls.PACIFIC_TZ
         )
 
 
@@ -377,10 +377,18 @@ class JobLocation(models.Model):
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
             job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
-            experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply
+            experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply,
+            job_posting__job_title=self.job_posting.job_title
+        ).exclude(id=self.id)
+        duplicate_job_locations_1 = JobLocation.objects.all().filter(
+            job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
+            experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply,
+            job_posting__job_title=self.job_posting.job_title, job_posting__company_name=self.job_posting.company_name
         ).exclude(id=self.id)
         if len(duplicate_job_locations) > 0:
             raise Exception(f"duplicate job location {self.id} detected")
+        if len(duplicate_job_locations_1) > 0:
+            raise Exception(f"duplicate job location-1 {self.id} detected")
         super(JobLocation, self).save(args, kwargs)
 
 

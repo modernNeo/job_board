@@ -4,7 +4,7 @@ import datetime
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, COMPANY_NAME_KEY, \
     EXPERIENCE_LEVEL_KEY, JOB_BOARD, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
 from jobs.models import JobLocation, ExperienceLevel, JobLocationDailyStat, Item, \
-    convert_utc_time_to_pacific, Job, List, JobLocationDatePosted
+    Job, List, JobLocationDatePosted, PstDateTime
 from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
@@ -29,15 +29,18 @@ def parse_csv_export(file_path, daily_stat):
         for idx, column in enumerate(csvFile[0]):
             MAPPING[column] = idx
         for line in csvFile[1:]:
-            job_location = JobLocation.objects.all().filter(
+            job_location_1 = JobLocation.objects.all().filter(
                 job_board_id=line[MAPPING[JOB_ID_KEY]],
                 location=line[MAPPING[LOCATION_KEY]],
                 job_board_link=line[MAPPING[JOB_URL_KEY]],
-                job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
-                job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]],
                 experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
                 job_board=line[MAPPING[JOB_BOARD]],
                 easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
+            )
+            job_location = job_location_1.filter(
+                job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
+                job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]],
+
             ).first()
             new_job_location = job_location is None
             existing_job_that_was_unlisted = False
@@ -95,7 +98,7 @@ def parse_csv_export(file_path, daily_stat):
                     if new_job_location:
                         daily_stat.number_of_new_inbox_jobs_applied += 1
                 applied_item = job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first()
-                pst_date_added = convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
+                pst_date_added = PstDateTime.convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
                     int(line[MAPPING[APPLIED_TO_JOB_KEY]])
                 ))
                 if applied_item is None:
