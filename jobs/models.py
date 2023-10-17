@@ -33,7 +33,6 @@ class PstDateTime(datetime.datetime):
     def utc(self):
         return self
 
-
     @classmethod
     def create_pst_time(cls, year, month, day, hour_24=0, minute=0, second=0):
         """
@@ -75,7 +74,6 @@ class PstDateTime(datetime.datetime):
                 year=year, month=month, day=day, hour_24=hour_24, minute=minute, second=second
             ).timestamp()
         ).astimezone(UTC_TZ)
-
 
     @classmethod
     def convert_pacific_time_to_utc(cls, pacific_date):
@@ -369,6 +367,12 @@ class JobLocation(models.Model):
             if job_location__date_posted.date_posted > date_posted:
                 date_posted = job_location__date_posted.date_posted
         return date_posted
+
+    @property
+    def get_pst_posted_date(self):
+        if self.date_posted is None:
+            return None
+        return self.date_posted.pst
 
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
