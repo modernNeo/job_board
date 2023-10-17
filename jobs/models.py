@@ -231,20 +231,17 @@ class Job(models.Model):
     def note(self):
         return self.jobnote.note if self.jobnote is not None else None
 
-    def get_latest_parsed_date(self):
+    def get_latest_posted_date(self):
         job_locations = self.joblocation_set.all()
         latest_date_added = None
         if len(job_locations) > 0:
-            latest_date_added = job_locations[0].date_posted
-            for job_location in job_locations:
-                try:
-                    if latest_date_added is None:
-                        latest_date_added = job_location.date_posted
-                    elif job_location.date_posted is not None:
-                        if job_location.date_posted > latest_date_added:
-                            latest_date_added = job_location.date_posted
-                except Exception as e:
-                    print(e)
+            latest_date_added = job_locations[0].get_latest_posted_date()
+            for job_location in job_locations[1:]:
+                if latest_date_added is None:
+                    latest_date_added = job_location.get_latest_posted_date()
+                elif job_location.get_latest_posted_date() is not None:
+                    if job_location.get_latest_posted_date() > latest_date_added:
+                        latest_date_added = job_location.get_latest_posted_date()
         return latest_date_added
 
     @property
@@ -262,6 +259,15 @@ class Job(models.Model):
             return ""
         else:
             return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
+
+    def save(self, *args, **kwargs):
+        duplicate_jobs = Job.objects.all().filter(
+            job_title=self.job_title, company_name=self.company_name
+        ).exclude(id=self.id)
+        if len(duplicate_jobs) > 0:
+            raise Exception(f"duplicate job {self.id} detected")
+        super(Job, self).save(args, kwargs)
+
 
 
 class ExperienceLevel(Enum):
@@ -335,6 +341,33 @@ class JobLocation(models.Model):
             if job_location_daily_stat.updated_more_recently(latest_date_added):
                 latest_date_added = job_location_daily_stat.daily_stat.date_added
         return latest_date_added
+
+    def get_latest_posted_date(self):
+        job_location__dates_posted = self.joblocationdateposted_set.all()
+        date_posted = job_location__dates_posted[0].date_posted
+        for job_location__date_posted in job_location__dates_posted[1:]:
+            if job_location__date_posted.date_posted > date_posted:
+                date_posted = job_location__date_posted.date_posted
+        return date_posted
+
+    def save(self, *args, **kwargs):
+        duplicate_job_locations = JobLocation.objects.all().filter(
+            job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
+            experience_level=self.experience_level, job_board=self.job_board, easy_apply=self.easy_apply
+        ).exclude(id=self.id)
+        if len(duplicate_job_locations) > 0:
+            raise Exception(f"duplicate job location {self.id} detected")
+        super(JobLocation, self).save(args, kwargs)
+
+
+class JobLocationDatePosted(models.Model):
+    job_location_posting = models.ForeignKey(
+        JobLocation, on_delete=models.CASCADE
+    )
+    date_posted = PSTDateTimeField(
+        null=True,
+        blank=True
+    )
 
 
 class JobLocationDailyStat(models.Model):

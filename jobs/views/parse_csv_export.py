@@ -4,7 +4,7 @@ import datetime
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, COMPANY_NAME_KEY, \
     EXPERIENCE_LEVEL_KEY, JOB_BOARD, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
 from jobs.models import JobLocation, ExperienceLevel, JobLocationDailyStat, Item, \
-    convert_utc_time_to_pacific, Job, List
+    convert_utc_time_to_pacific, Job, List, JobLocationDatePosted
 from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
@@ -66,6 +66,10 @@ def parse_csv_export(file_path, daily_stat):
                     easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                 )
                 job_location.save()
+                JobLocationDatePosted(
+                    date_posted=pst_epoch_datetime(line[MAPPING[POST_DATE_KEY]]),
+                    job_location_posting=job_location
+                ).save()
                 JobLocationDailyStat(
                     daily_stat=daily_stat,
                     job_location=job_location
