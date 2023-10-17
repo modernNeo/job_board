@@ -131,10 +131,12 @@ class PSTDateTimeField(models.DateTimeField):
         # date can be None cause of end date
         if value is None:
             return None
-        return PSTDateTimeField(value)
+        return convert_utc_time_to_pacific(value)
 
     @property
     def pst(self):
+        if self.verbose_name is None:
+            return None
         return convert_utc_time_to_pacific(self.verbose_name)
 
     @property
