@@ -22,5 +22,3 @@ selenium~=4.11.2
 
 # needed for making API requests
 requests
-
-selenium-profiles
