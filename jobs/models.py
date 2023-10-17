@@ -141,6 +141,13 @@ class PSTDateTimeField(models.DateTimeField):
     def utc(self):
         return self.verbose_name
 
+    def utcoffset(self):
+        return convert_utc_time_to_pacific(self.verbose_name).utcoffset()
+
+    def astimezone(self, tz=None):
+        return convert_utc_time_to_pacific(self.verbose_name).astimezone(tz=tz)
+
+
 # Create your models here.
 
 
