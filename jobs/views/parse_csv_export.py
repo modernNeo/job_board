@@ -26,6 +26,8 @@ def parse_csv_export(file_path, daily_stat):
         index = 0
         for idx, column in enumerate(csvFile[0]):
             MAPPING[column] = idx
+        new_dates_for_location = 0
+        newer_dates_for_location = 0
         for line in csvFile[1:]:
             job_location = JobLocation.objects.all().filter(
                 job_board_id=line[MAPPING[JOB_ID_KEY]],
@@ -63,16 +65,30 @@ def parse_csv_export(file_path, daily_stat):
                 )
                 job_location.save()
 
-                JobLocationDatePosted(
-                    date_posted=pstdatetime.from_epoch(int(line[MAPPING[POST_DATE_KEY]])).pst,
-                    job_location_posting=job_location
-                ).save()
+
                 JobLocationDailyStat(
                     daily_stat=daily_stat,
                     job_location=job_location
                 ).save()
             else:
                 existing_job_that_was_unlisted = len(job_location.job_posting.item_set.all()) == 0
+
+            date_from_csv = pstdatetime.from_epoch(int(line[MAPPING[POST_DATE_KEY]])).pst
+            latest_job_location_posted_date = job_location.joblocationdateposted_set.all().order_by('-date_posted').first()
+            if latest_job_location_posted_date is None:
+                new_dates_for_location += 1
+                JobLocationDatePosted(
+                    date_posted=date_from_csv,
+                    job_location_posting=job_location
+                ).save()
+            elif latest_job_location_posted_date.date_posted.pst < date_from_csv:
+                newer_dates_for_location += 1
+                JobLocationDatePosted(
+                    date_posted=date_from_csv,
+                    job_location_posting=job_location
+                ).save()
+
+
             job = job_location.job_posting
 
             job_marked_as_applied = line[MAPPING[APPLIED_TO_JOB_KEY]] != ""
@@ -135,7 +151,7 @@ def parse_csv_export(file_path, daily_stat):
             index += 1
             print(
                 f"parsing new job at line {index}/{len(csvFile)} "
-                f"{daily_stat.number_of_new_jobs} new jobs and {daily_stat.number_of_new_job_locations} "
+                f"{daily_stat.number_of_new_jobs} new jobs, {new_dates_for_location} new dates and {newer_dates_for_location} newer dates and {daily_stat.number_of_new_job_locations} "
                 f"new job locations so far"
             )
 
