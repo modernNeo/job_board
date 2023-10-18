@@ -1,3 +1,4 @@
+from django.db.models import When, Case
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
@@ -35,9 +36,15 @@ class JobLocationSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         locations = self.queryset
+        pk_list = []
         if 'job_id' in self.request.query_params:
             locations = locations.filter(job_posting_id=self.request.query_params['job_id'])
-        return locations.order_by('-date_posted')
+        locations = locations.order_by('-joblocationdateposted__date_posted')
+        for location in locations:
+            if location.id not in pk_list:
+                pk_list.append(location.id)
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
+        return self.queryset.filter(pk__in=pk_list).order_by(preserved)
 
     def destroy(self, request, *args, **kwargs):
         job_location = self.queryset.filter(id=int(kwargs['pk'])).first()
