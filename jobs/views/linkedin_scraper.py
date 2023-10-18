@@ -160,6 +160,7 @@ def get_job_item(logger, job_id):
         easy_apply = 'com.linkedin.voyager.jobs.ComplexOnsiteApply' in job_info['applyMethod']
         timestamp = job_info['listedAt']
         experience_level = job_info['formattedExperienceLevel'].replace(" ", "_").replace("-", "_")
+        experience_level = experience_level if len(experience_level) > 0 else None
         job_info = {
             "job_title": job_title, "location": location,
             "date_applied": date_applied, "easy_apply": easy_apply, "timestamp": timestamp,
