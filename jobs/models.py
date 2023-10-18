@@ -308,6 +308,8 @@ class ExperienceLevel:
 
     @classmethod
     def get_experience_string(cls, experience_level: int):
+        if experience_level is None:
+            return None
         experience_levels = list(cls._experience_level_map.keys())
         return experience_levels[int(experience_level)]
 
