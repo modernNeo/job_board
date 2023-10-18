@@ -17,7 +17,7 @@ class Command(BaseCommand):
             number_of_new_inbox_jobs_applied=0
         )
 
-        get_etl_start = lambda file_path_with_time: datetime.datetime.strptime(file_path_with_time[-34:-12], "%Y-%m-%d_%I-%M-%S_%p")
+        get_etl_start = lambda file_path_with_time: pstdatetime.from_datetime_with_pst_time(datetime.datetime.strptime(file_path_with_time[-34:-12], "%Y-%m-%d_%I-%M-%S_%p"))
 
         if settings.PROD_ENVIRONMENT:
             csv_files = ETLFile.objects.all()
@@ -27,14 +27,14 @@ class Command(BaseCommand):
             csv_file = csv_files[0]
             if os.path.exists(csv_file.file_path):
                 etl_extraction_start_time = get_etl_start(csv_file.file_path)
-                daily_stat.date_added = pstdatetime.create_pst_time_from_datetime(etl_extraction_start_time)
-                daily_stat.earliest_date_for_new_job_location = pstdatetime.create_pst_time_from_datetime(etl_extraction_start_time)
+                daily_stat.date_added = etl_extraction_start_time
+                daily_stat.earliest_date_for_new_job_location = etl_extraction_start_time
                 daily_stat.save()
                 parse_csv_export(csv_file.file_path, daily_stat)
             csv_file.delete()
         else:
             etl_extraction_start_time = get_etl_start(settings.EXPORT_FILE)
-            daily_stat.date_added = pstdatetime.create_pst_time_from_datetime(etl_extraction_start_time)
-            daily_stat.earliest_date_for_new_job_location = pstdatetime.create_pst_time_from_datetime(etl_extraction_start_time)
+            daily_stat.date_added = etl_extraction_start_time
+            daily_stat.earliest_date_for_new_job_location = etl_extraction_start_time
             daily_stat.save()
             parse_csv_export(settings.EXPORT_FILE, daily_stat)

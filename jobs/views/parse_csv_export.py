@@ -1,11 +1,9 @@
 import csv
-import datetime
 
 from jobs.csv_header import MAPPING, JOB_ID_KEY, LOCATION_KEY, JOB_URL_KEY, JOB_TITLE_KEY, COMPANY_NAME_KEY, \
     EXPERIENCE_LEVEL_KEY, JOB_BOARD, IS_EASY_APPLY_KEY, POST_DATE_KEY, APPLIED_TO_JOB_KEY, JOB_CLOSED_KEY
 from jobs.models import JobLocation, ExperienceLevel, JobLocationDailyStat, Item, \
     Job, List, JobLocationDatePosted, pstdatetime
-from jobs.templates.pst_epoch_datetime import pst_epoch_datetime
 
 
 def parse_csv_export(file_path, daily_stat):
@@ -70,7 +68,7 @@ def parse_csv_export(file_path, daily_stat):
                 )
                 job_location.save()
                 JobLocationDatePosted(
-                    date_posted=pst_epoch_datetime(line[MAPPING[POST_DATE_KEY]]),
+                    date_posted=pstdatetime.from_epoch(int(line[MAPPING[POST_DATE_KEY]])).pst,
                     job_location_posting=job_location
                 ).save()
                 JobLocationDailyStat(
@@ -98,9 +96,7 @@ def parse_csv_export(file_path, daily_stat):
                     if new_job_location:
                         daily_stat.number_of_new_inbox_jobs_applied += 1
                 applied_item = job.item_set.all().filter(list__name=APPLIED_LIST_NAME).first()
-                pst_date_added = pstdatetime.convert_utc_time_to_pacific(datetime.datetime.fromtimestamp(
-                    int(line[MAPPING[APPLIED_TO_JOB_KEY]])
-                ))
+                pst_date_added = pstdatetime.from_epoch(int(line[MAPPING[APPLIED_TO_JOB_KEY]]))
                 if applied_item is None:
                     Item.objects.all().get_or_create(
                         job=job, list=applied_list, date_added=pst_date_added
@@ -136,9 +132,9 @@ def parse_csv_export(file_path, daily_stat):
                     Item.objects.all().get_or_create(job=job, list=archived_list)
                 if job.item_set.all().filter(list__name=ETL_UPDATED_LIST_NAME).first() is not None:
                     job.item_set.all().filter(list__name=ETL_UPDATED_LIST_NAME).delete()
-            if new_job_location and job_location.date_posted is not None:
-                if daily_stat.earliest_date_for_new_job_location > job_location.date_posted:
-                    daily_stat.earliest_date_for_new_job_location = job_location.date_posted
+            if new_job_location and job_location.get_latest_posted_date() is not None:
+                if daily_stat.earliest_date_for_new_job_location > job_location.get_latest_posted_date():
+                    daily_stat.earliest_date_for_new_job_location = job_location.get_latest_posted_date()
             jobs_updated_so_far.append(job.id)
             index += 1
             print(
