@@ -14,7 +14,7 @@ class ItemSerializer(serializers.ModelSerializer):
         # from_db_value in PSTDateTimeField
         date_added = item.date_added
         if type(date_added) != pstdatetime:
-            date_added = pstdatetime.create_instance(date_added)
+            date_added = pstdatetime.from_utc_datetime(date_added)
         return date_added.pst
 
     class Meta:
