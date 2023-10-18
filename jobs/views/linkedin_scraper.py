@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 
 from jobs.csv_header import LINKED_IN_KEY
-from jobs.models import JobLocation
+from jobs.models import JobLocation, ExperienceLevel
 from jobs.views.views_helper import COMPANIES_TO_SKIP
 
 header = {
@@ -159,8 +159,7 @@ def get_job_item(logger, job_id):
         date_applied = int(int(job_info['applyingInfo']['appliedAt'])/1000) if job_info['applyingInfo']['applied'] else None
         easy_apply = 'com.linkedin.voyager.jobs.ComplexOnsiteApply' in job_info['applyMethod']
         timestamp = job_info['listedAt']
-        experience_level = job_info['formattedExperienceLevel'].replace(" ", "_").replace("-", "_")
-        experience_level = experience_level if len(experience_level) > 0 else None
+        experience_level = ExperienceLevel.get_experience_number(job_info['formattedExperienceLevel'])
         job_info = {
             "job_title": job_title, "location": location,
             "date_applied": date_applied, "easy_apply": easy_apply, "timestamp": timestamp,

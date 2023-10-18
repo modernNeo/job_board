@@ -282,22 +282,34 @@ class Job(models.Model):
         super(Job, self).save(args, kwargs)
 
 
+class ExperienceLevel:
+    _experience_level_map = {
+        "Internship": 0,
+        "Entry level": 1,
+        "Associate": 2,
+        "Mid-Senior level": 3,
+        "Director": 4,
+        '': None
+    }
 
-class ExperienceLevel(Enum):
-    Internship = 0
-    Entry_level = 1
-    Associate = 2
-    Mid_Senior_level = 3
-    Director = 4
+    @classmethod
+    def get_associate_number(cls):
+        return cls._experience_level_map["Associate"]
 
+    @classmethod
+    def get_experience_number(cls, experience_level: str):
+        return cls._experience_level_map[experience_level]
 
-ExperienceLevelString = {
-    ExperienceLevel.Internship.name: "Internship",
-    ExperienceLevel.Entry_level.name: "Entry Level",
-    ExperienceLevel.Associate.name: "Associate",
-    ExperienceLevel.Mid_Senior_level.name: "Mid-Senior Level",
-    ExperienceLevel.Director.name: "Director"
-}
+    @classmethod
+    def get_experience_number_from_csv(cls, experience_level: str):
+        if experience_level == '':
+            return None
+        return experience_level
+
+    @classmethod
+    def get_experience_string(cls, experience_level: int):
+        experience_levels = list(cls._experience_level_map.keys())
+        return experience_levels[int(experience_level)]
 
 
 class JobLocation(models.Model):

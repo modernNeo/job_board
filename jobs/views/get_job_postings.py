@@ -17,7 +17,9 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
         job_postings = job_postings.filter(item__list_id=int(list_parameter), item__list__user_id=user_id)
 
 
-    below_mid_senior_level_jobs = job_postings.exclude(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
+    below_mid_senior_level_jobs = job_postings.exclude(
+        joblocation__experience_level__gt=ExperienceLevel.get_associate_number()
+    )
     ordered_below_mid_senior_level_job_postings = below_mid_senior_level_jobs.order_by(
         F('joblocation__easy_apply').desc(nulls_last=True), F('joblocation__date_posted').desc(nulls_last=True),
         F('joblocation__experience_level').desc(nulls_last=True),
@@ -39,7 +41,9 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
                 )
             pk_list.append(ordered_below_mid_senior_level_job_posting.id)
 
-    above_associate_level_jobs = job_postings.filter(joblocation__experience_level__gt=ExperienceLevel.Associate.value)
+    above_associate_level_jobs = job_postings.filter(
+        joblocation__experience_level__gt=ExperienceLevel.get_associate_number()
+    )
     ordered_above_associate_level_jobs_postings = above_associate_level_jobs.order_by(
         F('joblocation__easy_apply').desc(nulls_last=True), F('joblocation__date_posted').desc(nulls_last=True),
         F('joblocation__experience_level').desc(nulls_last=True),

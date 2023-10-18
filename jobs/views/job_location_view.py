@@ -1,7 +1,7 @@
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import ExperienceLevel, ExperienceLevelString, JobLocation
+from jobs.models import ExperienceLevel, JobLocation
 
 
 class JobLocationSerializer(serializers.ModelSerializer):
@@ -15,10 +15,7 @@ class JobLocationSerializer(serializers.ModelSerializer):
         return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     def get_experience_level(self, job_location):
-        for experience_level in ExperienceLevel:
-            if experience_level.value == job_location.experience_level:
-                return ExperienceLevelString[experience_level.name]
-        return None
+        return ExperienceLevel.get_experience_string(job_location.experience_level)
 
     class Meta:
         model = JobLocation

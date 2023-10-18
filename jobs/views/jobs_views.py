@@ -2,7 +2,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from jobs.models import JobNote, ExperienceLevelString, ExperienceLevel, Job
+from jobs.models import JobNote, ExperienceLevel, Job
 from jobs.views.get_job_postings import get_job_postings
 
 
@@ -42,7 +42,7 @@ class JobSerializer(serializers.ModelSerializer):
                 experience = location.experience_level
         if experience == -1:
             return None
-        return ExperienceLevelString[list(ExperienceLevel)[experience].name]
+        return ExperienceLevel.get_experience_string(experience)
 
     def posting_job_board(self, job):
         return ", ".join(set([location.job_board for location in job.joblocation_set.all()]))

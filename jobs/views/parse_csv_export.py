@@ -27,18 +27,15 @@ def parse_csv_export(file_path, daily_stat):
         for idx, column in enumerate(csvFile[0]):
             MAPPING[column] = idx
         for line in csvFile[1:]:
-            job_location_1 = JobLocation.objects.all().filter(
+            job_location = JobLocation.objects.all().filter(
                 job_board_id=line[MAPPING[JOB_ID_KEY]],
                 location=line[MAPPING[LOCATION_KEY]],
                 job_board_link=line[MAPPING[JOB_URL_KEY]],
-                experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
+                experience_level=ExperienceLevel.get_experience_number_from_csv(line[MAPPING[EXPERIENCE_LEVEL_KEY]]),
                 job_board=line[MAPPING[JOB_BOARD]],
-                easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
-            )
-            job_location = job_location_1.filter(
+                easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True',
                 job_posting__job_title=line[MAPPING[JOB_TITLE_KEY]],
-                job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]],
-
+                job_posting__company_name=line[MAPPING[COMPANY_NAME_KEY]]
             ).first()
             new_job_location = job_location is None
             existing_job_that_was_unlisted = False
@@ -60,13 +57,12 @@ def parse_csv_export(file_path, daily_stat):
                     job_board_id=line[MAPPING[JOB_ID_KEY]],
                     location=line[MAPPING[LOCATION_KEY]],
                     job_board_link=line[MAPPING[JOB_URL_KEY]],
-                    date_posted=pst_epoch_datetime(line[MAPPING[POST_DATE_KEY]]),
-                    experience_level=None if line[MAPPING[EXPERIENCE_LEVEL_KEY]] == "" else ExperienceLevel[
-                        line[MAPPING[EXPERIENCE_LEVEL_KEY]]].value,
+                    experience_level=ExperienceLevel.get_experience_number_from_csv(line[MAPPING[EXPERIENCE_LEVEL_KEY]]),
                     job_board=line[MAPPING[JOB_BOARD]],
                     easy_apply=line[MAPPING[IS_EASY_APPLY_KEY]] == 'True'
                 )
                 job_location.save()
+
                 JobLocationDatePosted(
                     date_posted=pstdatetime.from_epoch(int(line[MAPPING[POST_DATE_KEY]])).pst,
                     job_location_posting=job_location
