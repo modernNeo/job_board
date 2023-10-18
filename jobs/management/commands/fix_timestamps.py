@@ -29,10 +29,13 @@ def parse_csv_export(file_path):
         csvFile = [line for line in csv.reader(linkedin_export)]
         number_of_lines = len(csvFile) - 1
         for index, line in enumerate(csvFile[1:]):
-            job_location = JobLocation.objects.get(id=line[0])
-            job_location.joblocationdateposted_set.all().delete()
-            JobLocationDatePosted(
-                job_location_posting=job_location,
-                date_posted=pstdatetime.from_epoch(int(line[1]))
-            ).save()
-            print(f"parsed job {index}/{number_of_lines}")
+            try:
+                job_location = JobLocation.objects.get(id=line[0])
+                job_location.joblocationdateposted_set.all().delete()
+                JobLocationDatePosted(
+                    job_location_posting=job_location,
+                    date_posted=pstdatetime.from_epoch(int(line[1]))
+                ).save()
+                print(f"parsed job {index}/{number_of_lines}")
+            except Exception as e:
+                print(f"error {e} {line[0]} - {index}/{number_of_lines}")
