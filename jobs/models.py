@@ -70,7 +70,7 @@ class pstdatetime(datetime.datetime):
             date = pstdatetime.fromtimestamp(
                 int(epoch_time)//1000
             ).replace(microsecond=int(epoch_time) % 1000 * 10).astimezone(cls.UTC_TZ)
-        return date
+        return date.pst
 
     @classmethod
     def create_pst_time(cls, year, month, day, hour_24=0, minute=0, second=0):
