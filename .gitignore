@@ -3,3 +3,4 @@ media/
 db.sqlite3
 *.env
 .idea
+jobs/management/commands/archive/
