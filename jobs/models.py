@@ -14,24 +14,49 @@ from django.utils import timezone
 
 class pstdatetime(datetime.datetime):
 
-    TIME_ZONE = 'Canada/Pacific'
-    PACIFIC_TZ = tz.gettz(TIME_ZONE)
+    PACIFIC_TZ = tz.gettz('Canada/Pacific')
     UTC_TZ = pytz.UTC
-
-    @classmethod
-    def create_instance(cls, value: datetime.datetime):
-        return pstdatetime(
-            value.year, month=value.month, day=value.day, hour=value.hour, minute=value.minute,
-            second=value.second, microsecond=value.microsecond, tzinfo=value.tzinfo
-        )
 
     @property
     def pst(self):
-        return pstdatetime.convert_utc_time_to_pacific(self)
+        return self.astimezone(self.PACIFIC_TZ) if self.tzinfo == self.UTC_TZ else self
 
     @property
     def utc(self):
-        return self
+        return self if self.tzinfo == self.UTC_TZ else self.astimezone(self.UTC_TZ)
+
+    @classmethod
+    def from_utc_datetime(cls, date: datetime.datetime):
+        return pstdatetime(
+            date.year, month=date.month, day=date.day, hour=date.hour, minute=date.minute, second=date.second,
+            microsecond=date.microsecond, tzinfo=cls.UTC_TZ
+        )
+
+    @classmethod
+    def from_datetime_with_pst_time(cls, datetime_obj):
+        """
+        Creates a PST timezone object using a datetime object
+
+        Keyword Arguments
+        datetime_obj -- the datetime with the day and time to use to create the PST timezone object
+
+        Return
+        datetime -- the PST timezone object
+        """
+        return pstdatetime(
+            year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day, hour=datetime_obj.hour,
+            minute=datetime_obj.minute, second=datetime_obj.second, tzinfo=cls.PACIFIC_TZ
+        )
+
+    @classmethod
+    def from_epoch(cls, epoch_time: int):
+        try:
+            date = pstdatetime.fromtimestamp(epoch_time).astimezone(cls.UTC_TZ)
+        except ValueError:
+            date = pstdatetime.fromtimestamp(
+                int(epoch_time)//1000
+            ).replace(microsecond=int(epoch_time) % 1000 * 10).astimezone(cls.UTC_TZ)
+        return date
 
     @classmethod
     def create_pst_time(cls, year, month, day, hour_24=0, minute=0, second=0):
@@ -49,7 +74,7 @@ class pstdatetime(datetime.datetime):
         Return
         datetime -- the PST timezone object
         """
-        return datetime.datetime(
+        return pstdatetime(
             year=year, month=month, day=day, hour=hour_24, minute=minute, second=second, tzinfo=cls.PACIFIC_TZ
         )
 
@@ -69,53 +94,9 @@ class pstdatetime(datetime.datetime):
         Return
         datetime -- the UTC timezone object
         """
-        return datetime.datetime.fromtimestamp(
-            cls.create_pst_time(
+        return cls.create_pst_time(
                 year=year, month=month, day=day, hour_24=hour_24, minute=minute, second=second
-            ).timestamp()
-        ).astimezone(cls.UTC_TZ)
-
-    @classmethod
-    def convert_pacific_time_to_utc(cls, pacific_date):
-        """
-        Convert the given Pacific timezone object to a UTC timezone object
-
-        Keyword Arguments
-        pacific_date -- the given pacific timezone object to convert
-
-        Return
-        datetime -- the UTC timezone equivalent of the pacific_date
-        """
-        return datetime.datetime.fromtimestamp(pacific_date.timestamp()).astimezone(cls.UTC_TZ)
-
-    @classmethod
-    def convert_utc_time_to_pacific(cls, utc_datetime):
-        """
-        Convert the given UTC timezone object to a PST timezone object
-
-        Keyword Arguments
-        utc_datetime -- the given UTC timezone object to convert
-
-        Return
-        datetime -- the PST timezone equivalent of the utc_datetime
-        """
-        return utc_datetime.astimezone(cls.PACIFIC_TZ)
-
-    @classmethod
-    def create_pst_time_from_datetime(cls, datetime_obj):
-        """
-        Creates a PST timezone object using a datetime object
-
-        Keyword Arguments
-        datetime_obj -- the datetime with the day and time to use to create the PST timezone object
-
-        Return
-        datetime -- the PST timezone object
-        """
-        return datetime.datetime(
-            year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day, hour=datetime_obj.hour,
-            minute=datetime_obj.minute, second=datetime_obj.second, tzinfo=cls.PACIFIC_TZ
-        )
+            ).utc
 
 
 class PSTDateTimeField(models.DateTimeField):
@@ -149,7 +130,7 @@ class PSTDateTimeField(models.DateTimeField):
         # date can be None cause of end date
         if value is None:
             return None
-        return pstdatetime.create_instance(value)
+        return pstdatetime.from_utc_datetime(value)
 
 
 # Create your models here.
