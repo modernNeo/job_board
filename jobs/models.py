@@ -315,10 +315,6 @@ class JobLocation(models.Model):
     job_board_link = models.CharField(
         max_length=5000
     )
-    date_posted = PSTDateTimeField(
-        null=True,
-        blank=True
-    )
 
     experience_level = models.IntegerField(
         default=None,
