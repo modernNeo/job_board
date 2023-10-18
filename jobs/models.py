@@ -13,6 +13,20 @@ from django.utils import timezone
 
 
 class pstdatetime(datetime.datetime):
+    """
+    Create a pstdatetime object representing current object
+    pstdatetime.now()
+
+    Converting datetime.datetime to pstdatetime
+    if the numbers in the datetime.datetime object are already in pacific time
+    pstdatetime.from_datetime_with_pst_time(datetime_object)
+
+    if the numbers in the datetime.datetime object are in UTC time
+    pstdatetime.from_utc_datetime(datetime_object)
+
+    creating object from epoch time
+    pstdatetime.from_epoch(datetime_object)
+    """
 
     PACIFIC_TZ = tz.gettz('Canada/Pacific')
     UTC_TZ = pytz.UTC
@@ -118,7 +132,7 @@ class PSTDateTimeField(models.DateTimeField):
                 day = int(date[8:10])
                 setattr(model_instance, self.attname, pstdatetime.create_utc_time(year, month, day))
             elif date.tzinfo == tzfile('/usr/share/zoneinfo/Canada/Pacific'):
-                setattr(model_instance, self.attname, pstdatetime.convert_pacific_time_to_utc(date))
+                setattr(model_instance, self.attname, date.utc)
             elif date.tzinfo is None:
                 raise Exception("no timezone detected")
         return super(PSTDateTimeField, self).pre_save(model_instance, add)
@@ -130,7 +144,7 @@ class PSTDateTimeField(models.DateTimeField):
         # date can be None cause of end date
         if value is None:
             return None
-        return pstdatetime.from_utc_datetime(value)
+        return pstdatetime.from_utc_datetime(value).pst
 
 
 # Create your models here.
