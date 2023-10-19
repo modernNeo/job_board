@@ -367,10 +367,12 @@ class JobLocation(models.Model):
 
     def get_latest_posted_date(self):
         job_location__dates_posted = self.joblocationdateposted_set.all()
-        date_posted = job_location__dates_posted[0].date_posted.pst
-        for job_location__date_posted in job_location__dates_posted[1:]:
-            if job_location__date_posted.date_posted.pst > date_posted:
-                date_posted = job_location__date_posted.date_posted.pst
+        date_posted = None
+        if len(job_location__dates_posted) > 0:
+            date_posted = job_location__dates_posted[0].date_posted.pst
+            for job_location__date_posted in job_location__dates_posted[1:]:
+                if job_location__date_posted.date_posted.pst > date_posted:
+                    date_posted = job_location__date_posted.date_posted.pst
         return date_posted
 
     def save(self, *args, **kwargs):
