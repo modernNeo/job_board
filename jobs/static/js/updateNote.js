@@ -14,7 +14,7 @@ async function saveNote(jobObjectId, note_exists) {
             "job": jobObjectId,
             "note": document.getElementById("note").value
         }
-        const url = note_exists ? `${getCookie('note_endpoint')}/${jobObjectId}` : getCookie('note_endpoint');
+        const url = note_exists ? `${getCookie('note_endpoint')}${jobObjectId}/` : getCookie('note_endpoint');
         const requestType = note_exists ? `PUT` : `POST`;
         try {
             await $.ajax({
