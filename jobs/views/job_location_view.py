@@ -12,8 +12,8 @@ class JobLocationSerializer(serializers.ModelSerializer):
     experience_level = serializers.SerializerMethodField('get_experience_level')
 
     def date_posted_to_linkedin(self, job_location):
-        date = job_location.get_latest_posted_date().pst
-        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+        date = job_location.get_latest_posted_date()
+        return date.pst.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     def get_experience_level(self, job_location):
         return ExperienceLevel.get_experience_string(job_location.experience_level)
