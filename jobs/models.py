@@ -375,6 +375,21 @@ class JobLocation(models.Model):
                     date_posted = job_location__date_posted.date_posted.pst
         return date_posted
 
+
+    def compare_to_job_info(self, job_info: dict, compare_title=True, compare_location=True, compare_easy_apply=True,
+                            compare_experience_level=True):
+        experience_levels = list(ExperienceLevel._experience_level_map)
+        same_title = self.job_posting.job_title == job_info['job_title'] if compare_title else True
+        same_location = self.location == job_info['location'] if compare_location else True
+        same_easy_apply = self.easy_apply == job_info['easy_apply'] if compare_easy_apply else True
+        if compare_experience_level:
+            if self.experience_level is None:
+                same_experience_level = job_info['experience_level'] is None
+            else:
+                same_experience_level = experience_levels[self.experience_level].name == job_info['experience_level']
+        else:
+            same_experience_level = True
+        return same_title and same_location and same_easy_apply and same_experience_level
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
             job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
