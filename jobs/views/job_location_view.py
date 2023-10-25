@@ -11,12 +11,49 @@ class JobLocationSerializer(serializers.ModelSerializer):
 
     experience_level = serializers.SerializerMethodField('get_experience_level')
 
+    applied_status = serializers.SerializerMethodField('get_applied_status')
+
+    closed_status = serializers.SerializerMethodField('get_closed_status')
+
+    applied_item_id = serializers.SerializerMethodField('get_applied_item_id')
+
+    closed_item_id = serializers.SerializerMethodField('get_closed_item_id')
+
+    latest_date_posted_obj_id = serializers.SerializerMethodField('get_latest_date_posted_obj_id')
+
     def date_posted_to_linkedin(self, job_location):
-        date = job_location.get_latest_posted_date()
-        return date.pst.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+        date = job_location.get_latest_job_location_posted_date_pst()
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     def get_experience_level(self, job_location):
         return ExperienceLevel.get_experience_string(job_location.experience_level)
+
+    def get_applied_status(self, job_location):
+        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
+            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        applied_items = [item for item in items if item.list_name == 'Applied']
+        return len(applied_items) > 0
+
+    def get_closed_status(self, job_location):
+        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
+            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        applied_items = [item for item in items if item.list_name == 'Job Closed']
+        return len(applied_items) > 0
+
+    def get_applied_item_id(self, job_location):
+        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
+            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        applied_items = [item for item in items if item.list_name == 'Applied']
+        return applied_items[0].id if len(applied_items) > 0 else None
+
+    def get_closed_item_id(self, job_location):
+        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
+            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        applied_items = [item for item in items if item.list_name == 'Job Closed']
+        return applied_items[0].id if len(applied_items) > 0 else None
+
+    def get_latest_date_posted_obj_id(self, job_location):
+        return job_location.get_latest_job_location_posted_date_obj().id if job_location.get_latest_job_location_posted_date_obj() is not None else None
 
     class Meta:
         model = JobLocation

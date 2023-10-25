@@ -98,9 +98,11 @@ async function deleteList() {
     await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
 }
-async function addJobToList(jobId, listId) {
+async function addJobToList(jobLocationRequest, objId, listId){
+    let params = jobLocationRequest ? `job_location_date_posted_id=${objId}` : `job_id=${objId}`;
+    let endpoint = jobLocationRequest ? getCookie('job_location_item_endpoint') : getCookie('job_item_endpoint');
     $.ajax({
-            'url': `${getCookie('item_endpoint')}?job_id=${jobId}&list_id=${listId}`,
+            'url': `${endpoint}?${params}&list_id=${listId}`,
             'type': 'POST',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -119,9 +121,10 @@ async function addJobToList(jobId, listId) {
     setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
     await refreshAfterJobOrListUpdate(allLists);
 }
-async function removeJobFromList(itemObjId) {
+async function removeJobFromList(jobLocationRequest, itemObjId) {
+    let endpoint = jobLocationRequest ? getCookie('job_location_item_endpoint') : getCookie('job_item_endpoint');
     $.ajax({
-            'url': `${getCookie('item_endpoint')}${itemObjId}`,
+            'url': `${endpoint}${itemObjId}`,
             'type': 'DELETE',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -141,18 +144,18 @@ async function removeJobFromList(itemObjId) {
     await refreshAfterJobOrListUpdate(allLists);
 }
 
-async function toggleApplied(jobAppliedState, jobObjectId, listId, itemObjectId) {
+async function toggleJobLocationSpecificDatePostedListItem(jobAppliedState, jobObjectId, listId, itemObjectId) {
     if (jobAppliedState){
-        await removeJobFromList(itemObjectId);
+        await removeJobFromList(true, itemObjectId);
     }else{
-        await addJobToList(jobObjectId, listId);
+        await addJobToList(true, jobObjectId, listId);
     }
 }
 
 async function toggleArchived(jobArchivedState, jobObjectId, listId, itemObjectId) {
     if (jobArchivedState) {
-        await removeJobFromList(itemObjectId);
+        await removeJobFromList(false, itemObjectId);
     } else {
-        await addJobToList(jobObjectId, listId);
+        await addJobToList(false, jobObjectId, listId);
     }
 }

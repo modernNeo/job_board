@@ -23,10 +23,11 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     }
     const allListMap = new Map(allLists.map(list => [list.name, list]))
     const appliedListId = allListMap.get("Applied").id;
+    const jobClosedListId = allListMap.get("Job Closed").id;
     const archivedListId = allListMap.get("Archived").id;
 
-    let userSpecificItems = JSON.parse($.ajax({
-            'url': `${getCookie('item_endpoint')}?job_id=${job.id}`,
+    let jobLocationItems = JSON.parse($.ajax({
+            'url': `${getCookie('job_location_item_endpoint')}?job_id=${job.id}`,
             'type': 'GET',
             'cache': false,
             headers: {'X-CSRFToken': getCookie('csrftoken')},
@@ -34,7 +35,18 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             async: false
         }
     ).responseText);
-
+    const jobItems = new Map(
+        (
+            JSON.parse($.ajax({
+                'url': `${getCookie('job_item_endpoint')}?job_id=${job.id}`,
+                'type': 'GET',
+                'cache': false,
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+                contentType: 'application/json; charset=utf-8',
+                async: false
+            }).responseText)
+        ).map(job_list_for_user => [job_list_for_user.list, job_list_for_user])
+    );
     let locations = JSON.parse($.ajax({
             'url': `${getCookie('job_location_endpoint')}?job_id=${job.id}`,
             'type': 'GET',
@@ -42,23 +54,14 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             headers: {'X-CSRFToken': getCookie('csrftoken')},
             contentType: 'application/json; charset=utf-8',
             async: false
-    }
+        }
     ).responseText);
-    userSpecificItems = new Map(userSpecificItems.map(job_list_for_user => [job_list_for_user.list, job_list_for_user]))
-    const userSpecificAppliedItem = userSpecificItems.get(appliedListId)
-    const userSpecificArchivedItem = userSpecificItems.get(archivedListId);
-
-    let appliedFunctionCall = `toggleApplied(${userSpecificAppliedItem !== undefined}, ${job.id}, ${appliedListId}`;
-    if (userSpecificAppliedItem !== undefined) {
-        appliedFunctionCall += `, ${userSpecificAppliedItem.id}`;
-    }
-    appliedFunctionCall += `)`;
-
-
     let jobPostingInfo = document.getElementById('company_info');
     jobPostingInfo.replaceChildren();
-    jobPostingInfo.appendChild(addButton(appliedFunctionCall, userSpecificAppliedItem === undefined ? "Mark as Applied" : 'Mark as Un-Applied'))
-    if (userSpecificItems.size > 0) {
+
+    // adds the button to archive a job to the posting
+    const userSpecificArchivedItem = jobItems.get(archivedListId);
+    if (jobLocationItems.length > 0 || jobItems.size > 0) {
         let archivedFunctionCall = `toggleArchived(${userSpecificArchivedItem !== undefined}, ${job.id}, ${archivedListId}`;
         if (userSpecificArchivedItem !== undefined) {
             archivedFunctionCall += `, ${userSpecificArchivedItem.id}`;
@@ -66,13 +69,16 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
         archivedFunctionCall += `)`;
         jobPostingInfo.appendChild(addButton(archivedFunctionCall, userSpecificArchivedItem === undefined ? "Archive" : 'Un-Archive'))
     }
+    // adding the job posting info to the section
     jobPostingInfo.append(document.createElement("br"), document.createElement("br"));
     jobPostingInfo.appendChild(createCompanyNoteInfo(job.id, job['note'], job['note'] !== null && job['note'].trim().length > 0));
     jobPostingInfo.appendChild(createCompanyTitle(job.job_title))
     jobPostingInfo.appendChild(createCompanyInfoLine("Company : ", "company_label", job.company_name))
+
+    // going over each job location and adding its info to the section
     for (let i = 0; i < locations.length; i++) {
         let message = ``;
-        if (locations[i].experience_level){
+        if (locations[i].experience_level) {
             message = `${locations[i].experience_level} - `;
         }
         if (locations.length > 1) {
@@ -83,18 +89,36 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             createJobLocationLinkedId(locations[i].job_board_id),
             createToggleEasyApplyButton(locations[i].id)
         );
-        if (locations.length > 1){
+        const appliedToJobLocation = locations[i].applied_status;
+        let jobLocationAppliedFunctionCall = (
+            `toggleJobLocationSpecificDatePostedListItem(${appliedToJobLocation}, ${locations[i].latest_date_posted_obj_id}, ` +
+            `${appliedListId}, ${locations[i].applied_item_id})`
+        );
+
+        jobPostingInfo.append(addButton(jobLocationAppliedFunctionCall, appliedToJobLocation ? 'Remove Applied Label' : "Mark Location as Applied"))
+
+
+        const closedJobLocation = locations[i].closed_status;
+        let jobLocationClosedFunctionCall = (
+            `toggleJobLocationSpecificDatePostedListItem(${closedJobLocation}, ${locations[i].latest_date_posted_obj_id}, ` +
+            `${jobClosedListId}, ${locations[i].closed_item_id})`
+        );
+
+        jobPostingInfo.append(addButton(jobLocationClosedFunctionCall, closedJobLocation ? 'Remove Closed Label' : "Mark Location as Closed"))
+
+
+        if (locations.length > 1) {
             jobPostingInfo.append(createDeleteButton(locations[i].id))
         }
         jobPostingInfo.append(document.createElement("br"), document.createElement("br"))
     }
-    jobPostingInfo.append(createListSelectSection(allLists, userSpecificItems, job.id), document.createElement("br"));
+    jobPostingInfo.append(createListSelectSection(allLists, jobItems, job.id), document.createElement("br"));
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
     let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
         try {
             let previousItem = document.getElementById(`${previously_selected_job_id}_list_item`);
-            previousItem.style = (previously_selected_job_id_green_highlighting === "true") ? 'background-color: green;'  : '';
+            previousItem.style = (previously_selected_job_id_green_highlighting === "true") ? 'background-color: green;' : '';
         } catch (e) {
             console.log(`could not remove highlighting for ${previously_selected_job_id}_list_item a list item due to error\n${e}`);
         }

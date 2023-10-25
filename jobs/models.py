@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from dateutil.tz import tz
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -61,6 +62,18 @@ class pstdatetime(datetime.datetime):
             year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day, hour=datetime_obj.hour,
             minute=datetime_obj.minute, second=datetime_obj.second, tzinfo=cls.PACIFIC_TZ
         )
+
+    @classmethod
+    def from_csv_epoch(cls, epoch_time: int):
+        if epoch_time == "":
+            return None
+        try:
+            date = pstdatetime.fromtimestamp(epoch_time).astimezone(cls.UTC_TZ)
+        except ValueError:
+            date = pstdatetime.fromtimestamp(
+                int(epoch_time)//1000
+            ).replace(microsecond=int(epoch_time) % 1000 * 10).astimezone(cls.UTC_TZ)
+        return date.pst
 
     @classmethod
     def from_epoch(cls, epoch_time: int):
@@ -244,18 +257,31 @@ class Job(models.Model):
     def note(self):
         return self.jobnote.note if self.jobnote is not None else None
 
-    def get_latest_posted_date(self):
-        job_locations = self.joblocation_set.all()
-        latest_date_added = None
+    def get_latest_non_easy_apply_job_posted_date_pst(self):
+        job_locations = self.joblocation_set.all().filter(easy_apply=False)
+        latest_job_posted_date_pst = None
         if len(job_locations) > 0:
-            latest_date_added = job_locations[0].get_latest_posted_date()
+            latest_job_posted_date_pst = job_locations[0].get_latest_job_location_posted_date_pst()
             for job_location in job_locations[1:]:
-                if latest_date_added is None:
-                    latest_date_added = job_location.get_latest_posted_date()
-                elif job_location.get_latest_posted_date() is not None:
-                    if job_location.get_latest_posted_date() > latest_date_added:
-                        latest_date_added = job_location.get_latest_posted_date()
-        return latest_date_added
+                if latest_job_posted_date_pst is None:
+                    latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
+                elif job_location.get_latest_job_location_posted_date_pst() is not None:
+                    if job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_pst:
+                        latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
+        return latest_job_posted_date_pst
+
+    def get_latest_easy_apply_job_posted_date_pst(self):
+        job_locations = self.joblocation_set.all().filter(easy_apply=True)
+        latest_job_posted_date_pst = None
+        if len(job_locations) > 0:
+            latest_job_posted_date_pst = job_locations[0].get_latest_job_location_posted_date_pst()
+            for job_location in job_locations[1:]:
+                if latest_job_posted_date_pst is None:
+                    latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
+                elif job_location.get_latest_job_location_posted_date_pst() is not None:
+                    if job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_pst:
+                        latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
+        return latest_job_posted_date_pst
 
     @property
     def has_easy_apply(self):
@@ -267,11 +293,14 @@ class Job(models.Model):
 
     @property
     def lists(self):
-        lists = List.objects.all().filter(item__job_id=self.id)
+        lists = List.objects.all().filter(
+            Q(joblocationdateposteditem__job_location_date_posted__job_location_posting__job_posting=self.id) |
+            Q(jobitem__job_id=self.id)
+        )
         if len(lists) == 0:
             return ""
         else:
-            return "<->" + " || ".join(list(lists.order_by('id').values_list('name', flat=True)))
+            return "<->" + " || ".join(list(set(lists.order_by('id').values_list('name', flat=True))))
 
     def save(self, *args, **kwargs):
         duplicate_jobs = Job.objects.all().filter(
@@ -346,36 +375,6 @@ class JobLocation(models.Model):
     )
 
 
-    def updated_more_recently(self, date_to_compare_to):
-        job_location_daily_stats = self.joblocationdailystat_set.all()
-        if len(job_location_daily_stats) == 0:
-            return False
-        if date_to_compare_to is None:
-            return True
-        for job_location_daily_stat in job_location_daily_stats:
-            if job_location_daily_stat.daily_stat.date_added > date_to_compare_to:
-                return True
-        return False
-
-    def get_latest_parsed_date(self):
-        job_location_daily_stats = self.joblocationdailystat_set.all()
-        latest_date_added = None
-        for job_location_daily_stat in job_location_daily_stats:
-            if job_location_daily_stat.updated_more_recently(latest_date_added):
-                latest_date_added = job_location_daily_stat.daily_stat.date_added
-        return latest_date_added
-
-    def get_latest_posted_date(self):
-        job_location__dates_posted = self.joblocationdateposted_set.all()
-        date_posted = None
-        if len(job_location__dates_posted) > 0:
-            date_posted = job_location__dates_posted[0].date_posted.pst
-            for job_location__date_posted in job_location__dates_posted[1:]:
-                if job_location__date_posted.date_posted.pst > date_posted:
-                    date_posted = job_location__date_posted.date_posted.pst
-        return date_posted
-
-
     def compare_to_job_info(self, job_info: dict, compare_title=True, compare_location=True, compare_easy_apply=True,
                             compare_experience_level=True):
         experience_levels = list(ExperienceLevel._experience_level_map)
@@ -390,6 +389,20 @@ class JobLocation(models.Model):
         else:
             same_experience_level = True
         return same_title and same_location and same_easy_apply and same_experience_level
+
+    def get_latest_job_location_posted_date_obj(self):
+        job_location__dates_posted = self.joblocationdateposted_set.all()
+        latest_job_location_posted_date_obj = None
+        if len(job_location__dates_posted) > 0:
+            latest_job_location_posted_date_obj = job_location__dates_posted[0]
+            for job_location__date_posted in job_location__dates_posted[1:]:
+                if job_location__date_posted.date_posted.pst > latest_job_location_posted_date_obj.date_posted.pst:
+                    latest_job_location_posted_date_obj = job_location__date_posted
+        return latest_job_location_posted_date_obj
+
+    def get_latest_job_location_posted_date_pst(self):
+        return self.get_latest_job_location_posted_date_obj().date_posted.pst
+
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
             job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
@@ -438,15 +451,37 @@ class List(models.Model):
 
     @property
     def number_of_jobs(self):
-        return len(Item.objects.all().filter(list_id=self.id))
+        return len(JobItem.objects.all().filter(list_id=self.id)) + len(JobLocationDatePostedItem.objects.all().filter(list_id=self.id))
 
 
-class Item(models.Model):
+class JobLocationDatePostedItem(models.Model):
+    # used for any lists that are associated with a JobLocationDatePosted obj rather than a Job
+    # relevant lists: Job Closed, Applied
+    list = models.ForeignKey(
+        List, on_delete=models.CASCADE,
+    )
+    job_location_date_posted = models.ForeignKey(
+        JobLocationDatePosted, on_delete=models.CASCADE,
+        default=None,
+        null=True
+    )
+    date_added = PSTDateTimeField(
+        default=timezone.now,
+        null=True
+    )
+
+    @property
+    def list_name(self):
+        return self.list.name
+
+
+class JobItem(models.Model):
     list = models.ForeignKey(
         List, on_delete=models.CASCADE,
     )
     job = models.ForeignKey(
         Job, on_delete=models.CASCADE,
+        default=None, null=True
     )
     date_added = PSTDateTimeField(
         default=timezone.now,

@@ -55,9 +55,10 @@ function deleteCookies() {
     for (var i = 0; i < allCookies.length; i++) {
         const key = allCookies[i].split("=")[0].trim();
         const clearable_cookie = (
-            key !== "applied_stats_endpoint" && key !== "daily_stat_endpoint" && key !== "item_endpoint" &&
-            key !== "job_location_endpoint" && key !== "list_endpoint" && key !== "list_of_jobs_endpoint" && key !== "logged_in_user"
-            && key !== "note_endpoint" && key !== "note_endpoint" && key !== "csrftoken"
+            key !== "applied_stats_endpoint" && key !== "daily_stat_endpoint" && key !== "job_location_item_endpoint" &&
+            key !== "job_item_endpoint" && key !== "job_location_endpoint" && key !== "list_endpoint" &&
+            key !== "list_of_jobs_endpoint" && key !== "logged_in_user" && key !== "note_endpoint" &&
+            key !== "note_endpoint" && key !== "csrftoken"
         )
         if (clearable_cookie) {
             console.log(`clearing cookie [${key}]`);

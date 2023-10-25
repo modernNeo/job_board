@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers, viewsets
 
 from jobs.models import List
@@ -23,5 +24,11 @@ class ListSet(viewsets.ModelViewSet):
         request = self.request
         lists = self.queryset
         if 'job_id' in request.query_params:
-            lists = lists.filter(item__job_id=request.query_params['job_id'])
+            lists = lists.filter(
+                Q(jobitem__job_id=request.query_params['job_id']) |
+                Q(
+                    joblocationdateposteditem__job_location_date_posted__job_location_posting__job_posting=
+                    request.query_params['job_id']
+                )
+            )
         return lists.filter(user_id=request.user.id)

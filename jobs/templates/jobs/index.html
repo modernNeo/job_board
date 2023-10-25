@@ -31,7 +31,8 @@
         setCookie("list_of_jobs_endpoint","{% url "api:job-list" %}");
         setCookie("applied_stats_endpoint","{% url "jobs_applied_numbers" %}");
         setCookie('list_endpoint', "{% url "api:list-list" %}");
-        setCookie('item_endpoint', "{% url "api:item-list" %}");
+        setCookie('job_location_item_endpoint', "{% url "api:job_location_item-list" %}");
+        setCookie('job_item_endpoint', "{% url "api:job_item-list" %}");
         setCookie('note_endpoint', "{% url "api:note-list" %}");
         setCookie('job_location_endpoint', "{% url "api:location-list" %}");
         setCookie('daily_stat_endpoint', "{% url "api:daily_stat-list" %}");

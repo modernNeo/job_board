@@ -37,15 +37,15 @@ function createListSelectSection(allLists, userSpecificJobList, jobId) {
     let current_width = max_width;
     let jobListDiv = document.createElement("div");
     for (let i = 0; i < allLists.length; i++) {
-        if (allLists[i].name !== 'Archived' && allLists[i].name !== 'Applied') {
+        if (allLists[i].name !== 'Archived' && allLists[i].name !== 'Applied' && allLists[i].name !== 'Job Closed') {
             let option = document.createElement("input");
             option.setAttribute("type", "checkbox");
             option.checked = userSpecificJobList.get(allLists[i].id) !== undefined;
             option.id = `job_list_${allLists[i].id}`;
             if (option.checked) {
-                option.setAttribute("onclick", "removeJobFromList(" + userSpecificJobList.get(allLists[i].id).id + ")");
+                option.setAttribute("onclick", "removeJobFromList(false," + userSpecificJobList.get(allLists[i].id).id + ")");
             } else {
-                option.setAttribute("onclick", "addJobToList(" + jobId + ", " + allLists[i].id + ")");
+                option.setAttribute("onclick", "addJobToList(false, " + jobId + ", " + allLists[i].id + ")");
             }
             let optionLabel = document.createElement("label");
             optionLabel.setAttribute("for", `job_list_${allLists[i].id}`);
