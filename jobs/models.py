@@ -1,6 +1,5 @@
 import datetime
 import re
-from enum import Enum
 
 import pytz
 from dateutil.tz import tzfile
@@ -432,13 +431,6 @@ class JobLocationDailyStat(models.Model):
     job_location = models.ForeignKey(
         JobLocation, on_delete=models.CASCADE
     )
-
-    def updated_more_recently(self, date_to_compare_to):
-        if self.daily_stat.date_added is None:
-            return date_to_compare_to
-        if date_to_compare_to is None:
-            return self.daily_stat.date_added
-        return self.daily_stat.date_added >= date_to_compare_to
 
 
 class List(models.Model):
