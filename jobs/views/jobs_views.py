@@ -13,7 +13,9 @@ class JobSerializer(serializers.ModelSerializer):
     """
     note = serializers.SerializerMethodField('user_has_note')
 
-    date_posted = serializers.SerializerMethodField("latest_job_date_posted")
+    non_easy_apply_date_posted = serializers.SerializerMethodField("latest_job_non_easy_apply_date_posted")
+
+    easy_apply_date_posted = serializers.SerializerMethodField("latest_job_easy_apply_date_posted")
 
     experience_level = serializers.SerializerMethodField('job_experience_level')
 
@@ -30,9 +32,13 @@ class JobSerializer(serializers.ModelSerializer):
         note = JobNote.objects.all().filter(job_id=job.id, user_id=self.user_id_for_request).first()
         return note.note if note is not None else note
 
-    def latest_job_date_posted(self, job):
-        date = job.get_latest_posted_date()
-        return date.pst.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+    def latest_job_non_easy_apply_date_posted(self, job):
+        date = job.get_latest_non_easy_apply_job_posted_date_pst()
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
+
+    def latest_job_easy_apply_date_posted(self, job):
+        date = job.get_latest_easy_apply_job_posted_date_pst()
+        return date.strftime("%Y %b %d %I:%m:%S %p") if date is not None else None
 
     def job_experience_level(self, job):
         locations = job.joblocation_set.all()
