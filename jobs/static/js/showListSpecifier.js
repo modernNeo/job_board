@@ -10,6 +10,11 @@ async function showAllJobs() {
     setCookie("view", "all_jobs")
     await goToPage(allLists, 0);
 }
+async function showAppliedJobs(allLists) {
+    setCookie("view", "applied_jobs")
+    await goToPage(allLists, 0);
+}
+
 async function showInbox(allLists) {
     if (allLists === undefined) {
         allLists = JSON.parse($.ajax({

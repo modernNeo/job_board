@@ -9,18 +9,22 @@
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js" integrity="sha384-cuYeSxntonz0PPNlHhBs68uyIAVpIIOZZ5JqeqvYYIcEL727kskC66kF92t6Xl2V" crossorigin="anonymous"></script>
-<script src="{%  static 'js/load.js' %}"></script>
-<script src="{%  static 'js/elementCreators.js' %}"></script>
-<script src="{%  static 'js/paginatorFunctions.js' %}"></script>
-<script src="{%  static 'js/refreshAfterJobOrListUpdate.js' %}"></script>
-<script src="{%  static 'js/updateNote.js' %}"></script>
-<script src="{%  static 'js/showListSpecifier.js' %}"></script>
-<script src="{%  static 'js/updateLists.js' %}"></script>
-<script src="{%  static 'js/update_daily_stat.js' %}"></script>
-<script src="{% static 'js/update_applied_stats.js' %}"></script>
+<script src="{% static 'js/load.js' %}"></script>
+
 <script src="{% static 'js/deleteJobLocation.js' %}"></script>
+<script src="{% static 'js/elementCreators.js' %}"></script>
+<script src="{% static 'js/goToPage.js' %}"></script>
+<script src="{% static 'js/paginatorFunctions.js' %}"></script>
+<script src="{% static 'js/refreshAfterJobOrListUpdate.js' %}"></script>
+<script src="{% static 'js/searchJob.js' %}"></script>
+<script src="{% static 'js/showListSpecifier.js' %}"></script>
 <script src="{% static 'js/toggleJobLocationEasyApply.js' %}"></script>
-<script src="{% static 'js/search_job.js' %}"></script>
+<script src="{% static 'js/updateDailyStat.js' %}"></script>
+<script src="{% static 'js/updateAppliedStats.js' %}"></script>
+<script src="{% static 'js/updateCompanyPane.js' %}"></script>
+<script src="{% static 'js/updateJobList.js' %}"></script>
+<script src="{% static 'js/updateLists.js' %}"></script>
+<script src="{% static 'js/updateNote.js' %}"></script>
 <script>
     $(document).ready(function () {
         setCookie("logged_in_user","{{ user }}");
@@ -63,8 +67,8 @@
     <br><br>
     <label for="job_title">Job Title:</label><input type="text" id="job_title" name="job_title">
     <label for="job_id">Job ID:</label><input type="text" id="job_id" name="job_id">
-    <button onclick="search_job()">Search</button>
-    <button onclick="clear_search()">Clear Search</button><br><br>
+    <button onclick="searchJob()">Search</button>
+    <button onclick="clearSearch()">Clear Search</button><br><br>
     <div style="width: 100%; overflow: hidden">
         <div style="width: 70%; float: left">
             <div id="job_list_header"></div>

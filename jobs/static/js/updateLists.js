@@ -1,4 +1,3 @@
-
 function refreshDeleteListDropDown(allLists) {
     let deleteListDiv = document.getElementById("delete_list");
     let listDeleteDropDown = document.createElement("select");
@@ -142,7 +141,7 @@ async function removeJobFromList(itemObjId) {
     await refreshAfterJobOrListUpdate(allLists);
 }
 
-async function toggle_applied(jobAppliedState, jobObjectId, listId, itemObjectId) {
+async function toggleApplied(jobAppliedState, jobObjectId, listId, itemObjectId) {
     if (jobAppliedState){
         await removeJobFromList(itemObjectId);
     }else{
@@ -150,7 +149,7 @@ async function toggle_applied(jobAppliedState, jobObjectId, listId, itemObjectId
     }
 }
 
-async function toggle_archived(jobArchivedState, jobObjectId, listId, itemObjectId) {
+async function toggleArchived(jobArchivedState, jobObjectId, listId, itemObjectId) {
     if (jobArchivedState) {
         await removeJobFromList(itemObjectId);
     } else {

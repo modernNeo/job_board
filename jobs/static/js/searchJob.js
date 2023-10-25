@@ -1,4 +1,4 @@
-async function search_job() {
+async function searchJob() {
     const search_title = document.getElementById("job_title").value.trim();
     const search_id = document.getElementById("job_id").value.trim();
     if (search_title.length > 0) {
@@ -13,7 +13,7 @@ async function search_job() {
     }
     await showInbox();
 }
-async function clear_search() {
+async function clearSearch() {
     setCookie("search_title", null);
     setCookie("search_id", null);
     await showInbox();
