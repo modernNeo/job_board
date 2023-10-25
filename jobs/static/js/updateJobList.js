@@ -60,11 +60,9 @@ async function updateJobList(listOfJobs, allLists) {
         setCookie("currently_selected_job_index", null);
         setCookie("previously_selected_job_index", null);
         document.getElementById('company_info').replaceChildren();
-        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job 0/0`;
+        updatePaginationInfoLabel(currentlySelectedJobIndex);
     }
 }
-
-
 
 async function updateSelectedJobInList(currentlySelectedJobIndex, currentlySelectedJobId, listOfJobs, allLists) {
     setCookie("currently_selected_job_id", currentlySelectedJobId);
@@ -72,9 +70,23 @@ async function updateSelectedJobInList(currentlySelectedJobIndex, currentlySelec
     item = document.getElementById(currentlySelectedJobId + "_list_item");
     item.style = 'color: blue';
     updateCompanyPane(allLists, listOfJobs, currentlySelectedJobId);
-    document.getElementById("number_of_jobs").innerText = (
-        `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/ 
-        Less than or Equal To Associate: [${getCookie("number_of_easy_apply_below_mid_senior_job_postings")}/${getCookie("number_of_non_easy_apply_below_mid_senior_job_postings")} Easy/Non-Easy Apply Jobs]
-        Greater Than Associate: [${getCookie("number_of_easy_apply_above_associate_job_postings")}/${getCookie("number_of_non_easy_apply_above_associate_job_postings")} Easy/Non-Easy Apply Jobs]`);
+    updatePaginationInfoLabel(currentlySelectedJobIndex);
 }
 
+function updatePaginationInfoLabel(currentlySelectedJobIndex){
+    const number_of_easy_apply_below_mid_senior_job_postings = getCookie("number_of_easy_apply_below_mid_senior_job_postings");
+    const number_of_non_easy_apply_below_mid_senior_job_postings = getCookie("number_of_non_easy_apply_below_mid_senior_job_postings");
+    const number_of_easy_apply_above_associate_job_postings = getCookie("number_of_easy_apply_above_associate_job_postings");
+    const number_of_non_easy_apply_above_associate_job_postings = getCookie("number_of_non_easy_apply_above_associate_job_postings");
+    const number_of_jobs = (number_of_easy_apply_below_mid_senior_job_postings + number_of_non_easy_apply_below_mid_senior_job_postings +
+        number_of_easy_apply_above_associate_job_postings + number_of_non_easy_apply_above_associate_job_postings
+    )
+    if (number_of_jobs > 0) {
+        document.getElementById("number_of_jobs").innerText = (
+            `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job ${((getCookie("pageNumber") - 1) * 25) + currentlySelectedJobIndex + 1}/ 
+        Less than or Equal To Associate: [${number_of_easy_apply_below_mid_senior_job_postings}/${number_of_non_easy_apply_below_mid_senior_job_postings} Easy/Non-Easy Apply Jobs]
+        Greater Than Associate: [${number_of_easy_apply_above_associate_job_postings}/${number_of_non_easy_apply_above_associate_job_postings} Easy/Non-Easy Apply Jobs]`);
+    }else{
+        document.getElementById("number_of_jobs").innerText = `Page ${getCookie("pageNumber")}/${getCookie("total_number_of_pages")} | Job 0/0`;
+    }
+}
