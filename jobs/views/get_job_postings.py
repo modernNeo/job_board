@@ -86,9 +86,19 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     number_of_easy_apply_above_associate_job_postings = len(easy_apply_ordered_above_associate_level_jobs_posting_pk_list)
     number_of_non_easy_apply_above_associate_job_postings = len(non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list)
 
-    return (
-        job_postings, number_of_easy_apply_below_mid_senior_job_postings,
-        number_of_non_easy_apply_below_mid_senior_job_postings, number_of_easy_apply_above_associate_job_postings,
-        number_of_non_easy_apply_above_associate_job_postings
-    )
+    preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(pk_list)])
+    job_postings = Job.objects.all().filter(pk__in=pk_list).order_by(preserved)
 
+    job_stats = {
+                'number_of_job_postings': {
+                    "below_mid_senior_level": {
+                        "easy_apply": number_of_easy_apply_below_mid_senior_job_postings,
+                        "non_easy_apply": number_of_non_easy_apply_below_mid_senior_job_postings
+                    },
+                    "above_associated_level": {
+                        "easy_apply": number_of_easy_apply_above_associate_job_postings,
+                        "non_easy_apply": number_of_non_easy_apply_above_associate_job_postings
+                    }
+                }
+    }
+    return job_postings, job_stats

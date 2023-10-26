@@ -115,12 +115,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if page_queryset is not None:
             serializer = self.get_serializer(page_queryset, many=True)
             response = self.get_paginated_response(serializer.data)
-            response.data.update({
-                'number_of_easy_apply_below_mid_senior_job_postings': posting_info[1],
-                'number_of_non_easy_apply_below_mid_senior_job_postings': posting_info[2],
-                'number_of_easy_apply_above_associate_job_postings': posting_info[3],
-                'number_of_non_easy_apply_above_associate_job_postings': posting_info[4]
-            })
+            response.data.update(posting_info[1])
             return response
 
         serializer = self.get_serializer(queryset, many=True)

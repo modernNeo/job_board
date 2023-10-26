@@ -33,19 +33,19 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     setCookie("total_number_of_pages", listOfJobsResp.total_number_of_pages);
     setCookie(
         "number_of_easy_apply_below_mid_senior_job_postings",
-        listOfJobsResp.number_of_easy_apply_below_mid_senior_job_postings
+        listOfJobsResp.number_of_job_postings.below_mid_senior_level.easy_apply
     );
     setCookie(
         "number_of_non_easy_apply_below_mid_senior_job_postings",
-        listOfJobsResp.number_of_non_easy_apply_below_mid_senior_job_postings
+        listOfJobsResp.number_of_job_postings.below_mid_senior_level.non_easy_apply
     );
     setCookie(
         "number_of_easy_apply_above_associate_job_postings",
-        listOfJobsResp.number_of_easy_apply_above_associate_job_postings
+        listOfJobsResp.number_of_job_postings.above_associated_level.easy_apply
     );
     setCookie(
         "number_of_non_easy_apply_above_associate_job_postings",
-        listOfJobsResp.number_of_non_easy_apply_above_associate_job_postings
+        listOfJobsResp.number_of_job_postings.above_associated_level.non_easy_apply
     );
 
     await updateJobList(listOfJobsResp.results, allLists);
