@@ -82,7 +82,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             message = `${locations[i].experience_level} - `;
         }
         if (locations.length > 1) {
-            message += `Easy Apply: ${locations[i].latest_posting_is_easy_apply} - `;
+            message += `Easy Apply: ${locations[i].easy_apply} - `;
         }
         jobPostingInfo.append(
             createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].job_board_link),
