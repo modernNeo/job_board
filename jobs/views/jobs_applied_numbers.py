@@ -24,7 +24,9 @@ class JobsAppliedNumbers(View):
                 job = applied_job.job_location_date_posted.job_location_posting.job_posting
                 if job.id not in jobs_pk_list:
                     jobs_pk_list.append(job.id)
-                    easy_apply = job.has_easy_apply
+                    easy_apply = job.has_easy_apply # keeping this cause I feel like the below line will throw errors
+                    # for Applied jobs that couldn't be migrated to new relationship between Job and Applied list
+                    easy_apply = applied_job.job_location_date_posted.job_location_posting.easy_apply
                     date_str = applied_job.date_added.pst.strftime("%Y-%m-%d")
                     if last_date != date_str:
                         number_of_dates += 1
