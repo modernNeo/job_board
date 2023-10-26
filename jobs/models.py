@@ -40,6 +40,10 @@ class pstdatetime(datetime.datetime):
         return self if self.tzinfo == self.UTC_TZ else self.astimezone(self.UTC_TZ)
 
     @classmethod
+    def now(cls, tz=None):
+        return super(pstdatetime, cls).now(tz=cls.PACIFIC_TZ)
+
+    @classmethod
     def from_utc_datetime(cls, date: datetime.datetime):
         return pstdatetime(
             date.year, month=date.month, day=date.day, hour=date.hour, minute=date.minute, second=date.second,
