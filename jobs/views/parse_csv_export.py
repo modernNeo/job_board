@@ -150,10 +150,8 @@ def labelling_job_location(line, date_from_csv, TRUE_String, job, jobs_updated_s
                 )
                 if job_in_non_archived_list:
                     JobItem.objects.all().get_or_create(job=job, list=resurfaced_in_case_list)
-                    pass
-                else:
-                    if latest_job_location_is_marked_as_applied_or_closed:
-                        JobItem.objects.all().get_or_create(job=job, list=resurfaced_applied_or_closed_list)
+                elif latest_job_location_is_marked_as_applied_or_closed:
+                    JobItem.objects.all().get_or_create(job=job, list=resurfaced_applied_or_closed_list)
 
 
 
@@ -169,18 +167,17 @@ def labelling_job_location(line, date_from_csv, TRUE_String, job, jobs_updated_s
                                              daily_stat, latest_job_location_posted_date,
                                              new_job, new_job_location, new_job_location_date_posted,
                                              APPLIED_LIST_NAME, date_from_csv, applied_list)
-    if job_marked_as_applied or job_marked_as_closed:
-        if not (new_job or new_job_location or new_job_location_date_posted):
-            # decided not to archive a job even if it is applied or closed for the time being if it is a new job or
-            # or location or new date posted for existing location
-            archived_job_item = job.jobitem_set.all().filter(list__name=ARCHIVED_LIST_NAME).first()
-            etl_job_item = job.jobitem_set.all().filter(list__name=ETL_UPDATED_LIST_NAME).first()
-            if archived_job_item is None and not new_job_location_date_posted:
-                if new_job or new_job_location or new_job_location_date_posted:
-                    raise Exception(f"a new job or location or date posted is being archived for job {line[MAPPING[JOB_URL_KEY]]}")
-                JobItem.objects.all().get_or_create(job=job, list=archived_list)
-            if etl_job_item is not None:
-                JobItem.objects.all().filter(list__name=ETL_UPDATED_LIST_NAME).delete()
+
+    job_posting_has_only_this_location = latest_job_location_posted_date.job_location_posting.job_posting.joblocation_set.all().count() == 1
+    if (job_marked_as_applied or job_marked_as_closed) and not (new_job or new_job_location or new_job_location_date_posted) and job_posting_has_only_this_location:
+        # decided not to archive a job even if it is applied or closed for the time being if it is a new job or
+        # or location or new date posted for existing location
+        archived_job_item = job.jobitem_set.all().filter(list__name=ARCHIVED_LIST_NAME).first()
+        etl_job_item = job.jobitem_set.all().filter(list__name=ETL_UPDATED_LIST_NAME).first()
+        if archived_job_item is None and not new_job_location_date_posted:
+            JobItem.objects.all().get_or_create(job=job, list=archived_list)
+        if etl_job_item is not None:
+            JobItem.objects.all().filter(list__name=ETL_UPDATED_LIST_NAME).delete()
 
 
 def job_location_is_marked_as_closed_in_csv(job_marked_as_closed, job, jobs_updated_so_far,
@@ -189,22 +186,14 @@ def job_location_is_marked_as_closed_in_csv(job_marked_as_closed, job, jobs_upda
                                             new_job_location_date_posted, JOB_CLOSED_LIST_NAME, date_from_csv,
                                             job_closed_list):
     if job_marked_as_closed:
-        if job.id not in jobs_updated_so_far:
-            if existing_inbox_job:
-                daily_stat.number_of_existing_inbox_jobs_closed += 1
-            if new_job_location:
-                daily_stat.number_of_new_inbox_jobs_closed += 1
         closed_job_location_item = latest_job_location_posted_date.joblocationdateposteditem_set.all().filter(
             list__name=JOB_CLOSED_LIST_NAME
         ).first()
         if closed_job_location_item is None:
             JobLocationDatePostedItem.objects.all().get_or_create(
                 job_location_date_posted=latest_job_location_posted_date, list=job_closed_list,
-                date_added=date_from_csv
+                date_added=None
             )
-        elif closed_job_location_item.date_added is None:
-            closed_job_location_item.date_added = date_from_csv
-            closed_job_location_item.save()
 
 
 def job_location_is_marked_as_applied_in_csv(job_marked_as_applied, job, jobs_updated_so_far,
@@ -213,19 +202,11 @@ def job_location_is_marked_as_applied_in_csv(job_marked_as_applied, job, jobs_up
                                              new_job, new_job_location, new_job_location_date_posted,
                                              APPLIED_LIST_NAME, date_from_csv, applied_list):
     if job_marked_as_applied:
-        if job.id not in jobs_updated_so_far:
-            if existing_inbox_job:
-                daily_stat.number_of_existing_inbox_jobs_applied += 1
-            if new_job_location:
-                daily_stat.number_of_new_inbox_jobs_applied += 1
         applied_job_location_item = latest_job_location_posted_date.joblocationdateposteditem_set.all().filter(
             list__name=APPLIED_LIST_NAME
         ).first()
         if applied_job_location_item is None:
             JobLocationDatePostedItem.objects.all().get_or_create(
                 job_location_date_posted=latest_job_location_posted_date, list=applied_list,
-                date_added=date_from_csv
+                date_added=None
             )
-        elif applied_job_location_item.date_added is None:
-            applied_job_location_item.date_added = date_from_csv
-            applied_job_location_item.save()
