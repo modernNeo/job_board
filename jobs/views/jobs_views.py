@@ -59,7 +59,8 @@ class JobSerializer(serializers.ModelSerializer):
         return job.has_easy_apply
 
     def get_latest_posting_is_easy_apply(self, job):
-        return job.get_latest_job_posted_date_obj().job_location_posting.easy_apply
+        latest_job_posted_date_job = job.get_latest_job_posted_date_obj()
+        return None if latest_job_posted_date_job is None else latest_job_posted_date_job.job_location_posting.easy_apply
 
     class Meta:
         model = Job
