@@ -287,6 +287,8 @@ class Job(models.Model):
         for job_location in job_locations:
             if latest_job_posted_date_obj is None:
                 latest_job_posted_date_obj = job_location.get_latest_job_location_posted_date_obj()
+            elif job_location.get_latest_job_location_posted_date_pst() is None:
+                pass
             elif job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_obj.date_posted.pst:
                 latest_job_posted_date_obj = job_location.get_latest_job_location_posted_date_obj()
         return latest_job_posted_date_obj
@@ -409,7 +411,8 @@ class JobLocation(models.Model):
         return latest_job_location_posted_date_obj
 
     def get_latest_job_location_posted_date_pst(self):
-        return self.get_latest_job_location_posted_date_obj().date_posted.pst
+        latest_job_location_posted_date_obj = self.get_latest_job_location_posted_date_obj()
+        return None if latest_job_location_posted_date_obj is None else self.get_latest_job_location_posted_date_obj().date_posted.pst
 
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
