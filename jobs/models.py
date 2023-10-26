@@ -275,6 +275,12 @@ class Job(models.Model):
     def get_latest_job_posted_date_obj(self):
         return self._get_latest_job_posted_date_obj(self.joblocation_set.all())
 
+    def latest_job_posted_date_obj_is_easy_apply(self):
+        latest_job_posted_date_obj = self._get_latest_job_posted_date_obj(self.joblocation_set.all())
+        if latest_job_posted_date_obj is None:
+            return False
+        return latest_job_posted_date_obj.job_location_posting.easy_apply
+
     @classmethod
     def _get_latest_job_posted_date_obj(cls, job_locations):
         latest_job_posted_date_obj = None
