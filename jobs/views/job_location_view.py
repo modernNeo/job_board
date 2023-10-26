@@ -29,31 +29,28 @@ class JobLocationSerializer(serializers.ModelSerializer):
         return ExperienceLevel.get_experience_string(job_location.experience_level)
 
     def get_applied_status(self, job_location):
-        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
-            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        items = job_location.get_job_items()
         applied_items = [item for item in items if item.list_name == 'Applied']
         return len(applied_items) > 0
 
     def get_closed_status(self, job_location):
-        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
-            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        items = job_location.get_job_items()
         applied_items = [item for item in items if item.list_name == 'Job Closed']
         return len(applied_items) > 0
 
     def get_applied_item_id(self, job_location):
-        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
-            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        items = job_location.get_job_items()
         applied_items = [item for item in items if item.list_name == 'Applied']
         return applied_items[0].id if len(applied_items) > 0 else None
 
     def get_closed_item_id(self, job_location):
-        items = job_location.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
-            if job_location.get_latest_job_location_posted_date_obj() is not None else job_location.job_posting.item_set.all()
+        items = job_location.get_job_items()
         applied_items = [item for item in items if item.list_name == 'Job Closed']
         return applied_items[0].id if len(applied_items) > 0 else None
 
     def get_latest_date_posted_obj_id(self, job_location):
-        return job_location.get_latest_job_location_posted_date_obj().id if job_location.get_latest_job_location_posted_date_obj() is not None else None
+        return job_location.get_latest_job_location_posted_date_obj().id \
+            if job_location.get_latest_job_location_posted_date_obj() is not None else None
 
     class Meta:
         model = JobLocation

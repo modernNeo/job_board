@@ -414,6 +414,10 @@ class JobLocation(models.Model):
         latest_job_location_posted_date_obj = self.get_latest_job_location_posted_date_obj()
         return None if latest_job_location_posted_date_obj is None else self.get_latest_job_location_posted_date_obj().date_posted.pst
 
+    def get_job_items(self):
+        return self.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
+            if self.get_latest_job_location_posted_date_obj() is not None else self.job_posting.jobitem_set.all()
+
     def save(self, *args, **kwargs):
         duplicate_job_locations = JobLocation.objects.all().filter(
             job_board_id=self.job_board_id, location=self.location, job_board_link=self.job_board_link,
