@@ -68,15 +68,7 @@ class pstdatetime(datetime.datetime):
 
     @classmethod
     def from_csv_epoch(cls, epoch_time: int):
-        if epoch_time == "":
-            return None
-        try:
-            date = pstdatetime.fromtimestamp(epoch_time).astimezone(cls.UTC_TZ)
-        except ValueError:
-            date = pstdatetime.fromtimestamp(
-                int(epoch_time)//1000
-            ).replace(microsecond=int(epoch_time) % 1000 * 10).astimezone(cls.UTC_TZ)
-        return date.pst
+        return None if epoch_time == "" else cls.from_epoch(epoch_time)
 
     @classmethod
     def from_epoch(cls, epoch_time: int):
