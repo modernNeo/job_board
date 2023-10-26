@@ -261,30 +261,29 @@ class Job(models.Model):
         return self.jobnote.note if self.jobnote is not None else None
 
     def get_latest_non_easy_apply_job_posted_date_pst(self):
-        job_locations = self.joblocation_set.all().filter(easy_apply=False)
-        latest_job_posted_date_pst = None
-        if len(job_locations) > 0:
-            latest_job_posted_date_pst = job_locations[0].get_latest_job_location_posted_date_pst()
-            for job_location in job_locations[1:]:
-                if latest_job_posted_date_pst is None:
-                    latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
-                elif job_location.get_latest_job_location_posted_date_pst() is not None:
-                    if job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_pst:
-                        latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
-        return latest_job_posted_date_pst
+        latest_job_posted_date_obj = self._get_latest_job_posted_date_obj(
+            self.joblocation_set.all().filter(easy_apply=False)
+        )
+        return None if latest_job_posted_date_obj is None else latest_job_posted_date_obj.date_posted.pst
 
     def get_latest_easy_apply_job_posted_date_pst(self):
-        job_locations = self.joblocation_set.all().filter(easy_apply=True)
-        latest_job_posted_date_pst = None
-        if len(job_locations) > 0:
-            latest_job_posted_date_pst = job_locations[0].get_latest_job_location_posted_date_pst()
-            for job_location in job_locations[1:]:
-                if latest_job_posted_date_pst is None:
-                    latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
-                elif job_location.get_latest_job_location_posted_date_pst() is not None:
-                    if job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_pst:
-                        latest_job_posted_date_pst = job_location.get_latest_job_location_posted_date_pst()
-        return latest_job_posted_date_pst
+        latest_job_posted_date_obj = self._get_latest_job_posted_date_obj(
+            self.joblocation_set.all().filter(easy_apply=True)
+        )
+        return None if latest_job_posted_date_obj is None else latest_job_posted_date_obj.date_posted.pst
+
+    def get_latest_job_posted_date_obj(self):
+        return self._get_latest_job_posted_date_obj(self.joblocation_set.all())
+
+    @classmethod
+    def _get_latest_job_posted_date_obj(cls, job_locations):
+        latest_job_posted_date_obj = None
+        for job_location in job_locations:
+            if latest_job_posted_date_obj is None:
+                latest_job_posted_date_obj = job_location.get_latest_job_location_posted_date_obj()
+            elif job_location.get_latest_job_location_posted_date_pst() > latest_job_posted_date_obj.date_posted.pst:
+                latest_job_posted_date_obj = job_location.get_latest_job_location_posted_date_obj()
+        return latest_job_posted_date_obj
 
     @property
     def has_easy_apply(self):

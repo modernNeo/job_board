@@ -21,7 +21,9 @@ class JobSerializer(serializers.ModelSerializer):
 
     job_board = serializers.SerializerMethodField('posting_job_board')
 
-    easy_apply = serializers.SerializerMethodField("has_easy_apply")
+    has_easy_apply = serializers.SerializerMethodField("get_has_easy_apply")
+
+    latest_posting_is_easy_apply = serializers.SerializerMethodField("get_latest_posting_is_easy_apply")
 
     @property
     def user_id_for_request(self):
@@ -53,8 +55,11 @@ class JobSerializer(serializers.ModelSerializer):
     def posting_job_board(self, job):
         return ", ".join(set([location.job_board for location in job.joblocation_set.all()]))
 
-    def has_easy_apply(self, job):
+    def get_has_easy_apply(self, job):
         return job.has_easy_apply
+
+    def get_latest_posting_is_easy_apply(self, job):
+        return job.get_latest_job_posted_date_obj().job_location_posting.easy_apply
 
     class Meta:
         model = Job

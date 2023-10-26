@@ -82,7 +82,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
             message = `${locations[i].experience_level} - `;
         }
         if (locations.length > 1) {
-            message += `Easy Apply: ${locations[i].easy_apply} - `;
+            message += `Easy Apply: ${locations[i].latest_posting_is_easy_apply} - `;
         }
         jobPostingInfo.append(
             createLink(`${message}${locations[i].location} - ${locations[i].date_posted}`, locations[i].job_board_link),
@@ -114,7 +114,7 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
     }
     jobPostingInfo.append(createListSelectSection(allLists, jobItems, job.id), document.createElement("br"));
     let previously_selected_job_id = getCookie("previously_selected_job_id", jobObjId);
-    let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.easy_apply);
+    let previously_selected_job_id_green_highlighting = getCookie("previously_selected_job_id_green_highlighting", job.latest_posting_is_easy_apply);
     if (!(previously_selected_job_id === null || previously_selected_job_id === "" || Number(previously_selected_job_id) === Number(jobObjId))) {
         try {
             let previousItem = document.getElementById(`${previously_selected_job_id}_list_item`);

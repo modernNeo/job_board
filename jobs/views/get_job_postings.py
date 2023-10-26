@@ -44,7 +44,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     non_easy_apply_ordered_below_mid_senior_level_job_posting_pk_list = []
     for ordered_below_mid_senior_level_job_posting in ordered_below_mid_senior_level_job_postings:
         if ordered_below_mid_senior_level_job_posting.id not in pk_list:
-            if ordered_below_mid_senior_level_job_posting.has_easy_apply:
+            if ordered_below_mid_senior_level_job_posting.has_easy_apply and ordered_below_mid_senior_level_job_posting.get_latest_job_posted_date_obj().job_location_posting.easy_apply:
                 easy_apply_ordered_below_mid_senior_level_job_posting_pk_list.append(
                     ordered_below_mid_senior_level_job_posting.id
                 )
@@ -67,7 +67,7 @@ def get_job_postings(job_postings, user_id, list_parameter=None):
     non_easy_apply_ordered_above_associate_level_jobs_posting_pk_list = []
     for ordered_above_associate_level_jobs_posting in ordered_above_associate_level_jobs_postings:
         if ordered_above_associate_level_jobs_posting.id not in pk_list:
-            if ordered_above_associate_level_jobs_posting.has_easy_apply:
+            if ordered_above_associate_level_jobs_posting.has_easy_apply and ordered_above_associate_level_jobs_posting.get_latest_job_posted_date_obj().job_location_posting.easy_apply:
                 easy_apply_ordered_above_associate_level_jobs_posting_pk_list.append(
                     ordered_above_associate_level_jobs_posting.id
                 )

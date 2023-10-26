@@ -20,7 +20,7 @@ async function updateJobList(listOfJobs, allLists) {
         let jobItem = document.createElement("b");
         jobItem.setAttribute("id", listOfJobs[i].id + "_list_item");
         jobItem.setAttribute("onclick", "updateSelectedJobInList(" + i + ", " + listOfJobs[i].id + ")");
-        let message = (listOfJobs[i].easy_apply) ? `${listOfJobs[i].easy_apply_date_posted}` : `${listOfJobs[i].non_easy_apply_date_posted}`;
+        let message = (listOfJobs[i].latest_posting_is_easy_apply) ? `${listOfJobs[i].easy_apply_date_posted}` : `${listOfJobs[i].non_easy_apply_date_posted}`;
         message += ` ${listOfJobs[i].job_board}: `;
         if (listOfJobs[i].experience_level){
             message += listOfJobs[i].experience_level + " => ";
@@ -30,7 +30,7 @@ async function updateJobList(listOfJobs, allLists) {
             jobItem.innerHTML += ` *`;
         }
         jobItem.innerHTML += listOfJobs[i].lists;
-        if (listOfJobs[i].easy_apply) {
+        if (listOfJobs[i].latest_posting_is_easy_apply) {
             jobItem.style = 'background-color: green;';
         }
         jobList.append(jobItem);
