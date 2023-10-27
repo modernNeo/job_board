@@ -14,6 +14,8 @@ async function searchJob() {
     await showInbox();
 }
 async function clearSearch() {
+    document.getElementById("job_title").value = "";
+    document.getElementById("job_id").value = "";
     setCookie("search_title", null);
     setCookie("search_id", null);
     await showInbox();
