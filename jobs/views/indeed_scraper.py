@@ -78,10 +78,12 @@ def run_indeed_scraper(exports_writer, exports):
                 job_title = job_info['displayTitle']
                 company_name = job_info['truncatedCompany']
                 timestamp = job_info['pubDate']
+                experience_level = None
                 location = job_info['formattedLocation']
+                appliedDate = None
                 exports_writer.writerow([
-                    jobkey, job_title, company_name, timestamp, None, location,
-                    f"https://ca.indeed.com/viewjob?jk={jobkey}", None, job_info['indeedApplyEnabled'], None,
+                    jobkey, job_title, company_name, timestamp, experience_level, location,
+                    f"https://ca.indeed.com/viewjob?jk={jobkey}", appliedDate, job_info['indeedApplyEnabled'],
                     INDEED_KEY
                 ])
                 exports.flush()

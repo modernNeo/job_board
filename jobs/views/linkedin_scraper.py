@@ -118,7 +118,7 @@ def run_linkedin_scraper(logger, exports_writer, exports):
                     experience_level = job_info['experience_level']
                     exports_writer.writerow([
                         job_id, job_title, company_name, timestamp, experience_level, location,
-                        f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, None, LINKED_IN_KEY
+                        f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, LINKED_IN_KEY
                     ])
                     exports.flush()
                 print(f"parsed LinkedIn job {processed_job_index} out of {indx + 1}/{number_of_jobs}")
@@ -156,7 +156,7 @@ def get_job_item(logger, job_id):
         job_info = json.loads(response.text)
         job_title = job_info['title']
         location = job_info['formattedLocation']
-        date_applied = int(int(job_info['applyingInfo']['appliedAt'])/1000) if job_info['applyingInfo']['applied'] else None
+        date_applied = job_info['applyingInfo']['appliedAt'] if job_info['applyingInfo']['applied'] else None
         easy_apply = 'com.linkedin.voyager.jobs.ComplexOnsiteApply' in job_info['applyMethod']
         timestamp = job_info['listedAt']
         experience_level = ExperienceLevel.get_experience_number(job_info['formattedExperienceLevel'])
@@ -249,7 +249,7 @@ def get_updates_for_tracked_jobs(logger, exports_writer, exports, new_jobs):
                 exports_writer.writerow([
                     job_location.job_board_id, job_location.job_posting.job_title, job_location.job_posting.company_name,
                     job_location.date_posted, job_location.experience_level, job_location.location,
-                    job_location.job_board_link, None, None, True
+                    job_location.job_board_link, None, True
                 ])
                 exports.flush()
         else:
