@@ -68,7 +68,7 @@ class pstdatetime(datetime.datetime):
 
     @classmethod
     def from_csv_epoch(cls, epoch_time: int):
-        return None if epoch_time == "" else cls.from_epoch(epoch_time)
+        return None if epoch_time == "" else cls.from_epoch(int(epoch_time))
 
     @classmethod
     def from_epoch(cls, epoch_time: int):
