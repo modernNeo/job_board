@@ -17,11 +17,15 @@ async function goToPage(allLists, newPageDifference, listObjectId) {
     param += `&page=${getCookie("pageNumber")}`;
     const search_title = getCookie("search_title");
     const search_id = getCookie("search_id");
+    const search_company = getCookie("search_company");
     if (search_title !== null){
         param += `&search_title=${search_title}`;
     }
     if (search_id !== null){
         param += `&search_id=${search_id}`;
+    }
+    if (search_company !== null){
+        param += `&search_company=${search_company}`;
     }
     let listOfJobsResp = JSON.parse($.ajax({
         'url': `${getCookie('list_of_jobs_endpoint')}?${param}`,
