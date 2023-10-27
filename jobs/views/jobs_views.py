@@ -101,9 +101,9 @@ class JobViewSet(viewsets.ModelViewSet):
         search_id = self.request.query_params.get("search_id", None)
         search_specified = search_id is not None or search_title is not None
         if search_title is not None:
-            queryset = queryset.filter(job_title__contains=search_title)
+            queryset = queryset.filter(job_title__icontains=search_title.lower())
         if search_id is not None:
-            queryset = queryset.filter(joblocation__job_board_id__contains=search_id)
+            queryset = queryset.filter(joblocation__job_board_id__icontains=search_id.lower())
         if search_company is not None:
             queryset = queryset.filter(company_name__icontains=search_company.lower())
         if 'list' in self.request.query_params:
