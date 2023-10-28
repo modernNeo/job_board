@@ -1,7 +1,9 @@
+import re
+
 from rest_framework import serializers, viewsets
 from rest_framework.response import Response
 
-from jobs.models import JobLocationDatePostedItem, pstdatetime, JobLocationDatePosted, Job, List
+from jobs.models import JobLocationDatePostedItem, pstdatetime, JobLocationDatePosted, List, JobLocation
 
 
 class JobLocationDatePostedItemSerializer(serializers.ModelSerializer):
@@ -30,9 +32,16 @@ class JobLocationDatePostedItemSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         query = request.query_params
+        legacy_job_location = re.match("location_id_", query['job_location_date_posted_id'])
+        if legacy_job_location:
+            job_location = JobLocation.objects.get(id=int(query['job_location_date_posted_id'][12:]))
+            job_location_date_posted = JobLocationDatePosted(job_location_posting=job_location, date_posted=None)
+            job_location_date_posted.save()
+        else:
+            job_location_date_posted = JobLocationDatePosted.objects.get(id=query['job_location_date_posted_id'])
         item_obj = JobLocationDatePostedItem(
             list=List.objects.get(id=query['list_id']),
-            job_location_date_posted=JobLocationDatePosted.objects.get(id=query['job_location_date_posted_id'])
+            job_location_date_posted=job_location_date_posted
         )
         item_obj.save()
         serializer = self.get_serializer(item_obj)

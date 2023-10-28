@@ -256,7 +256,9 @@ class Job(models.Model):
         latest_job_posted_date_obj = self._get_latest_job_posted_date_obj(
             self.joblocation_set.all().filter(easy_apply=False)
         )
-        return None if latest_job_posted_date_obj is None else latest_job_posted_date_obj.date_posted.pst
+        date = None if latest_job_posted_date_obj is None else latest_job_posted_date_obj.date_posted
+        date = None if date is None else date.pst
+        return date
 
     def get_latest_easy_apply_job_posted_date_pst(self):
         latest_job_posted_date_obj = self._get_latest_job_posted_date_obj(
@@ -404,7 +406,9 @@ class JobLocation(models.Model):
 
     def get_latest_job_location_posted_date_pst(self):
         latest_job_location_posted_date_obj = self.get_latest_job_location_posted_date_obj()
-        return None if latest_job_location_posted_date_obj is None else self.get_latest_job_location_posted_date_obj().date_posted.pst
+        date = None if latest_job_location_posted_date_obj is None else self.get_latest_job_location_posted_date_obj().date_posted
+        date = None if date is None else date.pst
+        return date
 
     def get_job_items(self):
         return self.get_latest_job_location_posted_date_obj().joblocationdateposteditem_set.all() \
