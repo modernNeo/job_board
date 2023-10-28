@@ -1,3 +1,7 @@
+from functools import reduce
+from operator import or_
+
+from django.db.models import Q
 from rest_framework import serializers, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -100,7 +104,9 @@ class JobViewSet(viewsets.ModelViewSet):
         search_company = self.request.query_params.get("search_company", None)
         search_id = self.request.query_params.get("search_id", None)
         if search_title is not None:
-            queryset = queryset.filter(job_title__icontains=search_title.lower())
+            title_search_params = search_title.split(",")
+            query = reduce(or_, (Q(job_title__icontains=search) for search in title_search_params))
+            queryset = queryset.filter(query)
         if search_id is not None:
             queryset = queryset.filter(joblocation__job_board_id__icontains=search_id.lower())
         if search_company is not None:

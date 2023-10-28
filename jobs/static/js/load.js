@@ -43,10 +43,23 @@ async function browserReady() {
         }).responseText)
         await refreshDeleteListDropDown(allLists)
         await showListButton(allLists)
-        await showInbox(allLists)
+        const searchDetected = extractSearchParams();
+        if (searchDetected) {
+            const allLists = JSON.parse($.ajax({
+                'url': `${getCookie('list_endpoint')}`,
+                'type': 'GET',
+                'cache': false,
+                headers: {'X-CSRFToken': getCookie('csrftoken')},
+                contentType: 'application/json; charset=utf-8',
+                async: false
+            }).responseText)
+            setCookie("previously_selected_job_index", getCookie("currently_selected_job_index"));
+            await refreshAfterJobOrListUpdate(allLists);
+        } else {
+            await showInbox(allLists)
+        }
     }
 }
-
 function deleteCookies() {
     var allCookies = document.cookie.split(';');
 
