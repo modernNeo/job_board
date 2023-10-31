@@ -121,11 +121,13 @@ def run_linkedin_scraper(logger, exports_writer, exports):
                         f"https://www.linkedin.com/jobs/view/{job_id}/", date_applied, easy_apply, LINKED_IN_KEY
                     ])
                     exports.flush()
-                print(f"parsed LinkedIn job {processed_job_index} out of {indx + 1}/{number_of_jobs}")
+                    print(f"parsed LinkedIn job {processed_job_index} out of {indx + 1}/{number_of_jobs}")
+                else:
+                    logger.error(f"skipping error LinkedIn job {indx + 1}/{number_of_jobs}")
             else:
-                logger.error(f"skipping duplicate LinkedIn job of {indx + 1}/{number_of_jobs}")
+                logger.info(f"skipping duplicate LinkedIn job of {indx + 1}/{number_of_jobs}")
         else:
-            logger.error(f"skipping LinkedIn job {indx + 1}/{number_of_jobs}")
+            logger.info(f"skipping LinkedIn job {indx + 1}/{number_of_jobs}")
 
 
 def get_job_item(logger, job_id):
