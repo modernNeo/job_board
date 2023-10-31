@@ -3,24 +3,23 @@ async function searchJob(){
     const search_title = document.getElementById("search_title").value.trim();
     const search_id = document.getElementById("search_id").value.trim();
     const search_company = document.getElementById("search_company").value.trim();
-    let searchDetected = false;
     if (search_title.length > 0) {
         currentSearchParams.set("search_title", search_title);
-        searchDetected = true;
+    }else{
+        currentSearchParams.delete("search_title");
     }
     if (search_id.length > 0) {
         currentSearchParams.set("search_id", search_id);
-        searchDetected = true;
+    }else{
+        currentSearchParams.delete("search_id");
     }
     if (search_company.length > 0) {
         currentSearchParams.set("search_company", search_company);
-        searchDetected = true;
+    }else{
+        currentSearchParams.delete("search_company");
     }
-    if (searchDetected) {
-        const view = getCookie("view")
-        currentSearchParams.set("view", view)
-        window.location.search = currentSearchParams;
-    }
+    currentSearchParams.set("view", getCookie("view"))
+    window.location.search = currentSearchParams;
 }
 async function extractSearchParams() {
     let searchDetected = false;
