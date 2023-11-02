@@ -92,15 +92,19 @@ function updateCompanyPane(allLists, listOfJobs, jobObjId) {
         const appliedToJobLocation = locations[i].applied_status;
         const objId = (locations[i].latest_date_posted_obj_id === null) ? `location_id_${locations[i].id}` : locations[i].latest_date_posted_obj_id;
         let jobLocationAppliedFunctionCall = (
-            `toggleJobLocationSpecificDatePostedListItem(${appliedToJobLocation}, "${objId}", ${appliedListId}, ${locations[i].applied_item_id})`
+            `toggleJobLocationSpecificDatePostedListItem(${appliedToJobLocation}, "${objId}", ${appliedListId}, ${locations[i].applied_item_id}, true)`
+        );
+        let jobLocationAlreadyAppliedFunctionCall = (
+            `toggleJobLocationSpecificDatePostedListItem(${appliedToJobLocation}, "${objId}", ${appliedListId}, ${locations[i].applied_item_id}, false)`
         );
 
         jobPostingInfo.append(addButton(jobLocationAppliedFunctionCall, appliedToJobLocation ? 'Remove Applied Label' : "Mark Location as Applied"))
+        jobPostingInfo.append(addButton(jobLocationAlreadyAppliedFunctionCall, appliedToJobLocation ? 'Remove Applied Label' : "Mark Location as Already Applied"))
 
 
         const closedJobLocation = locations[i].closed_status;
         let jobLocationClosedFunctionCall = (
-            `toggleJobLocationSpecificDatePostedListItem(${closedJobLocation}, "${objId}", ${jobClosedListId}, ${locations[i].closed_item_id})`
+            `toggleJobLocationSpecificDatePostedListItem(${closedJobLocation}, "${objId}", ${jobClosedListId}, ${locations[i].closed_item_id}, false)`
         );
 
         jobPostingInfo.append(addButton(jobLocationClosedFunctionCall, closedJobLocation ? 'Remove Closed Label' : "Mark Location as Closed"))

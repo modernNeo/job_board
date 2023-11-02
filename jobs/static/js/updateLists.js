@@ -98,8 +98,8 @@ async function deleteList() {
     await showListButton(allLists)
     await refreshAfterJobOrListUpdate(allLists);
 }
-async function addJobToList(jobLocationRequest, objId, listId){
-    let params = jobLocationRequest ? `job_location_date_posted_id=${objId}` : `job_id=${objId}`;
+async function addJobToList(jobLocationRequest, objId, listId, dateAppliedOrClosed){
+    let params = jobLocationRequest ? `job_location_date_posted_id=${objId}&dateAppliedOrClosed=${dateAppliedOrClosed}` : `job_id=${objId}`;
     let endpoint = jobLocationRequest ? getCookie('job_location_item_endpoint') : getCookie('job_item_endpoint');
     $.ajax({
             'url': `${endpoint}?${params}&list_id=${listId}`,
@@ -144,11 +144,11 @@ async function removeJobFromList(jobLocationRequest, itemObjId) {
     await refreshAfterJobOrListUpdate(allLists);
 }
 
-async function toggleJobLocationSpecificDatePostedListItem(jobAppliedState, jobObjectId, listId, itemObjectId) {
+async function toggleJobLocationSpecificDatePostedListItem(jobAppliedState, jobObjectId, listId, itemObjectId, AppliedOrClosed) {
     if (jobAppliedState){
         await removeJobFromList(true, itemObjectId);
     }else{
-        await addJobToList(true, jobObjectId, listId);
+        await addJobToList(true, jobObjectId, listId, AppliedOrClosed);
     }
 }
 
@@ -156,6 +156,6 @@ async function toggleArchived(jobArchivedState, jobObjectId, listId, itemObjectI
     if (jobArchivedState) {
         await removeJobFromList(false, itemObjectId);
     } else {
-        await addJobToList(false, jobObjectId, listId);
+        await addJobToList(false, jobObjectId, listId, false);
     }
 }

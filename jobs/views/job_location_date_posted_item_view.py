@@ -9,17 +9,29 @@ from jobs.models import JobLocationDatePostedItem, pstdatetime, JobLocationDateP
 class JobLocationDatePostedItemSerializer(serializers.ModelSerializer):
     list_name = serializers.CharField(read_only=True)
 
-    date_added = serializers.SerializerMethodField("pst_date_added")
+    date_applied_or_closed = serializers.SerializerMethodField("pst_date_applied_or_closed")
 
-    def pst_date_added(self, job_location_date_posted_item):
+    def pst_date_applied_or_closed(self, job_location_date_posted_item):
         # needed this func cause apparently the automatic serialization doesn't respect
         # from_db_value in PSTDateTimeField
-        date_added = job_location_date_posted_item.date_added
-        if job_location_date_posted_item.date_added is None:
+        date_applied_or_closed = job_location_date_posted_item.date_applied_or_closed
+        if job_location_date_posted_item.date_applied_or_closed is None:
             return None
-        if type(date_added) != pstdatetime:
-            date_added = pstdatetime.from_utc_datetime(date_added)
-        return date_added.pst
+        if type(date_applied_or_closed) != pstdatetime:
+            date_added = pstdatetime.from_utc_datetime(date_applied_or_closed)
+        return date_applied_or_closed.pst
+
+    date_created = serializers.SerializerMethodField("pst_date_created")
+
+    def pst_date_created(self, job_location_date_posted_item):
+        # needed this func cause apparently the automatic serialization doesn't respect
+        # from_db_value in PSTDateTimeField
+        date_created = job_location_date_posted_item.date_created
+        if job_location_date_posted_item.date_created is None:
+            return None
+        if type(date_created) != pstdatetime:
+            date_created = pstdatetime.from_utc_datetime(date_created)
+        return date_created.pst
 
     class Meta:
         model = JobLocationDatePostedItem
@@ -39,9 +51,15 @@ class JobLocationDatePostedItemSet(viewsets.ModelViewSet):
             job_location_date_posted.save()
         else:
             job_location_date_posted = JobLocationDatePosted.objects.get(id=query['job_location_date_posted_id'])
+        include_date_applied_or_closed = query['dateAppliedOrClosed'] == 'true'
+        if include_date_applied_or_closed:
+            date_applied_or_closed = pstdatetime.now().pst
+        else:
+            date_applied_or_closed = None
         item_obj = JobLocationDatePostedItem(
             list=List.objects.get(id=query['list_id']),
-            job_location_date_posted=job_location_date_posted
+            job_location_date_posted=job_location_date_posted,
+            date_applied_or_closed=date_applied_or_closed
         )
         item_obj.save()
         serializer = self.get_serializer(item_obj)

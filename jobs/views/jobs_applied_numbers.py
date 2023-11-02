@@ -10,8 +10,8 @@ class JobsAppliedNumbers(View):
 
     def get(self, request):
         applied_jobs = JobLocationDatePostedItem.objects.all().filter(
-            list__name='Applied', date_added__isnull=False
-        ).order_by('-date_added')
+            list__name='Applied', date_applied_or_closed__isnull=False
+        ).order_by('-date_applied_or_closed')
         applied_stats = {}
         index = 0
         last_date = None
@@ -20,7 +20,7 @@ class JobsAppliedNumbers(View):
         while number_of_dates < 3:
             applied_job = applied_jobs[index]
             index += 1
-            if applied_job.date_added is not None:
+            if applied_job.date_applied_or_closed is not None:
                 job_location_posting = applied_job.job_location_date_posted.job_location_posting
                 job = job_location_posting.job_posting
                 if job.id not in jobs_pk_list:
@@ -28,7 +28,7 @@ class JobsAppliedNumbers(View):
                     easy_apply = job.has_easy_apply # keeping this cause I feel like the below line will throw errors
                     # for Applied jobs that couldn't be migrated to new relationship between Job and Applied list
                     easy_apply = job_location_posting.easy_apply
-                    date_str = applied_job.date_added.pst.strftime("%Y-%m-%d")
+                    date_str = applied_job.date_applied_or_closed.pst.strftime("%Y-%m-%d")
                     if last_date != date_str:
                         number_of_dates += 1
                         last_date = date_str

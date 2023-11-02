@@ -303,14 +303,12 @@ class Job(models.Model):
         def get_latest_posted_job_location(job_location):
             return job_location.joblocationdateposted_set.all().order_by('-date_posted')[0]
 
-        job_applied_or_closed_items = [
-            get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all()
-            for job_location in self.joblocation_set.all()
-            if get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all().count() > 0
-        ]
-        item_names.extend(
-            [job_applied_or_closed_item.name for job_applied_or_closed_item in job_applied_or_closed_items]
-        )
+        for job_location in self.joblocation_set.all():
+            if get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all().count() > 0:
+                item_names.extend(
+                    [item.list_name for item in
+                     get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all()]
+                )
         item_names = list(set(item_names))
         if len(item_names) == 0:
             return ""
@@ -480,7 +478,11 @@ class JobLocationDatePostedItem(models.Model):
         default=None,
         null=True
     )
-    date_added = PSTDateTimeField(
+    date_applied_or_closed = PSTDateTimeField(
+        default=None,
+        null=True
+    )
+    date_created = PSTDateTimeField(
         default=timezone.now,
         null=True
     )
