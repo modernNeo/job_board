@@ -19,7 +19,7 @@ def run_indeed_scraper(exports_writer, exports):
     brave_path = '/usr/bin/brave-browser'
     option = uc.ChromeOptions()
     option.binary_location = brave_path
-    driver = uc.Chrome(options=option)
+    driver = uc.Chrome(options=option,  version_main=118)
 
     SOFTWARE_KEYWORD = 'q=intermediate+software+developer'
     INTERMEDIATE_JAVA_KEYWORD = 'q=intermediate+java+developer'
