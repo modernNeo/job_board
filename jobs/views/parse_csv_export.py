@@ -204,7 +204,7 @@ def job_location_is_marked_as_applied_in_csv(job_marked_as_applied, job_applied_
         if applied_job_location_item is None:
             JobLocationDatePostedItem.objects.all().get_or_create(
                 job_location_date_posted=latest_job_location_posted_date, list=applied_list,
-                date_added=job_applied_date
+                date_applied_or_closed=job_applied_date
             )
             job_is_marked_as_applied = True
         applied_job_is_archived = archive_applied_job(latest_job_location_posted_date, job, archived_list)
