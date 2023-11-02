@@ -297,14 +297,25 @@ class Job(models.Model):
 
     @property
     def lists(self):
-        lists = List.objects.all().filter(
-            Q(joblocationdateposteditem__job_location_date_posted__job_location_posting__job_posting=self.id) |
-            Q(jobitem__job_id=self.id)
+        lists = List.objects.all().filter(jobitem__job_id=self.id)
+        item_names = list(lists.order_by('id').values_list('name', flat=True))
+
+        def get_latest_posted_job_location(job_location):
+            return job_location.joblocationdateposted_set.all().order_by('-date_posted')[0]
+
+        job_applied_or_closed_items = [
+            get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all()
+            for job_location in self.joblocation_set.all()
+            if get_latest_posted_job_location(job_location).joblocationdateposteditem_set.all().count() > 0
+        ]
+        item_names.extend(
+            [job_applied_or_closed_item.name for job_applied_or_closed_item in job_applied_or_closed_items]
         )
-        if len(lists) == 0:
+        item_names = list(set(item_names))
+        if len(item_names) == 0:
             return ""
         else:
-            return "<->" + " || ".join(list(set(lists.order_by('id').values_list('name', flat=True))))
+            return "<->" + " || ".join(item_names)
 
     def save(self, *args, **kwargs):
         duplicate_jobs = Job.objects.all().filter(
